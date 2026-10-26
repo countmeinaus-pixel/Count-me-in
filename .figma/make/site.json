@@ -1,0 +1,10 @@
+{
+  "description": "Reviews project documentation and helps teams clarify requirements by identifying questions before development begins.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

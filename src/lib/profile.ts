@@ -122,3 +122,24 @@ export async function uploadProfilePhoto(file: File, userId: string) {
   const { data } = supabase.storage.from('avatars').getPublicUrl(path)
   return data.publicUrl
 }
+
+export async function updateProfilePhoto(userId: string, file: File) {
+  if (!supabase) {
+    throw new Error('Supabase is not configured yet.')
+  }
+
+  const compressedFile = await compressProfilePhoto(file)
+  const photoUrl = await uploadProfilePhoto(compressedFile, userId)
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      photo_url: photoUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+
+  if (error) throw error
+
+  return photoUrl
+}

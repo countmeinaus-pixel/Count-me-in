@@ -1,19 +1,27 @@
 import { ArrowRight, CheckCircle2, Mail, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { DEFAULT_LANGUAGE, getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 export function AuthScreen() {
   const navigate = useNavigate()
+  const [language, setLanguage] = useState<Language>(getStoredLanguage())
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [stage, setStage] = useState<'email' | 'code'>('email')
   const [error, setError] = useState('')
   const [isBusy, setIsBusy] = useState(false)
+  const copy = getTranslations(language)
+
+  function handleLanguageChange(nextLanguage: Language) {
+    setLanguage(nextLanguage)
+    setStoredLanguage(nextLanguage)
+  }
 
   async function handleSendCode() {
     if (!email.trim()) {
-      setError('Voer je e-mailadres in om een code te ontvangen.')
+      setError(copy.emailRequired)
       return
     }
 
@@ -49,7 +57,7 @@ export function AuthScreen() {
     }
 
     if (!code.trim() || code.trim().length < 6) {
-      setError('Voer de 6-cijferige code in.')
+      setError(copy.codeRequired)
       return
     }
 
@@ -75,30 +83,48 @@ export function AuthScreen() {
   return (
     <div className="min-h-screen bg-[#0a1621] px-5 py-8 text-[#e6e2d8]">
       <div className="mx-auto max-w-md">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#163430] text-[#7fb7a8]">
-            <ShieldCheck className="h-6 w-6" />
+<div className="mb-8 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#163430] text-[#7fb7a8]">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#7fb7a8]">Count Me In</p>
+                <h1 className="text-2xl font-bold text-white">{copy.authTitle}</h1>
+              </div>
+            </div>
+            <div className="flex gap-2 rounded-full border border-[#22384a] bg-[#0a1621] p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('en')}
+                className={`rounded-full px-2 py-1 ${language === 'en' ? 'bg-[#163430] text-[#dff4ef]' : 'text-[#9fb3c2]'}`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('nl')}
+                className={`rounded-full px-2 py-1 ${language === 'nl' ? 'bg-[#163430] text-[#dff4ef]' : 'text-[#9fb3c2]'}`}
+              >
+                NL
+              </button>
+            </div>
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[#7fb7a8]">Count Me In</p>
-            <h1 className="text-2xl font-bold text-white">Welkom mate</h1>
-          </div>
-        </div>
 
         <div className="rounded-3xl border border-[#22384a] bg-[#132433] p-5 shadow-2xl shadow-black/20">
           <div className="mb-6 flex items-center gap-2 rounded-2xl bg-[#163430] px-3 py-2 text-sm text-[#dff4ef]">
             <Mail className="h-4 w-4 text-[#7fb7a8]" />
-            <span>Inloggen via eenmalige e-mailcode</span>
+            <span>{copy.authSubtitle}</span>
           </div>
 
           {stage === 'email' ? (
             <>
-              <label className="mb-2 block text-sm text-[#dfe5ea]">E-mailadres</label>
+              <label className="mb-2 block text-sm text-[#dfe5ea]">{copy.emailLabel}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="jij@voorbeeld.com"
+                placeholder={copy.emailPlaceholder}
                 className="w-full rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-base outline-none ring-0 placeholder:text-[#6e8597] focus:border-[#7fb7a8]"
               />
 
@@ -108,20 +134,20 @@ export function AuthScreen() {
                 disabled={isBusy}
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6b2c] px-4 py-3 font-semibold text-[#1a0d05] transition hover:bg-[#ff8250] disabled:opacity-60"
               >
-                {isBusy ? 'Versturen...' : 'Verstuur code'}
+                {isBusy ? copy.sending : copy.sendCode}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </>
           ) : (
             <>
               <div className="mb-4 flex items-center justify-between">
-                <label className="text-sm text-[#dfe5ea]">6-cijferige code</label>
+                <label className="text-sm text-[#dfe5ea]">{copy.sixDigitCode}</label>
                 <button
                   type="button"
                   className="text-sm text-[#7fb7a8] underline underline-offset-2"
                   onClick={() => setStage('email')}
                 >
-                  Ander e-mailadres
+                  {copy.switchEmail}
                 </button>
               </div>
 
@@ -140,7 +166,7 @@ export function AuthScreen() {
                 disabled={isBusy}
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7fb7a8] px-4 py-3 font-semibold text-[#0a1621] transition hover:opacity-95 disabled:opacity-60"
               >
-                {isBusy ? 'Controleren...' : 'Inloggen'}
+                {isBusy ? copy.checking : copy.signIn}
                 <CheckCircle2 className="h-4 w-4" />
               </button>
             </>

@@ -50,6 +50,17 @@ alter table public.profile_sports enable row level security;
 alter table public.profile_availability enable row level security;
 alter table public.sports enable row level security;
 
+drop policy if exists "Profiles are viewable by everyone" on public.profiles;
+drop policy if exists "Users can insert their own profile" on public.profiles;
+drop policy if exists "Users can update their own profile" on public.profiles;
+drop policy if exists "Users can delete their own profile" on public.profiles;
+drop policy if exists "Profile sport rows are viewable by everyone" on public.profile_sports;
+drop policy if exists "Users can manage their own sport rows" on public.profile_sports;
+drop policy if exists "Profile availability rows are viewable by everyone" on public.profile_availability;
+drop policy if exists "Users can manage their own availability rows" on public.profile_availability;
+drop policy if exists "Sports are viewable by everyone" on public.sports;
+drop policy if exists "Sports are insertable by authenticated users" on public.sports;
+
 create policy "Profiles are viewable by everyone"
 on public.profiles for select using (true);
 

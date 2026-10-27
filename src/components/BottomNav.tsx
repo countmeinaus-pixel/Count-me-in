@@ -11,7 +11,7 @@ const items = [
   ['profile', 'Profile', User, '/profile'],
 ] as const
 
-export function BottomNav({ active }: { active: Tab }) {
+export function BottomNav({ active, hasUnreadChats = true }: { active: Tab; hasUnreadChats?: boolean }) {
   const navigate = useNavigate()
 
   return (
@@ -23,6 +23,7 @@ export function BottomNav({ active }: { active: Tab }) {
           className={`${active === id ? 'active' : ''} ${id === 'create' ? 'create' : ''}`}
           onClick={() => navigate(href)}
         >
+          {id === 'chats' && hasUnreadChats && <span className="nav-unread-dot" aria-label="Unread chats" />}
           <Icon />
           <span>{label}</span>
         </button>

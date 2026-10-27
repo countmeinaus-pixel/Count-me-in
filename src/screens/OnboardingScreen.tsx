@@ -21,6 +21,25 @@ const sportOptions = [
   'Open activity',
 ]
 
+function calculateAgeFromDateOfBirth(dateOfBirth: string) {
+  if (!dateOfBirth) return null
+
+  const birthDate = new Date(dateOfBirth)
+  if (Number.isNaN(birthDate.getTime())) return null
+
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const hasBirthdayPassed =
+    today.getMonth() > birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate())
+
+  if (!hasBirthdayPassed) {
+    age -= 1
+  }
+
+  return age
+}
+
 const availabilityOptions = ['Weekday mornings', 'Weekday evenings', 'Saturdays', 'Sundays', 'Flexible']
 const skillOptions: SkillLevel[] = ['Beginner', 'Intermediate', 'Experienced']
 const suburbOptions = [
@@ -54,7 +73,7 @@ export function OnboardingScreen() {
   const copy = getTranslations(language)
 
   const [firstName, setFirstName] = useState('')
-  const [age, setAge] = useState('')
+  const [dateOfBirth, setDateOfBirth] = useState('')
   const [suburb, setSuburb] = useState('')
   const [bio, setBio] = useState('')
   const [selectedSports, setSelectedSports] = useState<string[]>([])
@@ -64,6 +83,7 @@ export function OnboardingScreen() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const calculatedAge = useMemo(() => calculateAgeFromDateOfBirth(dateOfBirth), [dateOfBirth])
 
   useEffect(() => {
     async function ensureSession() {
@@ -82,8 +102,9 @@ export function OnboardingScreen() {
   }, [navigate])
 
   const canSubmit = useMemo(() => {
-    return !!firstName.trim() && !!suburb.trim() && Number(age) >= 18 && selectedSports.length > 0 && selectedAvailability.length > 0 && !!photoFile
-  }, [age, firstName, photoFile, selectedAvailability.length, selectedSports.length, suburb])
+    const age = calculateAgeFromDateOfBirth(dateOfBirth)
+    return !!firstName.trim() && !!suburb.trim() && typeof age === 'number' && age >= 18 && age <= 99 && selectedSports.length > 0 && selectedAvailability.length > 0
+  }, [dateOfBirth, firstName, selectedAvailability.length, selectedSports.length, suburb])
 
   function toggleSport(sport: string) {
     setSelectedSports((current) => {
@@ -127,8 +148,9 @@ export function OnboardingScreen() {
       return
     }
 
-    if (!canSubmit) {
-      setError(copy.requiredMessage)
+    const ageValue = calculateAgeFromDateOfBirth(dateOfBirth)
+    if (!canSubmit || typeof ageValue !== 'number' || ageValue < 18 || ageValue > 99) {
+      setError(copy.invalidDateOfBirth)
       return
     }
 
@@ -149,7 +171,7 @@ export function OnboardingScreen() {
         id: userData.user.id,
         email: userData.user.email ?? '',
         firstName: firstName.trim(),
-        age: Number(age),
+        age: ageValue,
         suburb: suburb.trim(),
         bio: bio.trim(),
         photoUrl,
@@ -206,6 +228,8 @@ export function OnboardingScreen() {
         </div>
 
         <div className="space-y-6 rounded-3xl border border-[#22384a] bg-[#132433] p-5 shadow-2xl shadow-black/20">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#9fb3c2]">{copy.requiredNote}</p>
+
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <button
@@ -231,12 +255,12 @@ export function OnboardingScreen() {
             </div>
 
             <input ref={inputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
-            <p className="text-sm text-[#9fb3c2]">{copy.uploadPhoto}</p>
+            <p className="text-sm text-[#9fb3c2]">{copy.uploadPhoto} ({copy.optional})</p>
           </div>
 
           <div className="grid gap-4">
             <label className="grid gap-2 text-sm text-[#dfe5ea]">
-              {copy.firstName}
+              {copy.firstName} *
               <input
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
@@ -247,34 +271,40 @@ export function OnboardingScreen() {
 
             <div className="grid grid-cols-2 gap-4">
               <label className="grid gap-2 text-sm text-[#dfe5ea]">
-                {copy.age}
+                {copy.dateOfBirth} *
                 <input
-                  type="number"
-                  min={18}
-                  max={99}
-                  value={age}
-                  onChange={(event) => setAge(event.target.value)}
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(event) => setDateOfBirth(event.target.value)}
                   className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-base text-white outline-none focus:border-[#7fb7a8]"
-                  placeholder={copy.agePlaceholder}
+                  placeholder={copy.dateOfBirthPlaceholder}
+                  max={new Date().toISOString().slice(0, 10)}
                 />
               </label>
 
-              <label className="grid gap-2 text-sm text-[#dfe5ea]">
-                {copy.suburb}
-                <input
-                  value={suburb}
-                  onChange={(event) => setSuburb(event.target.value)}
-                  list="suburb-options"
-                  className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-base text-white outline-none focus:border-[#7fb7a8]"
-                  placeholder={copy.suburbPlaceholder}
-                />
-                <datalist id="suburb-options">
-                  {suburbOptions.map((option) => (
-                    <option key={option} value={option} />
-                  ))}
-                </datalist>
-              </label>
+              <div className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-sm text-[#dfe5ea]">
+                <div className="text-[#9fb3c2]">{copy.ageLabel}</div>
+                <div className="mt-2 text-lg font-semibold text-white">
+                  {typeof calculatedAge === 'number' ? calculatedAge : '--'}
+                </div>
+              </div>
             </div>
+
+            <label className="grid gap-2 text-sm text-[#dfe5ea]">
+              {copy.suburb} *
+              <input
+                value={suburb}
+                onChange={(event) => setSuburb(event.target.value)}
+                list="suburb-options"
+                className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-base text-white outline-none focus:border-[#7fb7a8]"
+                placeholder={copy.suburbPlaceholder}
+              />
+              <datalist id="suburb-options">
+                {suburbOptions.map((option) => (
+                  <option key={option} value={option} />
+                ))}
+              </datalist>
+            </label>
 
             <label className="grid gap-2 text-sm text-[#dfe5ea]">
               {copy.bio}
@@ -289,7 +319,7 @@ export function OnboardingScreen() {
           </div>
 
           <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#7fb7a8]">{copy.sports}</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#7fb7a8]">{copy.sports} *</p>
             <div className="flex flex-wrap gap-2">
               {sportOptions.map((sport) => {
                 const isSelected = selectedSports.includes(sport)
@@ -342,7 +372,7 @@ export function OnboardingScreen() {
           ) : null}
 
           <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#7fb7a8]">{copy.availability}</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#7fb7a8]">{copy.availability} *</p>
             <div className="flex flex-wrap gap-2">
               {availabilityOptions.map((slot) => {
                 const isSelected = selectedAvailability.includes(slot)

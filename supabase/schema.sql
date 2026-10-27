@@ -42,13 +42,45 @@ create table if not exists public.profile_availability (
   primary key (profile_id, availability)
 );
 
+create table if not exists public.activity_chat_threads (
+  id uuid primary key default gen_random_uuid(),
+  activity_id uuid not null,
+  title text not null,
+  organiser_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.activity_chat_members (
+  thread_id uuid not null references public.activity_chat_threads(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  status text not null default 'accepted' check (status in ('accepted', 'pending', 'removed')),
+  joined_at timestamptz not null default now(),
+  primary key (thread_id, user_id)
+);
+
+create table if not exists public.activity_chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  thread_id uuid not null references public.activity_chat_threads(id) on delete cascade,
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  body text not null,
+  message_type text not null default 'message' check (message_type in ('message', 'system')),
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_profiles_suburb on public.profiles(suburb);
 create index if not exists idx_profile_sports_sport on public.profile_sports(sport_id);
+create index if not exists idx_chat_threads_activity on public.activity_chat_threads(activity_id);
+create index if not exists idx_chat_members_user on public.activity_chat_members(user_id);
+create index if not exists idx_chat_messages_thread on public.activity_chat_messages(thread_id, created_at desc);
 
 alter table public.profiles enable row level security;
 alter table public.profile_sports enable row level security;
 alter table public.profile_availability enable row level security;
 alter table public.sports enable row level security;
+alter table public.activity_chat_threads enable row level security;
+alter table public.activity_chat_members enable row level security;
+alter table public.activity_chat_messages enable row level security;
 
 drop policy if exists "Profiles are viewable by everyone" on public.profiles;
 drop policy if exists "Users can insert their own profile" on public.profiles;
@@ -60,6 +92,13 @@ drop policy if exists "Profile availability rows are viewable by everyone" on pu
 drop policy if exists "Users can manage their own availability rows" on public.profile_availability;
 drop policy if exists "Sports are viewable by everyone" on public.sports;
 drop policy if exists "Sports are insertable by authenticated users" on public.sports;
+drop policy if exists "Users can view activity chats they belong to" on public.activity_chat_threads;
+drop policy if exists "Users can insert activity chat threads they organise" on public.activity_chat_threads;
+drop policy if exists "Organisers can update activity chat threads" on public.activity_chat_threads;
+drop policy if exists "Users can view chat membership for threads they belong to" on public.activity_chat_members;
+drop policy if exists "Users can manage their own chat membership" on public.activity_chat_members;
+drop policy if exists "Members can read chat messages" on public.activity_chat_messages;
+drop policy if exists "Members can send chat messages" on public.activity_chat_messages;
 
 create policy "Profiles are viewable by everyone"
 on public.profiles for select using (true);
@@ -90,6 +129,66 @@ on public.sports for select using (true);
 
 create policy "Sports are insertable by authenticated users"
 on public.sports for insert with check (auth.role() = 'authenticated');
+
+create policy "Users can view activity chats they belong to"
+on public.activity_chat_threads for select using (
+  organiser_id = auth.uid() or
+  id in (
+    select thread_id from public.activity_chat_members
+    where user_id = auth.uid() and status = 'accepted'
+  )
+);
+
+create policy "Users can insert activity chat threads they organise"
+on public.activity_chat_threads for insert with check (organiser_id = auth.uid());
+
+create policy "Organisers can update activity chat threads"
+on public.activity_chat_threads for update using (organiser_id = auth.uid())
+with check (organiser_id = auth.uid());
+
+create policy "Users can view chat membership for threads they belong to"
+on public.activity_chat_members for select using (
+  user_id = auth.uid() or
+  thread_id in (
+    select id from public.activity_chat_threads where organiser_id = auth.uid()
+  )
+);
+
+create policy "Users can manage their own chat membership"
+on public.activity_chat_members for all using (
+  user_id = auth.uid() or
+  thread_id in (
+    select id from public.activity_chat_threads where organiser_id = auth.uid()
+  )
+) with check (
+  user_id = auth.uid() or
+  thread_id in (
+    select id from public.activity_chat_threads where organiser_id = auth.uid()
+  )
+);
+
+create policy "Members can read chat messages"
+on public.activity_chat_messages for select using (
+  sender_id = auth.uid() or
+  thread_id in (
+    select id from public.activity_chat_threads where organiser_id = auth.uid()
+  ) or
+  thread_id in (
+    select thread_id from public.activity_chat_members where user_id = auth.uid() and status = 'accepted'
+  )
+);
+
+create policy "Members can send chat messages"
+on public.activity_chat_messages for insert with check (
+  sender_id = auth.uid() and (
+    thread_id in (
+      select id from public.activity_chat_threads where organiser_id = auth.uid()
+    ) or
+    thread_id in (
+      select thread_id from public.activity_chat_members where user_id = auth.uid() and status = 'accepted'
+    )
+  )
+);
 
 -- Seed the sport catalog
 insert into public.sports (name, icon)

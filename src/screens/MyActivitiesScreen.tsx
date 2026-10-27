@@ -6,7 +6,7 @@ export function MyActivitiesScreen() {
   const navigate = useNavigate()
 
   return (
-    <div className="screen">
+    <div className="screen my-activities-screen">
       <header className="page-title">
         <p className="eyebrow">Your plans</p>
         <h1>My activities</h1>
@@ -17,17 +17,23 @@ export function MyActivitiesScreen() {
         <button type="button">Past</button>
       </div>
 
-      <div className="status-line">
-        <span>Going</span>
-        <p>Next up on Saturday</p>
-      </div>
-      <ActivityCard activity={activities[0]} onClick={() => navigate(`/activity/${activities[0].id}`)} />
+      <div className="my-activities-grid">
+        <section className="my-activities-section">
+          <div className="status-line">
+            <span>Going</span>
+            <p>Next up on Saturday</p>
+          </div>
+          <ActivityCard activity={activities[0]} onClick={() => navigate(`/activity/${activities[0].id}`)} />
+        </section>
 
-      <div className="status-line">
-        <span className="host-status">Hosting</span>
-        <p>2 join requests</p>
+        <section className="my-activities-section">
+          <div className="status-line">
+            <span className="host-status">Hosting</span>
+            <p>2 join requests</p>
+          </div>
+          <ActivityCard activity={activities[1]} onClick={() => navigate(`/activity/${activities[1].id}`)} />
+        </section>
       </div>
-      <ActivityCard activity={activities[1]} onClick={() => navigate(`/activity/${activities[1].id}`)} />
     </div>
   )
 }

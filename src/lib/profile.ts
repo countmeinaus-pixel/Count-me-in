@@ -19,6 +19,15 @@ export async function saveProfile(input: SaveProfileInput) {
     throw new Error('Supabase is not configured yet.')
   }
 
+  const { data: sessionData, error: sessionError } = await supabase.auth.getUser()
+  if (sessionError || !sessionData.user) {
+    throw new Error('Your session expired. Please sign in again.')
+  }
+
+  if (sessionData.user.id !== input.id) {
+    throw new Error('Your session does not match this profile. Please sign in again.')
+  }
+
   const { error: profileError } = await supabase.from('profiles').upsert({
     id: input.id,
     email: input.email,

@@ -35,9 +35,9 @@ function AppShell() {
         <Route path="/activities" element={<MyActivitiesScreen />} />
         <Route path="/create" element={<CreateActivityScreen />} />
         <Route path="/chats" element={<ChatsScreen />} />
-        <Route path="/profile" element={<ProfileScreen />} />
+        <Route path="/profile/:name?" element={<ProfileScreen />} />
       </Routes>
-      {showNav && <BottomNav active={activeTab} />}
+      {showNav && <BottomNav active={activeTab} hasUnreadChats />}
     </>
   )
 }

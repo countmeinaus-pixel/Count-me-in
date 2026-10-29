@@ -1,8 +1,24 @@
 import { ArrowRight, CheckCircle2, Mail, ShieldCheck } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { activities } from '../data/mockData'
 import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
+
+const featureSlides = {
+  en: [
+    { image: activities[1].hero, alt: 'Trail through the Adelaide Hills', title: 'Find your crew', body: 'Meet local mates who share your kind of adventure.' },
+    { image: activities[0].hero, alt: 'Diver exploring the reef', title: 'Make a plan', body: 'Find a callout or post one of your own.' },
+    { image: activities[2].hero, alt: 'Runner on an outdoor trail', title: 'Stay in the loop', body: 'Chat with the crew before you head out.' },
+    { image: activities[3].hero, alt: 'Kitesurfing along the coast', title: 'Show up together', body: 'Meet in person and build your crew, one outing at a time.' },
+  ],
+  nl: [
+    { image: activities[1].hero, alt: 'Pad door de Adelaide Hills', title: 'Vind je crew', body: 'Ontmoet locals die graag hetzelfde avontuur aangaan.' },
+    { image: activities[0].hero, alt: 'Duiker op het rif', title: 'Maak een plan', body: 'Vind een activiteit of plaats er zelf een.' },
+    { image: activities[2].hero, alt: 'Hardloper op een buitenpad', title: 'Blijf op de hoogte', body: 'Chat met de groep voordat je op pad gaat.' },
+    { image: activities[3].hero, alt: 'Kitesurfen aan de kust', title: 'Ga samen op pad', body: 'Ontmoet elkaar en bouw aan je crew, activiteit voor activiteit.' },
+  ],
+} as const
 
 export function AuthScreen() {
   const navigate = useNavigate()
@@ -13,7 +29,19 @@ export function AuthScreen() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [isBusy, setIsBusy] = useState(false)
+  const [activeSlide, setActiveSlide] = useState(0)
   const copy = getTranslations(language)
+  const slides = featureSlides[language]
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const intervalId = window.setInterval(() => {
+      setActiveSlide((current) => (current + 1) % featureSlides.en.length)
+    }, 6000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   function handleLanguageChange(nextLanguage: Language) {
     setLanguage(nextLanguage)
@@ -114,7 +142,7 @@ export function AuthScreen() {
   return (
     <div className="min-h-screen bg-[var(--bg)] px-5 py-8 text-[var(--text-primary)]">
       <div className="mx-auto max-w-md">
-        <div className="mb-8 flex items-center justify-between gap-3">
+        <div className="mb-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--seafoam-subtle)] text-[var(--seafoam)]">
               <ShieldCheck className="h-6 w-6" />
@@ -141,6 +169,36 @@ export function AuthScreen() {
             </button>
           </div>
         </div>
+
+        <section className="auth-carousel" aria-label="Count Me In features" aria-roledescription="carousel">
+          {slides.map((slide, index) => (
+            <img
+              key={slide.title}
+              src={slide.image}
+              alt={index === activeSlide ? slide.alt : ''}
+              aria-hidden={index !== activeSlide}
+              className={`auth-carousel-image ${index === activeSlide ? 'active' : ''}`}
+            />
+          ))}
+          <div className="auth-carousel-scrim" />
+          <div className="auth-carousel-copy" aria-live="polite">
+            <span>{String(activeSlide + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}</span>
+            <h2>{slides[activeSlide].title}</h2>
+            <p>{slides[activeSlide].body}</p>
+          </div>
+          <div className="auth-carousel-indicators" aria-label="Choose a feature">
+            {slides.map((slide, index) => (
+              <button
+                key={slide.title}
+                type="button"
+                className={index === activeSlide ? 'active' : ''}
+                aria-label={`Show feature ${index + 1}: ${slide.title}`}
+                aria-pressed={index === activeSlide}
+                onClick={() => setActiveSlide(index)}
+              />
+            ))}
+          </div>
+        </section>
 
         <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-2xl shadow-black/20">
           <div className="mb-6 flex items-center gap-2 rounded-2xl bg-[var(--seafoam-subtle)] px-3 py-2 text-sm text-[var(--seafoam)]">
@@ -187,7 +245,7 @@ export function AuthScreen() {
             <ArrowRight className="h-4 w-4" />
           </button>
 
-          <p className="mt-4 text-center text-sm text-[var(--text-secondary)]">
+          <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
             {isSignUp ? copy.haveAccount : copy.noAccount}{' '}
             <button
               type="button"

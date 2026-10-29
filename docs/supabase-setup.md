@@ -37,3 +37,12 @@ In Vercel:
 5. Redeploy.
 
 Important: in Vite, browser variables must start with `VITE_`.
+
+## 4) Password reset redirect URLs
+
+In Supabase, open Authentication > URL Configuration and add these Redirect URLs:
+
+- `http://localhost:8443/reset-password`
+- `https://count-me-in-nine.vercel.app/reset-password`
+
+If the production domain changes, add its `/reset-password` URL here as well.

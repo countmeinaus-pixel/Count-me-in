@@ -34,6 +34,51 @@ export const currentUser = {
   stats: { meetups: 7, hosted: 2, sports: 5 },
 }
 
+export const communityMembers = [
+  {
+    name: 'Matt', age: 34, suburb: 'Brighton', verified: true,
+    sports: [{ name: 'Spearfishing', level: 'Intermediate' }, { name: 'Running', level: 'Beginner' }, { name: 'Gym', level: 'Experienced' }],
+    stats: { meetups: 12, hosted: 3, sports: 3 },
+  },
+  {
+    name: 'Luca', age: 29, suburb: 'Glenelg', verified: true,
+    sports: [{ name: 'Kitesurfing', level: 'Intermediate' }, { name: 'Surfing', level: 'Experienced' }, { name: 'Swimming', level: 'Beginner' }],
+    stats: { meetups: 7, hosted: 1, sports: 3 },
+  },
+  {
+    name: 'Sam', age: 41, suburb: 'Aldinga', verified: true,
+    sports: [{ name: 'Running', level: 'Intermediate' }, { name: 'Hiking', level: 'Intermediate' }, { name: 'Road cycling', level: 'Experienced' }],
+    stats: { meetups: 14, hosted: 4, sports: 3 },
+  },
+  {
+    name: 'Hamish', age: 36, suburb: 'Stirling', verified: true,
+    sports: [{ name: 'Hiking', level: 'Experienced' }, { name: 'Running', level: 'Intermediate' }, { name: 'Mountain biking', level: 'Beginner' }],
+    stats: { meetups: 9, hosted: 2, sports: 3 },
+  },
+  {
+    name: 'Raj', age: 32, suburb: 'Mawson Lakes', verified: true,
+    sports: [{ name: 'Road cycling', level: 'Intermediate' }, { name: 'Gym', level: 'Experienced' }, { name: 'Hiking', level: 'Beginner' }],
+    stats: { meetups: 6, hosted: 1, sports: 3 },
+  },
+  {
+    name: 'Ben', age: 45, suburb: 'Seaford', verified: true,
+    sports: [{ name: 'Hiking', level: 'Intermediate' }, { name: 'Spearfishing', level: 'Experienced' }, { name: 'Swimming', level: 'Beginner' }],
+    stats: { meetups: 25, hosted: 5, sports: 3 },
+  },
+  {
+    name: 'Tom', age: 27, suburb: 'Norwood', verified: true,
+    sports: [{ name: 'Running', level: 'Beginner' }, { name: 'Gym', level: 'Intermediate' }, { name: 'Climbing / bouldering', level: 'Beginner' }],
+    stats: { meetups: 1, hosted: 0, sports: 3 },
+  },
+  {
+    name: 'Dave', age: 39, suburb: 'Semaphore', verified: true,
+    sports: [{ name: 'Spearfishing', level: 'Intermediate' }, { name: 'Kitesurfing', level: 'Intermediate' }, { name: 'SUP / kayak', level: 'Experienced' }],
+    stats: { meetups: 18, hosted: 3, sports: 3 },
+  },
+]
+
+export type CommunityMember = (typeof communityMembers)[number]
+
 export const activities: Activity[] = [
   {
     id: 1,

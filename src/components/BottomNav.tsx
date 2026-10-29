@@ -11,7 +11,7 @@ const items = [
   ['profile', 'Profile', User, '/profile'],
 ] as const
 
-export function BottomNav({ active, hasUnreadChats = true }: { active: Tab; hasUnreadChats?: boolean }) {
+export function BottomNav({ active, hasUnreadChats = true }: { active: Tab | null; hasUnreadChats?: boolean }) {
   const navigate = useNavigate()
 
   return (

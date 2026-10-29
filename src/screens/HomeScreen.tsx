@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Bell, CalendarDays, Check, ChevronLeft, ChevronRight, ListFilter, MapPin, Search } from 'lucide-react'
+import { Bell, Bike, CalendarDays, Check, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, ListFilter, MapPin, Mountain, Search, Waves } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { ActivityCard } from '../components/ActivityCard'
 import { Button } from '../components/Button'
-import { activities, filters } from '../data/mockData'
+import { activities, communityMembers, filters } from '../data/mockData'
+import { MateCard } from '../components/MateCard'
 
 type ViewMode = 'list' | 'map' | 'calendar'
 type CalendarMode = 'week' | 'month'
@@ -42,6 +43,15 @@ const mapPins = {
   2: { x: '52%', y: '28%' },
   3: { x: '66%', y: '62%' },
   4: { x: '40%', y: '74%' },
+} as const
+
+const activityIcons = {
+  fish: Fish,
+  mountain: Mountain,
+  run: Footprints,
+  waves: Waves,
+  bike: Bike,
+  gym: Dumbbell,
 } as const
 
 export function HomeScreen() {
@@ -141,7 +151,7 @@ export function HomeScreen() {
     <div className="screen">
       <header className="topbar">
         <div className="location"><MapPin />Adelaide</div>
-        <button className="icon-button" aria-label="Notifications"><Bell /></button>
+        <button className="icon-button" aria-label="Notifications" onClick={() => navigate('/notifications')} type="button"><Bell /></button>
       </header>
 
       <section className="intro">
@@ -285,11 +295,14 @@ export function HomeScreen() {
 
                     {dayActivities.length > 0 ? (
                       <div className="day-icons" aria-label={`${dayActivities.length} activities on ${label} ${day}`}>
-                        {visibleIcons.map((activity) => (
-                          <span key={activity.id} className="day-icon" title={activity.sport}>
-                            {activity.sport.slice(0, 1)}
-                          </span>
-                        ))}
+                        {visibleIcons.map((activity) => {
+                          const Icon = activityIcons[activity.icon]
+                          return (
+                            <span key={activity.id} className="day-icon" title={activity.sport}>
+                              <Icon aria-hidden="true" />
+                            </span>
+                          )
+                        })}
                         {extra > 0 && <span className="day-overflow">+{extra}</span>}
                       </div>
                     ) : (
@@ -322,36 +335,68 @@ export function HomeScreen() {
                     onClick={() => setSelectedDateKey(dateKey)}
                   >
                     <span>{day}</span>
-                    {(dayActivities.slice(0, 2)).map((activity) => (
-                      <small key={activity.id}>{activity.sport}</small>
-                    ))}
-                    {extra > 0 && <small className="month-overflow">+{extra}</small>}
+                    {dayActivities.length > 0 && (
+                      <div className="day-icons month-day-icons" aria-label={`${dayActivities.length} activities on ${day}`}>
+                        {dayActivities.slice(0, 2).map((activity) => {
+                          const Icon = activityIcons[activity.icon]
+                          return (
+                            <span key={activity.id} className="day-icon" title={activity.sport}>
+                              <Icon aria-hidden="true" />
+                            </span>
+                          )
+                        })}
+                        {extra > 0 && <span className="day-overflow">+{extra}</span>}
+                      </div>
+                    )}
                   </button>
                 )
               })}
             </div>
           )}
 
-          {selectedDateKey && selectedDayActivities.length > 0 && (
+          {selectedDateKey && (
             <div className="selected-day-panel">
               <div className="selected-day-header">
                 <h3>{selectedDateLabel}</h3>
                 <span>{selectedDayActivities.length} callouts</span>
               </div>
 
-              <div className="selected-day-list">
-                {selectedDayActivities.map((activity) => (
-                  <ActivityCard
-                    key={activity.id}
-                    activity={activity}
-                    onClick={() => navigate(`/activity/${activity.id}`)}
-                  />
-                ))}
-              </div>
+              {selectedDayActivities.length > 0 ? (
+                <div className="selected-day-list">
+                  {selectedDayActivities.map((activity) => (
+                    <ActivityCard
+                      key={activity.id}
+                      activity={activity}
+                      onClick={() => navigate(`/activity/${activity.id}`)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="selected-day-empty">No activities scheduled for this day.</p>
+              )}
             </div>
           )}
         </div>
       )}
+
+      <section className="crew-preview">
+        <div className="crew-preview-heading">
+          <div>
+            <p className="eyebrow">Good people, good plans</p>
+            <h2>Find your crew</h2>
+          </div>
+          <button type="button" className="text-action" onClick={() => navigate('/mates')}>View all</button>
+        </div>
+        <div className="mate-grid crew-preview-grid">
+          {communityMembers.slice(0, 4).map((member) => (
+            <MateCard
+              key={member.name}
+              member={member}
+              onClick={() => navigate(`/profile/${encodeURIComponent(member.name)}`)}
+            />
+          ))}
+        </div>
+      </section>
 
       {visible.length === 0 && (
         <div className="empty-state">

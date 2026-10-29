@@ -1,7 +1,7 @@
 import { ArrowLeft, LogOut, MapPin, Pencil, Settings2, ShieldCheck, Users, Waves } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { currentUser } from '../data/mockData'
+import { communityMembers, currentUser } from '../data/mockData'
 import { getConfirmedMeetupCountForUser, getEarnedPatchesForUser, getLollipopChartForUser } from '../lib/checkins'
 import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
 import { updateProfilePhoto } from '../lib/profile'
@@ -43,7 +43,7 @@ export function ProfileScreen() {
   const isCurrentUser = !profileParam || decodeURIComponent(profileParam) === currentUser.name
   const profile = isCurrentUser
     ? currentUser
-    : {
+    : communityMembers.find((member) => member.name === decodeURIComponent(profileParam ?? '')) ?? {
         name: decodeURIComponent(profileParam ?? currentUser.name),
         age: 31,
         suburb: 'Adelaide',

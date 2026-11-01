@@ -150,6 +150,20 @@ export const activities: Activity[] = [
   },
 ]
 
+export function getDefaultActivityHero(sportName: string) {
+  const exactMatch = activities.find((activity) => activity.sport === sportName)
+  if (exactMatch) return exactMatch.hero
+
+  if (['Kitesurfing', 'Surfing', 'Swimming', 'SUP / kayak', 'Scuba diving'].includes(sportName)) {
+    return activities.find((activity) => activity.sport === 'Kitesurfing')?.hero ?? activities[0].hero
+  }
+  if (['Running', 'Gym', 'Mountain biking', 'Road cycling'].includes(sportName)) {
+    return activities.find((activity) => activity.sport === 'Running')?.hero ?? activities[0].hero
+  }
+
+  return activities.find((activity) => activity.sport === 'Hiking')?.hero ?? activities[0].hero
+}
+
 export const chats = [
   {
     id: 1,

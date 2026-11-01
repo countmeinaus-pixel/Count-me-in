@@ -46,3 +46,16 @@ In Supabase, open Authentication > URL Configuration and add these Redirect URLs
 - `https://count-me-in-nine.vercel.app/reset-password`
 
 If the production domain changes, add its `/reset-password` URL here as well.
+
+## 5) Activity creation database
+
+The create-activity flow needs two additional tables: `activities` stores the activity details and optional sport presets, and `activity_invites` stores invitations. Both tables have Row Level Security policies. Activity hosts can manage their own activities; people can only read invitations addressed to them or created by them.
+
+To apply the migration manually:
+
+1. Open your Supabase project and choose **SQL Editor**.
+2. Choose **New query**.
+3. Open `supabase/migrations/20261101150000_create_activities.sql` in the project and copy its full contents.
+4. Paste the SQL into the new query and choose **Run**.
+
+The repository also has a GitHub Actions workflow that applies migrations when code is pushed to `main`, provided the Supabase GitHub secrets are configured. Do not apply this SQL manually as well if that workflow has already run successfully.

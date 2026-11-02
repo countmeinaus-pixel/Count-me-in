@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, LogOut, MapPin, Pencil, Settings2, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ChevronRight, MapPin, Pencil, Settings2, ShieldCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { MateCard } from '../components/MateCard'
@@ -11,9 +11,10 @@ import {
   getPatchProgressForUser,
   getLollipopChartForUser,
 } from '../lib/checkins'
-import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
 import { getCurrentProfile, type CurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
+import { addBlockedUser, getBlockedUsers } from '../lib/localPreferences'
+import { getMoreOrigin } from '../lib/moreNavigation'
 
 const initialFriends = ['Matt', 'Hamish', 'Sam', 'Luca'].map((name) => ({ name }))
 
@@ -21,17 +22,17 @@ export function ProfileScreen() {
   const navigate = useNavigate()
   const location = useLocation()
   const { name: profileParam } = useParams()
-  const [language, setLanguage] = useState<Language>(getStoredLanguage())
   const [savedProfile, setSavedProfile] = useState<CurrentProfile | null>(null)
   const [profileLoadError, setProfileLoadError] = useState('')
   const [statusMessage, setStatusMessage] = useState(
     typeof location.state?.statusMessage === 'string' ? location.state.statusMessage : '',
   )
+  const returnToMore = location.state?.returnTo === '/more'
+  const moreOrigin = getMoreOrigin(location.state)
   const [friends, setFriends] = useState(initialFriends)
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [openFriendMenu, setOpenFriendMenu] = useState<string | null>(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-  const [blockedUsers, setBlockedUsers] = useState<string[]>([])
-  const copy = getTranslations(language)
 
   const isCurrentUser = !profileParam || decodeURIComponent(profileParam) === currentUser.name
 
@@ -42,6 +43,7 @@ export function ProfileScreen() {
 
       try {
         const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError?.message === 'Auth session missing!') return
         if (userError) throw userError
         if (!userData.user) return
         const profileData = await getCurrentProfile(userData.user.id)
@@ -56,6 +58,14 @@ export function ProfileScreen() {
       active = false
     }
   }, [isCurrentUser])
+
+  useEffect(() => {
+    try {
+      setBlockedUsers(getBlockedUsers())
+    } catch (error) {
+      setProfileLoadError(error instanceof Error ? error.message : 'Unable to load blocked members.')
+    }
+  }, [])
 
   const profile = isCurrentUser && savedProfile
     ? {
@@ -95,27 +105,13 @@ export function ProfileScreen() {
       ? new Set(confirmedMeetups.filter((entry) => entry.hosted).map((entry) => entry.activityId)).size
       : profile.stats.hosted
   const sportCount = profile.stats.sports
+  const visibleFriends = friends.filter((friend) => !blockedUsers.includes(friend.name))
   const patchList = useMemo(() => getPatchProgressForUser(profile.name), [profile.name])
   const earnedPatches = patchList.filter((patch) => patch.earned)
   const chartData = useMemo(
     () => getLollipopChartForUser(isCurrentUser ? currentUser.name : profile.name, 6),
     [isCurrentUser, profile.name],
   )
-
-  async function handleSignOut() {
-    if (!supabase) {
-      navigate('/login')
-      return
-    }
-
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      setStatusMessage(error.message)
-      return
-    }
-
-    navigate('/login')
-  }
 
   function handleReportUser(name: string) {
     setStatusMessage(`${name} has been reported. We will review the profile.`)
@@ -124,18 +120,30 @@ export function ProfileScreen() {
   }
 
   function handleBlockUser(name: string) {
-    setBlockedUsers((current) => [...new Set([...current, name])])
-    setStatusMessage(`${name} is now blocked and hidden from your activity flow.`)
+    try {
+      addBlockedUser(name)
+      setBlockedUsers((current) => [...new Set([...current, name])])
+      setStatusMessage(`${name} is now blocked and hidden from your crew lists.`)
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to block this member.')
+      return false
+    }
     setOpenFriendMenu(null)
     setProfileMenuOpen(false)
+    return true
   }
 
   return (
     <div className="screen profile-page">
       <header className="profile-header">
         <div className="profile-top">
-          {!isCurrentUser && (
-            <button type="button" onClick={() => navigate(-1)} className="icon-button" aria-label="Back">
+          {(!isCurrentUser || returnToMore) && (
+            <button
+              type="button"
+              onClick={() => returnToMore ? navigate('/more', { replace: true, state: { from: moreOrigin } }) : navigate(-1)}
+              className="icon-button"
+              aria-label={returnToMore ? 'Back to More' : 'Back'}
+            >
               <ArrowLeft />
             </button>
           )}
@@ -300,11 +308,11 @@ export function ProfileScreen() {
 
       <div className="section-heading compact">
         <h2>Friends</h2>
-        <span>{friends.length}</span>
+        <span>{visibleFriends.length}</span>
       </div>
 
       <div className="profile-friends-grid">
-        {friends.map((friend) => {
+        {visibleFriends.map((friend) => {
           const member = communityMembers.find((person) => person.name === friend.name)
           if (!member) return null
 
@@ -346,8 +354,9 @@ export function ProfileScreen() {
                     <button
                       type="button"
                       onClick={() => {
-                        handleBlockUser(friend.name)
-                        setFriends((current) => current.filter((person) => person.name !== friend.name))
+                        if (handleBlockUser(friend.name)) {
+                          setFriends((current) => current.filter((person) => person.name !== friend.name))
+                        }
                       }}
                     >
                       Block
@@ -369,54 +378,12 @@ export function ProfileScreen() {
         })}
       </div>
 
-      {isCurrentUser && (
-        <div className="mt-6 rounded-2xl border border-[#22384a] bg-[#132433] p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-medium text-[#dfe5ea]">{copy.languageLabel}</span>
-            <div className="flex gap-2 rounded-full border border-[#22384a] bg-[#0a1621] p-1 text-xs">
-              <button
-                type="button"
-                onClick={() => {
-                  setLanguage('en')
-                  setStoredLanguage('en')
-                }}
-                className={`rounded-full px-2 py-1 ${language === 'en' ? 'bg-[#163430] text-[#dff4ef]' : 'text-[#9fb3c2]'}`}
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLanguage('nl')
-                  setStoredLanguage('nl')
-                }}
-                className={`rounded-full px-2 py-1 ${language === 'nl' ? 'bg-[#163430] text-[#dff4ef]' : 'text-[#9fb3c2]'}`}
-              >
-                NL
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {statusMessage ? (
         <p className="profile-status-message" role="status">
           {statusMessage}
         </p>
       ) : null}
 
-      {isCurrentUser && (
-        <div className="profile-actions">
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 font-medium text-[#e6e2d8]"
-          >
-            <LogOut className="h-4 w-4" />
-            {copy.logOut}
-          </button>
-        </div>
-      )}
     </div>
   )
 }

@@ -1,9 +1,10 @@
 import { ArrowLeft, Camera, ImagePlus, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { adelaideSuburbs } from '../data/adelaideSuburbs'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 import { useUnsavedChangesWarning } from '../lib/useUnsavedChangesWarning'
+import { getMoreOrigin } from '../lib/moreNavigation'
 import {
   calculateAgeFromDateOfBirth,
   compressProfilePhoto,
@@ -38,6 +39,9 @@ function getLatestAdultDateOfBirth() {
 
 export function EditProfileScreen() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo = location.state?.returnTo === '/more' ? '/more' : '/profile'
+  const moreOrigin = getMoreOrigin(location.state)
   const photoInputRef = useRef<HTMLInputElement | null>(null)
   const cameraInputRef = useRef<HTMLInputElement | null>(null)
   const [userId, setUserId] = useState('')
@@ -193,7 +197,10 @@ export function EditProfileScreen() {
       setOriginal(savedForm)
       setForm(savedForm)
       setSelectedPhoto(null)
-      navigate('/profile', { replace: true, state: { statusMessage } })
+      navigate(returnTo, {
+        replace: true,
+        state: returnTo === '/more' ? { statusMessage, from: moreOrigin } : { statusMessage },
+      })
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save your profile.')
     } finally {
@@ -209,7 +216,14 @@ export function EditProfileScreen() {
     return (
       <main className="screen edit-profile-page">
         <header className="edit-page-header">
-          <button type="button" className="icon-button" aria-label="Back to profile" onClick={() => navigate('/profile')}><ArrowLeft /></button>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Back"
+            onClick={() => navigate(returnTo, { replace: true, state: returnTo === '/more' ? { from: moreOrigin } : undefined })}
+          >
+            <ArrowLeft />
+          </button>
           <h1>Edit profile</h1>
         </header>
         <p className="edit-form-error" role="alert">{error || 'Unable to load your profile.'}</p>
@@ -301,7 +315,14 @@ export function EditProfileScreen() {
       {error && <p className="edit-form-error" role="alert">{error}</p>}
 
       <div className="edit-form-actions">
-        <button type="button" className="secondary-action" onClick={() => navigate('/profile')} disabled={isSaving}>Cancel</button>
+        <button
+          type="button"
+          className="secondary-action"
+          onClick={() => navigate(returnTo, { replace: true, state: returnTo === '/more' ? { from: moreOrigin } : undefined })}
+          disabled={isSaving}
+        >
+          Cancel
+        </button>
         <button type="button" className="primary-action" onClick={() => void handleSave()} disabled={!valid || !isDirty || isSaving}>
           <Pencil aria-hidden="true" />{isSaving ? 'Saving…' : 'Save changes'}
         </button>

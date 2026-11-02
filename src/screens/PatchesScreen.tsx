@@ -1,12 +1,13 @@
 import { ArrowLeft, Check, LockKeyhole, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { PatchIcon } from '../components/PatchIcon'
 import { patchCategories } from '../data/patches'
 import { getPatchProgressForUser, type PatchProgress } from '../lib/checkins'
 import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
+import { getMoreOrigin } from '../lib/moreNavigation'
 
 function formatEarnedDate(date: string | null) {
   if (!date) return ''
@@ -35,6 +36,9 @@ function PatchProgressBar({ patch }: { patch: PatchProgress }) {
 
 export function PatchesScreen() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo = location.state?.returnTo === '/more' ? '/more' : '/profile'
+  const moreOrigin = getMoreOrigin(location.state)
   const [selectedPatch, setSelectedPatch] = useState<PatchProgress | null>(null)
   const [userName, setUserName] = useState(currentUser.name)
   const [profileError, setProfileError] = useState('')
@@ -45,6 +49,7 @@ export function PatchesScreen() {
       if (!supabase) return
       try {
         const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError?.message === 'Auth session missing!') return
         if (userError) throw userError
         if (!userData.user) return
         const profile = await getCurrentProfile(userData.user.id)
@@ -66,7 +71,12 @@ export function PatchesScreen() {
   return (
     <div className="screen patches-page">
       <header className="patches-header">
-        <button type="button" className="icon-button" aria-label="Back to profile" onClick={() => navigate('/profile')}>
+        <button
+          type="button"
+          className="icon-button"
+          aria-label="Back"
+          onClick={() => navigate(returnTo, { replace: true, state: returnTo === '/more' ? { from: moreOrigin } : undefined })}
+        >
           <ArrowLeft />
         </button>
         <div>

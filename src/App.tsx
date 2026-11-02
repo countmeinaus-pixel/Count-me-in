@@ -8,13 +8,20 @@ import { EditProfileScreen } from './screens/EditProfileScreen'
 import { EditSportsScreen } from './screens/EditSportsScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { MyActivitiesScreen } from './screens/MyActivitiesScreen'
-import { MatesScreen } from './screens/MatesScreen'
 import { NotificationsScreen } from './screens/NotificationsScreen'
+import { NotificationSettingsScreen } from './screens/NotificationSettingsScreen'
 import { OnboardingScreen } from './screens/OnboardingScreen'
 import { PasswordResetScreen } from './screens/PasswordResetScreen'
 import { PatchesScreen } from './screens/PatchesScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
+import { MoreAboutScreen } from './screens/MoreAboutScreen'
+import { MoreHelpScreen } from './screens/MoreHelpScreen'
+import { MoreScreen } from './screens/MoreScreen'
+import { MySportsScreen } from './screens/MySportsScreen'
+import { LanguageSettingsScreen } from './screens/LanguageSettingsScreen'
+import { PrivacySettingsScreen } from './screens/PrivacySettingsScreen'
 import { SportProfileScreen } from './screens/SportProfileScreen'
+import { MatesScreen } from './screens/MatesScreen'
 
 function AppShell() {
   const location = useLocation()
@@ -29,10 +36,11 @@ function AppShell() {
         : path === '/chats'
           ? 'chats'
           : path.startsWith('/profile')
-            ? 'profile'
+            ? 'more'
             : 'home'
 
   const showNav = !['/login', '/onboarding', '/reset-password', '/profile/edit', '/profile/sports/edit'].includes(path)
+    && !path.startsWith('/more')
 
   return (
     <>
@@ -62,6 +70,15 @@ const router = createBrowserRouter([
       { path: '/profile/sports/:sport', element: <SportProfileScreen /> },
       { path: '/profile/:name/sports/:sport', element: <SportProfileScreen /> },
       { path: '/profile/patches', element: <PatchesScreen /> },
+      { path: '/more', element: <MoreScreen /> },
+      { path: '/more/crew', element: <MatesScreen fromMore /> },
+      { path: '/more/friends', element: <MatesScreen friendsOnly fromMore /> },
+      { path: '/more/sports', element: <MySportsScreen /> },
+      { path: '/more/notifications', element: <NotificationSettingsScreen /> },
+      { path: '/more/privacy', element: <PrivacySettingsScreen /> },
+      { path: '/more/language', element: <LanguageSettingsScreen /> },
+      { path: '/more/about', element: <MoreAboutScreen /> },
+      { path: '/more/help', element: <MoreHelpScreen /> },
     ],
   },
 ])

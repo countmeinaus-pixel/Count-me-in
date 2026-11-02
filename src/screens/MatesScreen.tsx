@@ -1,19 +1,39 @@
 import { ArrowLeft, Search } from 'lucide-react'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { MateCard } from '../components/MateCard'
 import { communityMembers } from '../data/mockData'
+import { getBlockedUsers } from '../lib/localPreferences'
+import { useBackToMore } from '../lib/moreNavigation'
 
 const sports = [...new Set(communityMembers.flatMap((member) => member.sports.map((sport) => sport.name)))].sort()
 const suburbs = [...new Set(communityMembers.map((member) => member.suburb))].sort()
+const friendNames = ['Matt', 'Hamish', 'Sam', 'Luca']
 
-export function MatesScreen() {
+export function MatesScreen({ friendsOnly = false, fromMore = false }: { friendsOnly?: boolean; fromMore?: boolean }) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const backToMore = useBackToMore()
   const [query, setQuery] = useState('')
   const [selectedSport, setSelectedSport] = useState('')
   const [selectedSuburb, setSelectedSuburb] = useState('')
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([])
+  const [blockedUsersError, setBlockedUsersError] = useState('')
+  const title = friendsOnly ? 'Friends' : 'Find your crew'
+
+  useEffect(() => {
+    try {
+      setBlockedUsers(getBlockedUsers())
+    } catch (error) {
+      setBlockedUsersError(error instanceof Error ? error.message : 'Unable to load blocked members.')
+    }
+  }, [])
+
   const normalizedQuery = query.trim().toLowerCase()
   const filteredMembers = communityMembers.filter((member) => {
+    if (blockedUsersError) return false
+    if (blockedUsers.includes(member.name)) return false
+    if (friendsOnly && !friendNames.includes(member.name)) return false
     const matchesName = member.name.toLowerCase().includes(normalizedQuery)
     const matchesSport = !selectedSport || member.sports.some((sport) => sport.name === selectedSport)
     const matchesSuburb = !selectedSuburb || member.suburb === selectedSuburb
@@ -23,15 +43,21 @@ export function MatesScreen() {
   return (
     <div className="screen mates-screen">
       <header className="mates-header">
-        <button type="button" className="icon-button" aria-label="Back to home" onClick={() => navigate('/')}>
+        <button
+          type="button"
+          className="icon-button"
+          aria-label={fromMore ? 'Back to More' : 'Back to home'}
+          onClick={() => fromMore || location.state?.from === '/more' ? backToMore() : navigate('/')}
+        >
           <ArrowLeft />
         </button>
         <div>
           <p className="eyebrow">Good people, good plans</p>
-          <h1>Find your crew</h1>
+          <h1>{title}</h1>
         </div>
       </header>
 
+      {blockedUsersError && <p className="edit-form-error" role="alert">{blockedUsersError}</p>}
       <label className="mate-search">
         <Search aria-hidden="true" />
         <input
@@ -61,7 +87,7 @@ export function MatesScreen() {
       </div>
 
       <div className="mates-results-heading">
-        <h2>Mates around Adelaide</h2>
+        <h2>{friendsOnly ? 'Your friends' : 'Mates around Adelaide'}</h2>
         <span>{filteredMembers.length} profiles</span>
       </div>
 

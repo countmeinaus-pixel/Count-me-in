@@ -1,10 +1,11 @@
 import { ArrowLeft, Check, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { SportIcon } from '../components/SportIcon'
 import { getCurrentProfile, saveProfileSports, type ProfileSport, type SkillLevel } from '../lib/profile'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 import { useUnsavedChangesWarning } from '../lib/useUnsavedChangesWarning'
+import { getMoreOrigin } from '../lib/moreNavigation'
 
 const skillLevels: SkillLevel[] = ['Beginner', 'Intermediate', 'Experienced']
 
@@ -18,6 +19,13 @@ function sameSelection(current: ProfileSport[], initial: ProfileSport[]) {
 
 export function EditSportsScreen() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo = location.state?.returnTo === '/more/sports'
+    ? '/more/sports'
+    : location.state?.returnTo === '/more'
+      ? '/more'
+      : '/profile'
+  const moreOrigin = getMoreOrigin(location.state)
   const [userId, setUserId] = useState('')
   const [catalog, setCatalog] = useState<CatalogSport[]>([])
   const [selectedSports, setSelectedSports] = useState<ProfileSport[]>([])
@@ -88,7 +96,8 @@ export function EditSportsScreen() {
 
     setSelectedSports((current) => {
       if (existing) return current.filter((item) => item.id !== sport.id)
-      return [...current, { ...sport, skill: 'Intermediate' }]
+      const addedSport: ProfileSport = { ...sport, skill: 'Intermediate' }
+      return [...current, addedSport]
         .sort((left, right) => left.name.localeCompare(right.name))
     })
   }
@@ -106,7 +115,12 @@ export function EditSportsScreen() {
     setError('')
     try {
       await saveProfileSports(userId, selectedSports.map(({ name, skill }) => ({ name, skill })))
-      navigate('/profile', { replace: true, state: { statusMessage: 'Sports updated.' } })
+      navigate(returnTo, {
+        replace: true,
+        state: returnTo.startsWith('/more')
+          ? { statusMessage: 'Sports updated.', from: moreOrigin }
+          : { statusMessage: 'Sports updated.' },
+      })
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save your sports.')
     } finally {
@@ -117,7 +131,14 @@ export function EditSportsScreen() {
   return (
     <main className="screen edit-sports-page">
       <header className="edit-page-header">
-        <button type="button" className="icon-button" aria-label="Back to profile" onClick={() => navigate('/profile')}><ArrowLeft /></button>
+        <button
+          type="button"
+          className="icon-button"
+          aria-label="Back"
+          onClick={() => navigate(returnTo, { replace: true, state: returnTo.startsWith('/more') ? { from: moreOrigin } : undefined })}
+        >
+          <ArrowLeft />
+        </button>
         <div>
           <p className="eyebrow">Your profile</p>
           <h1>Edit sports</h1>
@@ -181,7 +202,14 @@ export function EditSportsScreen() {
       {error && <p className="edit-form-error" role="alert">{error}</p>}
 
       <div className="edit-form-actions">
-        <button type="button" className="secondary-action" onClick={() => navigate('/profile')} disabled={isSaving}>Cancel</button>
+        <button
+          type="button"
+          className="secondary-action"
+          onClick={() => navigate(returnTo, { replace: true, state: returnTo.startsWith('/more') ? { from: moreOrigin } : undefined })}
+          disabled={isSaving}
+        >
+          Cancel
+        </button>
         <button
           type="button"
           className="primary-action"

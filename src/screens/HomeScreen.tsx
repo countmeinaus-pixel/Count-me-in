@@ -1,41 +1,21 @@
-import { useMemo, useState } from 'react'
-import { Bell, Bike, CalendarDays, Check, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, ListFilter, MapPin, Mountain, Search, Waves } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Bell, Bike, CalendarDays, Check, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, ListFilter, MapPin, Mountain, Waves } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { ActivityCard } from '../components/ActivityCard'
 import { Button } from '../components/Button'
-import { activities, communityMembers, filters } from '../data/mockData'
+import { activities, communityMembers, currentUser } from '../data/mockData'
 import { MateCard } from '../components/MateCard'
 
 type ViewMode = 'list' | 'map' | 'calendar'
 type CalendarMode = 'week' | 'month'
 
-const monthLookup: Record<string, number> = {
-  Jan: 0,
-  Feb: 1,
-  Mar: 2,
-  Apr: 3,
-  May: 4,
-  Jun: 5,
-  Jul: 6,
-  Aug: 7,
-  Sep: 8,
-  Oct: 9,
-  Nov: 10,
-  Dec: 11,
-}
-
 const toDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 
-const activityDateKey = (dateText: string) => {
-  const monthMatch = Object.keys(monthLookup).find((month) => dateText.includes(month))
-  const dayMatch = dateText.match(/(\d{1,2})/)
-
-  if (!monthMatch || !dayMatch) return null
-
-  const month = monthLookup[monthMatch]
-  const day = Number(dayMatch[1])
-  const date = new Date(2026, month, day)
-  return toDateKey(date)
+function getWeekStart(date: Date) {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const daysSinceMonday = (start.getDay() + 6) % 7
+  start.setDate(start.getDate() - daysSinceMonday)
+  return start
 }
 
 const mapPins = {
@@ -56,19 +36,56 @@ const activityIcons = {
 
 export function HomeScreen() {
   const navigate = useNavigate()
+  const filterRowRef = useRef<HTMLDivElement | null>(null)
   const [filter, setFilter] = useState('My sports')
   const [view, setView] = useState<ViewMode>('list')
   const [calendarMode, setCalendarMode] = useState<CalendarMode>('week')
   const [calendarOffset, setCalendarOffset] = useState(0)
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null)
+  const [now, setNow] = useState(() => new Date())
+  const [filterScroll, setFilterScroll] = useState({ isScrollable: false, canScrollLeft: false, canScrollRight: false, activeDot: 0, dotCount: 0 })
+  const filterOptions = useMemo(() => ['My sports', ...new Set(currentUser.sports.map((sport) => sport.name))], [])
 
   const visible = useMemo(() => {
     if (filter === 'My sports') return activities
     return activities.filter((item) => item.sport === filter)
   }, [filter])
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNow(new Date()), 60_000)
+    return () => window.clearInterval(intervalId)
+  }, [])
+
+  useEffect(() => {
+    const row = filterRowRef.current
+    if (!row) return
+
+    const updateScrollState = () => {
+      const maxScroll = row.scrollWidth - row.clientWidth
+      const isScrollable = maxScroll > 1
+      const dotCount = isScrollable ? Math.ceil(row.scrollWidth / row.clientWidth) : 0
+      const progress = maxScroll > 0 ? row.scrollLeft / maxScroll : 0
+      setFilterScroll({
+        isScrollable,
+        canScrollLeft: row.scrollLeft > 1,
+        canScrollRight: maxScroll - row.scrollLeft > 1,
+        activeDot: isScrollable ? Math.round(progress * (dotCount - 1)) : 0,
+        dotCount,
+      })
+    }
+
+    updateScrollState()
+    const resizeObserver = new ResizeObserver(updateScrollState)
+    resizeObserver.observe(row)
+    row.addEventListener('scroll', updateScrollState, { passive: true })
+    return () => {
+      resizeObserver.disconnect()
+      row.removeEventListener('scroll', updateScrollState)
+    }
+  }, [filterOptions])
+
   const calendarLabel = useMemo(() => {
-    const base = new Date(2026, 1, 22)
+    const base = getWeekStart(now)
     const start = new Date(base)
     start.setDate(base.getDate() + calendarOffset * 7)
 
@@ -79,10 +96,10 @@ export function HomeScreen() {
     }
 
     return start.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
-  }, [calendarMode, calendarOffset])
+  }, [calendarMode, calendarOffset, now])
 
   const calendarDays = useMemo(() => {
-    const base = new Date(2026, 1, 22)
+    const base = getWeekStart(now)
     const start = new Date(base)
     start.setDate(base.getDate() + calendarOffset * 7)
 
@@ -121,13 +138,12 @@ export function HomeScreen() {
     }
 
     return cells
-  }, [calendarMode, calendarOffset])
+  }, [calendarMode, calendarOffset, now])
 
   const calendarActivityMap = useMemo(() => {
     const map = new Map<string, typeof activities>()
     visible.forEach((activity) => {
-      const key = activityDateKey(activity.date)
-      if (!key) return
+      const key = toDateKey(activity.startsAt)
       const existing = map.get(key) ?? []
       existing.push(activity)
       map.set(key, existing)
@@ -155,12 +171,21 @@ export function HomeScreen() {
       </header>
 
       <section className="intro">
-        <p className="eyebrow">Good morning</p>
+        <p className="eyebrow">
+          {now.getHours() < 5
+            ? 'Good evening'
+            : now.getHours() < 12
+              ? 'Good morning'
+              : now.getHours() < 17
+                ? 'Good afternoon'
+                : 'Good evening'}
+        </p>
         <h1>Ready to get out there, Jai?</h1>
       </section>
 
-      <div className="filter-row">
-        {filters.map((item) => (
+      <div className={`filter-scroll-shell ${filterScroll.isScrollable ? 'is-scrollable' : ''} ${filterScroll.canScrollLeft ? 'can-scroll-left' : ''} ${filterScroll.canScrollRight ? 'can-scroll-right' : ''}`}>
+        <div className="filter-row" ref={filterRowRef}>
+          {filterOptions.map((item) => (
           <button
             key={item}
             className={`chip ${filter === item ? 'selected' : ''}`}
@@ -170,19 +195,27 @@ export function HomeScreen() {
             {filter === item && <Check />}
             {item}
           </button>
-        ))}
+          ))}
+        </div>
       </div>
+      {filterScroll.isScrollable && (
+        <div className="filter-scroll-dots" aria-label={`${filterScroll.activeDot + 1} of ${filterScroll.dotCount} filter sections`}>
+          {Array.from({ length: filterScroll.dotCount }, (_, index) => (
+            <span key={index} className={index === filterScroll.activeDot ? 'active' : ''} />
+          ))}
+        </div>
+      )}
 
       <div className="view-toggle" aria-label="Select view mode">
-        <button className={view === 'list' ? 'selected' : ''} onClick={() => setView('list')} type="button">
+        <button className={view === 'list' ? 'selected' : ''} onClick={() => setView('list')} type="button" aria-pressed={view === 'list'}>
           <ListFilter />
           List
         </button>
-        <button className={view === 'map' ? 'selected' : ''} onClick={() => setView('map')} type="button">
+        <button className={view === 'map' ? 'selected' : ''} onClick={() => setView('map')} type="button" aria-pressed={view === 'map'}>
           <MapPin />
           Map
         </button>
-        <button className={view === 'calendar' ? 'selected' : ''} onClick={() => setView('calendar')} type="button">
+        <button className={view === 'calendar' ? 'selected' : ''} onClick={() => setView('calendar')} type="button" aria-pressed={view === 'calendar'}>
           <CalendarDays />
           Calendar
         </button>
@@ -242,7 +275,7 @@ export function HomeScreen() {
               <button key={activity.id} type="button" className="map-callout" onClick={() => navigate(`/activity/${activity.id}`)}>
                 <div className="map-callout-header">
                   <span>{activity.sport}</span>
-                  <time>{activity.date.split('·')[0]?.trim()}</time>
+                  <time>{activity.startsAt.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}</time>
                 </div>
                 <strong>{activity.title}</strong>
                 <p>{activity.place}</p>
@@ -259,7 +292,9 @@ export function HomeScreen() {
               <ChevronLeft />
             </button>
             <div>
-              <strong>{calendarMode === 'week' ? 'Next week' : 'This month'}</strong>
+              <strong>{calendarMode === 'week'
+                ? calendarOffset === 0 ? 'This week' : calendarOffset === 1 ? 'Next week' : calendarLabel
+                : 'This month'}</strong>
               <span>{calendarLabel}</span>
             </div>
             <button type="button" onClick={() => setCalendarOffset((value) => value + 1)} aria-label="Next period">
@@ -398,14 +433,6 @@ export function HomeScreen() {
         </div>
       </section>
 
-      {visible.length === 0 && (
-        <div className="empty-state">
-          <Search />
-          <h2>Nothing on for this sport yet</h2>
-          <p>Be the first. Post a callout.</p>
-          <Button onClick={() => navigate('/create')}>Create activity</Button>
-        </div>
-      )}
     </div>
   )
 }

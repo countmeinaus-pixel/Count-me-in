@@ -19,6 +19,7 @@ export type SavedActivityDetails = {
   hostAge: number | null
   hostPhoto: string | null
   hostVerified: boolean
+  viewerIsHost: boolean
 }
 
 export async function getSavedActivity(id: string): Promise<SavedActivityDetails | null> {
@@ -49,6 +50,8 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
         Object.entries(details).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
       )
     : {}
+  const { data: viewerData, error: viewerError } = await supabase.auth.getUser()
+  if (viewerError && viewerError.name !== 'AuthSessionMissingError') throw viewerError
 
   return {
     id: activity.id,
@@ -68,5 +71,6 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
     hostAge: hostResult.data.age,
     hostPhoto: hostResult.data.photo_url,
     hostVerified: hostResult.data.selfie_verified,
+    viewerIsHost: viewerData.user?.id === activity.host_id,
   }
 }

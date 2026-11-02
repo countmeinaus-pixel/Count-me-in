@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Check, Fish, Footprints, Mountain, Plus, Waves, Wind, Dumbbell, Bike, Anchor } from 'lucide-react'
-import { ActivityCard, type Activity } from '../components/ActivityCard'
+import { ActivityCard } from '../components/ActivityCard'
 import { Button } from '../components/Button'
+import { formatActivityDate, getActivitySpotsLabel, getDefaultActivityHero, type Activity } from '../data/mockData'
 
 const sportOptions = [
   ['Spearfishing', Fish], ['Hiking', Mountain], ['Running', Footprints], ['Kitesurfing', Wind],
@@ -46,12 +47,23 @@ export function CreateActivity({ onPost, onHome }: { onPost: (activity: Activity
     const detailValues = Object.values(draft.details).filter(Boolean).slice(0, 3)
     const activityName = draft.details['Activity name']
     const location = draft.details.Spot || draft.details['Trail or destination'] || draft.details.Location || draft.suburb
+    const startsAt = draft.date && draft.time ? new Date(`${draft.date}T${draft.time}`) : new Date()
+    const spotsTotal = draft.group === '1 buddy' ? 1 : draft.spots
     return {
       id: Date.now(), sport: draft.sport, title: activityName || draft.title || `${draft.sport} at ${location}`,
-      date: draft.date && draft.time ? `${new Date(`${draft.date}T12:00:00`).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })} · ${draft.time}` : 'Date and time',
-      facts: detailValues.join(' · '), place: `${draft.meeting}, ${draft.suburb}`, host: 'Jai',
-      spots: draft.group === '1 buddy' ? '1 buddy wanted' : `1 of ${draft.spots} spots`,
+      startsAt,
+      facts: detailValues.join(' · '),
+      details: Object.fromEntries(Object.entries(draft.details).filter(([, value]) => value)),
+      place: `${draft.meeting}, ${draft.suburb}`,
+      suburb: draft.suburb,
+      host: 'Jai',
+      spotsTotal,
+      spotsTaken: 0,
       level: draft.level, icon: draft.sport === 'Hiking' ? 'mountain' : draft.sport === 'Running' ? 'run' : 'fish',
+      hero: getDefaultActivityHero(draft.sport),
+      hostMeta: '0 confirmed meetups',
+      notes: draft.notes,
+      attendees: ['Jai'],
     }
   }, [draft])
 
@@ -109,9 +121,9 @@ export function CreateActivity({ onPost, onHome }: { onPost: (activity: Activity
       {step === 5 && <div className="review">
         <p className="support">This is how your callout will appear.</p><ActivityCard activity={preview} onClick={() => {}} />
         <Review label="Activity" value={preview.title} onEdit={() => setStep(2)} />
-        <Review label="When" value={preview.date} onEdit={() => setStep(3)} />
+        <Review label="When" value={formatActivityDate(preview.startsAt)} onEdit={() => setStep(3)} />
         <Review label="Meeting point" value={preview.place} onEdit={() => setStep(3)} />
-        <Review label="Group" value={`${preview.spots} · ${draft.level}`} onEdit={() => setStep(4)} />
+        <Review label="Group" value={`${getActivitySpotsLabel(preview)} · ${draft.level}`} onEdit={() => setStep(4)} />
       </div>}
 
       <div className="flow-actions">{step > 1 && <button className="secondary-action" onClick={() => setStep((value) => value - 1)}>Back</button>}<Button disabled={!valid} onClick={next}>{step === 5 ? 'Post activity' : 'Continue'}</Button></div>

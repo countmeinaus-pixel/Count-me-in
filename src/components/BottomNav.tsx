@@ -15,13 +15,15 @@ export function BottomNav({ active, hasUnreadChats = true }: { active: Tab | nul
   const navigate = useNavigate()
 
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav" aria-label="Main navigation">
       {items.map(([id, label, Icon, href]) => (
         <button
           key={id}
           type="button"
           className={`${active === id ? 'active' : ''} ${id === 'create' ? 'create' : ''}`}
           onClick={() => navigate(href)}
+          aria-label={label}
+          aria-current={active === id ? 'page' : undefined}
         >
           {id === 'chats' && hasUnreadChats && <span className="nav-unread-dot" aria-label="Unread chats" />}
           <Icon />

@@ -1,5 +1,5 @@
 import { Check, Fish, Footprints, MapPin, Mountain, Waves, Bike, Dumbbell } from 'lucide-react'
-import type { Activity } from '../data/mockData'
+import { formatActivityDate, getActivitySpotsLabel, type Activity } from '../data/mockData'
 
 export function ActivityCard({ activity, onClick }: { activity: Activity; onClick: () => void }) {
   const Icon = activity.icon === 'fish'
@@ -18,7 +18,7 @@ export function ActivityCard({ activity, onClick }: { activity: Activity; onClic
     <button className="activity-card" onClick={onClick} type="button">
       <div className="card-top">
         <span><Icon />{activity.sport}</span>
-        <time>{activity.date}</time>
+        <time>{formatActivityDate(activity.startsAt, { weekday: 'short', day: 'numeric', month: 'short' })}</time>
       </div>
 
       <h3>{activity.title}</h3>
@@ -26,14 +26,40 @@ export function ActivityCard({ activity, onClick }: { activity: Activity; onClic
       <p className="card-place"><MapPin />{activity.place}</p>
 
       <div className="card-bottom">
-        <div className="host">
-          <div className="avatar">{activity.host[0]}<i><Check /></i></div>
-          <span>{activity.host}</span>
+        <div className={`card-attendees ${activity.attendees.length >= 3 ? 'stacked' : ''}`} aria-label={`${activity.attendees.length} ${activity.attendees.length === 1 ? 'person' : 'people'} going, hosted by ${activity.host}`}>
+          {activity.attendees.length >= 3 ? (
+            <>
+              {activity.attendees.slice(0, 3).map((name, index) => (
+                <span key={`${name}-${index}`} className={`avatar attendee-avatar ${index === 0 ? 'host-avatar' : ''}`} aria-label={name}>
+                  {name[0]}
+                  {index === 0 && <i><Check /></i>}
+                </span>
+              ))}
+              {activity.attendees.length > 3 && <span className="attendee-overflow">+{activity.attendees.length - 3}</span>}
+            </>
+          ) : (
+            <>
+              {activity.attendees.map((name, index) => (
+                <span key={`${name}-${index}`} className={`avatar attendee-avatar ${index === 0 ? 'host-avatar' : ''}`} aria-label={name}>
+                  {name[0]}
+                  {index === 0 && <i><Check /></i>}
+                </span>
+              ))}
+              <span className="attendee-names">{activity.attendees.join(', ')}</span>
+            </>
+          )}
         </div>
 
         <div className="meta-right">
           <span className="level-pill">{activity.level}</span>
-          <div className="spots"><i /><i /><i className="open" /><i className="open" /><span>{activity.spots}</span></div>
+          <div className="spots">
+            <span className="spot-dots" aria-hidden="true">
+              {Array.from({ length: activity.spotsTotal }, (_, index) => (
+                <i key={index} className={index >= activity.spotsTaken ? 'open' : ''} />
+              ))}
+            </span>
+            <span>{getActivitySpotsLabel(activity)}</span>
+          </div>
         </div>
       </div>
     </button>

@@ -3,7 +3,15 @@ import QRCode from 'qrcode'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
-import { activities, currentUser, type Activity } from '../data/mockData'
+import {
+  activities,
+  communityMembers,
+  currentUser,
+  formatActivityDate,
+  getActivitySpotsLabel,
+  getActivitySpotsLeft,
+  type Activity,
+} from '../data/mockData'
 import { getSavedActivity, type SavedActivityDetails } from '../lib/activities'
 import {
   getEarnedPatchesForUser,
@@ -20,6 +28,7 @@ export function ActivityDetailScreen() {
   const [loadError, setLoadError] = useState('')
   const [qrOpen, setQrOpen] = useState(false)
   const [scanMode, setScanMode] = useState<'qr' | 'camera' | 'success'>('qr')
+  const [joinRequested, setJoinRequested] = useState(false)
   const [confirmed, setConfirmed] = useState(() => mockActivity ? hasConfirmedMeetupForUser(currentUser.name, mockActivity.id) : false)
   const qrCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -114,7 +123,7 @@ export function ActivityDetailScreen() {
       partner: mockActivity.host,
       activityId: mockActivity.id,
       activityTitle: mockActivity.title,
-      activityDate: mockActivity.date,
+      activityDate: mockActivity.startsAt.toISOString(),
     })
 
     recordMeetupCheckIn({
@@ -122,7 +131,7 @@ export function ActivityDetailScreen() {
       partner: currentUser.name,
       activityId: mockActivity.id,
       activityTitle: mockActivity.title,
-      activityDate: mockActivity.date,
+      activityDate: mockActivity.startsAt.toISOString(),
     })
 
     if (hostCheckIn) {
@@ -186,25 +195,35 @@ export function ActivityDetailScreen() {
         },
       ]
     : [
-        { label: 'Depth', value: '5 to 10 m' },
-        { label: 'Entry', value: 'Shore dive' },
-        { label: 'Duration', value: '2 hours' },
-        { label: 'Spots', value: '2 of 4' },
+        ...Object.entries(mockActivity?.details ?? {}).map(([label, value]) => ({ label, value })),
+        { label: 'Spots', value: mockActivity ? getActivitySpotsLabel(mockActivity) : '' },
       ]
   const displayDate = savedDetails
-    ? new Date(savedDetails.startsAt).toLocaleString('en-AU', {
+    ? formatActivityDate(new Date(savedDetails.startsAt), {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
         hour: 'numeric',
         minute: '2-digit',
       })
-    : mockActivity?.date ?? ''
+    : mockActivity ? formatActivityDate(mockActivity.startsAt) : ''
   const hostName = savedDetails?.host ?? mockActivity?.host ?? ''
+  const hostAge = savedDetails?.hostAge ?? (hostName === currentUser.name
+    ? currentUser.age
+    : communityMembers.find((member) => member.name === hostName)?.age)
   const attendees = savedDetails ? [savedDetails.host] : mockActivity?.attendees ?? []
+  const activityStart = savedDetails ? new Date(savedDetails.startsAt) : mockActivity?.startsAt
+  const isActivityDay = activityStart !== undefined &&
+    activityStart.getFullYear() === new Date().getFullYear() &&
+    activityStart.getMonth() === new Date().getMonth() &&
+    activityStart.getDate() === new Date().getDate()
+  const isHost = savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
+  const isJoined = isHost || attendees.includes(currentUser.name)
   const spotsLabel = savedDetails
     ? `${savedDetails.spotsTotal} ${savedDetails.spotsTotal === 1 ? 'spot' : 'spots'} available`
-    : '2 spots left'
+    : mockActivity?.spotsTotal === 1
+      ? '1 buddy wanted'
+      : `${mockActivity ? getActivitySpotsLeft(mockActivity) : 0} spots left`
 
   return (
     <main className="detail-layout">
@@ -234,7 +253,7 @@ export function ActivityDetailScreen() {
           <MapPin />
           <div>
             <strong>{savedDetails?.meetingPoint ?? mockActivity?.place ?? ''}</strong>
-            <span>{savedDetails?.suburb ?? 'Port Noarlunga'}</span>
+            <span>{savedDetails?.suburb ?? mockActivity?.suburb ?? ''}</span>
           </div>
           <ChevronRight />
         </div>
@@ -246,7 +265,7 @@ export function ActivityDetailScreen() {
           </div>
           <div className="grow">
             <p className="eyebrow">Hosted by</p>
-            <strong>{hostName}{savedDetails?.hostAge ? `, ${savedDetails.hostAge}` : !savedDetails ? ', 34' : ''}</strong>
+            <strong>{hostName}{hostAge ? `, ${hostAge}` : ''}</strong>
             <span>{savedDetails ? 'Hosting this activity' : mockActivity?.hostMeta ?? ''}</span>
           </div>
           <ChevronRight />
@@ -285,14 +304,34 @@ export function ActivityDetailScreen() {
         </div>
       </section>
 
-      {!isSavedActivity && (
-        <div className="sticky-action">
-          <div className="sticky-action-group">
-            <Button variant="secondary" onClick={() => navigate('/chats')} size="lg">Open chat</Button>
-            <Button onClick={() => setQrOpen(true)} size="lg">{confirmed ? 'Confirmed' : 'Check in'}</Button>
-          </div>
+      <div className="sticky-action">
+        <div className="sticky-action-group">
+          {isHost ? (
+            <Button size="lg" disabled>Manage activity</Button>
+          ) : isJoined ? (
+            <>
+              <Button variant="secondary" onClick={() => navigate('/chats')} size="lg">Open chat</Button>
+              <Button
+                onClick={() => setQrOpen(true)}
+                size="lg"
+                disabled={!isActivityDay || confirmed || isSavedActivity}
+                title={!isActivityDay ? 'Check-in opens on the activity day.' : undefined}
+              >
+                {confirmed ? 'Confirmed' : 'Check in'}
+              </Button>
+            </>
+          ) : (
+            <>
+              {joinRequested && (
+                <Button variant="secondary" onClick={() => setJoinRequested(false)} size="lg">Cancel request</Button>
+              )}
+              <Button onClick={() => setJoinRequested(true)} size="lg" disabled={joinRequested}>
+                {joinRequested ? 'Requested' : 'Count me in'}
+              </Button>
+            </>
+          )}
         </div>
-      )}
+      </div>
 
       {qrOpen && !isSavedActivity && (
         <div className="checkin-modal" role="dialog" aria-modal="true" aria-label="Check in">

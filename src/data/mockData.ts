@@ -52,6 +52,7 @@ export const currentUser = {
   age: 37,
   suburb: 'Port Noarlunga',
   verified: true,
+  photoUrl: null,
   sports: [
     { name: 'Spearfishing', level: 'Intermediate', meetups: 3 },
     { name: 'Hiking', level: 'Intermediate', meetups: 2 },

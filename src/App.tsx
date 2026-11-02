@@ -1,9 +1,11 @@
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { createBrowserRouter, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import { BottomNav, type Tab } from './components/BottomNav'
 import { ActivityDetailScreen } from './screens/ActivityDetailScreen'
 import { AuthScreen } from './screens/AuthScreen'
 import { ChatsScreen } from './screens/ChatsScreen'
 import { CreateActivityScreen } from './screens/CreateActivityScreen'
+import { EditProfileScreen } from './screens/EditProfileScreen'
+import { EditSportsScreen } from './screens/EditSportsScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { MyActivitiesScreen } from './screens/MyActivitiesScreen'
 import { MatesScreen } from './screens/MatesScreen'
@@ -30,35 +32,40 @@ function AppShell() {
             ? 'profile'
             : 'home'
 
-  const showNav = !['/login', '/onboarding', '/reset-password'].includes(path)
+  const showNav = !['/login', '/onboarding', '/reset-password', '/profile/edit', '/profile/sports/edit'].includes(path)
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={<HomeScreen />} />
-        <Route path="/login" element={<AuthScreen />} />
-        <Route path="/reset-password" element={<PasswordResetScreen />} />
-        <Route path="/onboarding" element={<OnboardingScreen />} />
-        <Route path="/activity/:id" element={<ActivityDetailScreen />} />
-        <Route path="/activities" element={<MyActivitiesScreen />} />
-        <Route path="/mates" element={<MatesScreen />} />
-        <Route path="/notifications" element={<NotificationsScreen />} />
-        <Route path="/create" element={<CreateActivityScreen />} />
-        <Route path="/chats" element={<ChatsScreen />} />
-        <Route path="/profile/:name?" element={<ProfileScreen />} />
-        <Route path="/profile/sports/:sport" element={<SportProfileScreen />} />
-        <Route path="/profile/:name/sports/:sport" element={<SportProfileScreen />} />
-        <Route path="/profile/patches" element={<PatchesScreen />} />
-      </Routes>
+      <Outlet />
       {showNav && <BottomNav active={activeTab} hasUnreadChats />}
     </>
   )
 }
 
+const router = createBrowserRouter([
+  {
+    element: <AppShell />,
+    children: [
+      { path: '/', element: <HomeScreen /> },
+      { path: '/login', element: <AuthScreen /> },
+      { path: '/reset-password', element: <PasswordResetScreen /> },
+      { path: '/onboarding', element: <OnboardingScreen /> },
+      { path: '/activity/:id', element: <ActivityDetailScreen /> },
+      { path: '/activities', element: <MyActivitiesScreen /> },
+      { path: '/mates', element: <MatesScreen /> },
+      { path: '/notifications', element: <NotificationsScreen /> },
+      { path: '/create', element: <CreateActivityScreen /> },
+      { path: '/chats', element: <ChatsScreen /> },
+      { path: '/profile/:name?', element: <ProfileScreen /> },
+      { path: '/profile/edit', element: <EditProfileScreen /> },
+      { path: '/profile/sports/edit', element: <EditSportsScreen /> },
+      { path: '/profile/sports/:sport', element: <SportProfileScreen /> },
+      { path: '/profile/:name/sports/:sport', element: <SportProfileScreen /> },
+      { path: '/profile/patches', element: <PatchesScreen /> },
+    ],
+  },
+])
+
 export default function App() {
-  return (
-    <BrowserRouter>
-      <AppShell />
-    </BrowserRouter>
-  )
+  return <RouterProvider router={router} />
 }

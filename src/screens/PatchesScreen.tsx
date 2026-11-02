@@ -1,10 +1,12 @@
 import { ArrowLeft, Check, LockKeyhole, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { currentUser } from '../data/mockData'
 import { PatchIcon } from '../components/PatchIcon'
 import { patchCategories } from '../data/patches'
 import { getPatchProgressForUser, type PatchProgress } from '../lib/checkins'
-import { currentUser } from '../data/mockData'
+import { getCurrentProfile } from '../lib/profile'
+import { supabase } from '../lib/supabase'
 
 function formatEarnedDate(date: string | null) {
   if (!date) return ''
@@ -34,7 +36,31 @@ function PatchProgressBar({ patch }: { patch: PatchProgress }) {
 export function PatchesScreen() {
   const navigate = useNavigate()
   const [selectedPatch, setSelectedPatch] = useState<PatchProgress | null>(null)
-  const patches = getPatchProgressForUser(currentUser.name)
+  const [userName, setUserName] = useState(currentUser.name)
+  const [profileError, setProfileError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    async function loadProfile() {
+      if (!supabase) return
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError) throw userError
+        if (!userData.user) return
+        const profile = await getCurrentProfile(userData.user.id)
+        if (active && profile) setUserName(profile.firstName)
+      } catch (error) {
+        if (active) setProfileError(error instanceof Error ? error.message : 'Unable to load your profile.')
+      }
+    }
+
+    void loadProfile()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const patches = getPatchProgressForUser(userName)
   const earnedCount = patches.filter((patch) => patch.earned).length
 
   return (
@@ -49,6 +75,7 @@ export function PatchesScreen() {
         </div>
         <span className="patches-summary">{earnedCount} of {patches.length} earned</span>
       </header>
+      {profileError && <p className="edit-form-error" role="alert">{profileError}</p>}
 
       {patchCategories.map((category) => {
         const categoryPatches = patches.filter((patch) => patch.category === category)

@@ -59,3 +59,15 @@ To apply the migration manually:
 4. Paste the SQL into the new query and choose **Run**.
 
 The repository also has a GitHub Actions workflow that applies migrations when code is pushed to `main`, provided the Supabase GitHub secrets are configured. Do not apply this SQL manually as well if that workflow has already run successfully.
+
+## 6) Profile date of birth
+
+Profile editing and new onboarding saves the date of birth and calculates the age from it. Existing profiles keep their current age; the new date column remains empty until the user enters their date of birth. This migration also creates the public `avatars` bucket, limits uploads to compressed JPEGs up to 5 MB, and allows authenticated users to manage files only in their own user-ID folder.
+
+To enable this:
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103100000_add_profile_date_of_birth.sql`.
+3. Paste it into the editor and choose **Run**.
+
+The migration only adds a nullable `date_of_birth` column. It does not guess existing users' birthdays from their age.

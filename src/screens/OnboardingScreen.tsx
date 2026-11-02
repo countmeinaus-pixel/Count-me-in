@@ -1,8 +1,15 @@
 import { Camera, Check, ChevronRight, Pencil, ShieldCheck } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { adelaideSuburbs } from '../data/adelaideSuburbs'
 import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
-import { compressProfilePhoto, saveProfile, uploadProfilePhoto, type SkillLevel } from '../lib/profile'
+import {
+  calculateAgeFromDateOfBirth,
+  compressProfilePhoto,
+  saveProfile,
+  uploadProfilePhoto,
+  type SkillLevel,
+} from '../lib/profile'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 const sportOptions = [
@@ -21,51 +28,8 @@ const sportOptions = [
   'Open activity',
 ]
 
-function calculateAgeFromDateOfBirth(dateOfBirth: string) {
-  if (!dateOfBirth) return null
-
-  const birthDate = new Date(dateOfBirth)
-  if (Number.isNaN(birthDate.getTime())) return null
-
-  const today = new Date()
-  let age = today.getFullYear() - birthDate.getFullYear()
-  const hasBirthdayPassed =
-    today.getMonth() > birthDate.getMonth() ||
-    (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate())
-
-  if (!hasBirthdayPassed) {
-    age -= 1
-  }
-
-  return age
-}
-
 const availabilityOptions = ['Weekday mornings', 'Weekday evenings', 'Saturdays', 'Sundays', 'Flexible']
 const skillOptions: SkillLevel[] = ['Beginner', 'Intermediate', 'Experienced']
-const suburbOptions = [
-  'Adelaide',
-  'North Adelaide',
-  'South Adelaide',
-  'Glenelg',
-  'Henley Beach',
-  'Noarlunga',
-  'Port Noarlunga',
-  'Port Adelaide',
-  'Morphett Vale',
-  'Marion',
-  'Unley',
-  'Mawson Lakes',
-  'Mount Barker',
-  'Prospect',
-  'Modbury',
-  'Blackwood',
-  'Happy Valley',
-  'Seaford',
-  'Aldinga',
-  'Norwood',
-  'West Beach',
-]
-
 export function OnboardingScreen() {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -172,6 +136,7 @@ export function OnboardingScreen() {
         email: userData.user.email ?? '',
         firstName: firstName.trim(),
         age: ageValue,
+        dateOfBirth,
         suburb: suburb.trim(),
         bio: bio.trim(),
         photoUrl,
@@ -300,7 +265,7 @@ export function OnboardingScreen() {
                 placeholder={copy.suburbPlaceholder}
               />
               <datalist id="suburb-options">
-                {suburbOptions.map((option) => (
+                {adelaideSuburbs.map((option) => (
                   <option key={option} value={option} />
                 ))}
               </datalist>

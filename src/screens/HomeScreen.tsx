@@ -5,6 +5,8 @@ import { ActivityCard } from '../components/ActivityCard'
 import { Button } from '../components/Button'
 import { activities, communityMembers, currentUser } from '../data/mockData'
 import { MateCard } from '../components/MateCard'
+import { getCurrentProfile } from '../lib/profile'
+import { supabase } from '../lib/supabase'
 
 type ViewMode = 'list' | 'map' | 'calendar'
 type CalendarMode = 'week' | 'month'
@@ -43,8 +45,42 @@ export function HomeScreen() {
   const [calendarOffset, setCalendarOffset] = useState(0)
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null)
   const [now, setNow] = useState(() => new Date())
+  const [firstName, setFirstName] = useState(currentUser.name)
+  const [userSportNames, setUserSportNames] = useState(() => currentUser.sports.map((sport) => sport.name))
+  const [sportLoadError, setSportLoadError] = useState('')
   const [filterScroll, setFilterScroll] = useState({ isScrollable: false, canScrollLeft: false, canScrollRight: false, activeDot: 0, dotCount: 0 })
-  const filterOptions = useMemo(() => ['My sports', ...new Set(currentUser.sports.map((sport) => sport.name))], [])
+  const filterOptions = useMemo(() => ['My sports', ...new Set(userSportNames)], [userSportNames])
+
+  useEffect(() => {
+    let active = true
+    async function loadUserSports() {
+      if (!supabase) return
+
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError) throw userError
+        if (!userData.user) return
+
+        const profile = await getCurrentProfile(userData.user.id)
+        if (!profile) return
+        if (active) {
+          setFirstName(profile.firstName)
+          setUserSportNames(profile.sports.map((sport) => sport.name))
+        }
+      } catch (error) {
+        if (active) setSportLoadError(error instanceof Error ? error.message : 'Unable to load your sports filters.')
+      }
+    }
+
+    void loadUserSports()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!filterOptions.includes(filter)) setFilter('My sports')
+  }, [filter, filterOptions])
 
   const visible = useMemo(() => {
     if (filter === 'My sports') return activities
@@ -180,7 +216,7 @@ export function HomeScreen() {
                 ? 'Good afternoon'
                 : 'Good evening'}
         </p>
-        <h1>Ready to get out there, Jai?</h1>
+        <h1>Ready to get out there, {firstName}?</h1>
       </section>
 
       <div className={`filter-scroll-shell ${filterScroll.isScrollable ? 'is-scrollable' : ''} ${filterScroll.canScrollLeft ? 'can-scroll-left' : ''} ${filterScroll.canScrollRight ? 'can-scroll-right' : ''}`}>
@@ -198,6 +234,7 @@ export function HomeScreen() {
           ))}
         </div>
       </div>
+      {sportLoadError && <p className="inline-error" role="alert">{sportLoadError}</p>}
       {filterScroll.isScrollable && (
         <div className="filter-scroll-dots" aria-label={`${filterScroll.activeDot + 1} of ${filterScroll.dotCount} filter sections`}>
           {Array.from({ length: filterScroll.dotCount }, (_, index) => (

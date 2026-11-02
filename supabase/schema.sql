@@ -15,6 +15,7 @@ create table if not exists public.profiles (
   email text not null,
   first_name text not null,
   age integer not null check (age between 18 and 99),
+  date_of_birth date,
   suburb text not null,
   bio text default '',
   photo_url text,
@@ -208,19 +209,34 @@ values
   ('Open activity', 'plus')
 on conflict (name) do nothing;
 
--- Optional: create an avatars bucket in Supabase Storage via the UI.
--- Bucket name: avatars
--- Public bucket: true
--- Then add RLS policies below in Supabase SQL Editor if you want to enforce ownership.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 5242880, array['image/jpeg'])
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
 
--- Bucket policy example:
--- create policy "Anyone can view avatars" on storage.objects for select using (bucket_id = 'avatars');
--- create policy "Users can upload their own avatar" on storage.objects
--- for insert with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
--- create policy "Users can update their own avatar" on storage.objects
--- for update using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
--- create policy "Users can delete their own avatar" on storage.objects
--- for delete using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+drop policy if exists "Anyone can view profile photos" on storage.objects;
+drop policy if exists "Users can upload their own profile photos" on storage.objects;
+drop policy if exists "Users can update their own profile photos" on storage.objects;
+drop policy if exists "Users can delete their own profile photos" on storage.objects;
+
+create policy "Anyone can view profile photos"
+on storage.objects for select
+using (bucket_id = 'avatars');
+
+create policy "Users can upload their own profile photos"
+on storage.objects for insert
+with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "Users can update their own profile photos"
+on storage.objects for update
+using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1])
+with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "Users can delete their own profile photos"
+on storage.objects for delete
+using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
 
 -- Activity creation tables
 create table if not exists public.activities (

@@ -1,6 +1,6 @@
 import { ArrowLeft, ChevronRight, LogOut, MapPin, Pencil, Settings2, ShieldCheck } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { MateCard } from '../components/MateCard'
 import { PatchIcon } from '../components/PatchIcon'
 import { SportIcon } from '../components/SportIcon'
@@ -12,19 +12,21 @@ import {
   getLollipopChartForUser,
 } from '../lib/checkins'
 import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
-import { updateProfilePhoto } from '../lib/profile'
-import { getSupabaseSetupHint, supabase } from '../lib/supabase'
+import { getCurrentProfile, type CurrentProfile } from '../lib/profile'
+import { supabase } from '../lib/supabase'
 
 const initialFriends = ['Matt', 'Hamish', 'Sam', 'Luca'].map((name) => ({ name }))
 
 export function ProfileScreen() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { name: profileParam } = useParams()
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [language, setLanguage] = useState<Language>(getStoredLanguage())
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
-  const [statusMessage, setStatusMessage] = useState('')
-  const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false)
+  const [savedProfile, setSavedProfile] = useState<CurrentProfile | null>(null)
+  const [profileLoadError, setProfileLoadError] = useState('')
+  const [statusMessage, setStatusMessage] = useState(
+    typeof location.state?.statusMessage === 'string' ? location.state.statusMessage : '',
+  )
   const [friends, setFriends] = useState(initialFriends)
   const [openFriendMenu, setOpenFriendMenu] = useState<string | null>(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -32,13 +34,51 @@ export function ProfileScreen() {
   const copy = getTranslations(language)
 
   const isCurrentUser = !profileParam || decodeURIComponent(profileParam) === currentUser.name
-  const profile = isCurrentUser
-    ? currentUser
-    : communityMembers.find((member) => member.name === decodeURIComponent(profileParam ?? '')) ?? {
+
+  useEffect(() => {
+    let active = true
+    async function loadProfile() {
+      if (!isCurrentUser || !supabase) return
+
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError) throw userError
+        if (!userData.user) return
+        const profileData = await getCurrentProfile(userData.user.id)
+        if (active && profileData) setSavedProfile(profileData)
+      } catch (error) {
+        if (active) setProfileLoadError(error instanceof Error ? error.message : 'Unable to load your profile.')
+      }
+    }
+
+    void loadProfile()
+    return () => {
+      active = false
+    }
+  }, [isCurrentUser])
+
+  const profile = isCurrentUser && savedProfile
+    ? {
+        name: savedProfile.firstName,
+        age: savedProfile.age,
+        suburb: savedProfile.suburb,
+        verified: savedProfile.selfieVerified,
+        photoUrl: savedProfile.photoUrl,
+        sports: savedProfile.sports.map((sport) => ({
+          name: sport.name,
+          level: sport.skill,
+          meetups: getConfirmedMeetupsForUserAndSport(savedProfile.firstName, sport.name).length,
+        })),
+        stats: { meetups: currentUser.stats.meetups, hosted: currentUser.stats.hosted, sports: savedProfile.sports.length },
+      }
+    : isCurrentUser
+      ? currentUser
+      : communityMembers.find((member) => member.name === decodeURIComponent(profileParam ?? '')) ?? {
         name: decodeURIComponent(profileParam ?? currentUser.name),
         age: 31,
         suburb: 'Adelaide',
         verified: true,
+        photoUrl: null,
         sports: [
           { name: 'Running', level: 'Intermediate', meetups: 0 },
           { name: 'Hiking', level: 'Beginner', meetups: 0 },
@@ -46,10 +86,14 @@ export function ProfileScreen() {
         stats: { meetups: 4, hosted: 1, sports: 2 },
       }
   const confirmedMeetups = useMemo(() => getConfirmedMeetupsForUser(profile.name), [profile.name])
-  const profileMeetups = confirmedMeetups.length > 0 ? confirmedMeetups.length : profile.stats.meetups
-  const hostedActivities = confirmedMeetups.length > 0
+  const profileMeetups = savedProfile
+    ? confirmedMeetups.length
+    : confirmedMeetups.length > 0 ? confirmedMeetups.length : profile.stats.meetups
+  const hostedActivities = savedProfile
     ? new Set(confirmedMeetups.filter((entry) => entry.hosted).map((entry) => entry.activityId)).size
-    : profile.stats.hosted
+    : confirmedMeetups.length > 0
+      ? new Set(confirmedMeetups.filter((entry) => entry.hosted).map((entry) => entry.activityId)).size
+      : profile.stats.hosted
   const sportCount = profile.stats.sports
   const patchList = useMemo(() => getPatchProgressForUser(profile.name), [profile.name])
   const earnedPatches = patchList.filter((patch) => patch.earned)
@@ -57,34 +101,6 @@ export function ProfileScreen() {
     () => getLollipopChartForUser(isCurrentUser ? currentUser.name : profile.name, 6),
     [isCurrentUser, profile.name],
   )
-
-  async function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    try {
-      if (!supabase) {
-        setStatusMessage(getSupabaseSetupHint())
-        return
-      }
-
-      setIsUpdatingPhoto(true)
-      const { data: userData, error: userError } = await supabase.auth.getUser()
-      if (userError || !userData.user) {
-        navigate('/login')
-        return
-      }
-
-      const nextPhotoUrl = await updateProfilePhoto(userData.user.id, file)
-      setProfilePhoto(nextPhotoUrl)
-      setStatusMessage(copy.profileUpdated)
-    } catch (error) {
-      setStatusMessage(error instanceof Error ? error.message : copy.photoUpdateFailed)
-    } finally {
-      setIsUpdatingPhoto(false)
-      event.target.value = ''
-    }
-  }
 
   async function handleSignOut() {
     if (!supabase) {
@@ -151,26 +167,29 @@ export function ProfileScreen() {
           {isCurrentUser ? (
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => navigate('/profile/edit')}
               className="avatar hero-avatar flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-[#7fb7a8] bg-[#163430] text-4xl font-bold text-[#e6e2d8]"
+              aria-label="Edit profile photo"
             >
-              {profilePhoto ? (
-                <img src={profilePhoto} alt="Profielfoto" className="h-full w-full object-cover" />
+              {profile.photoUrl ? (
+                <img src={profile.photoUrl} alt="Profile photo" className="h-full w-full object-cover" />
               ) : (
-                'J'
+                profile.name[0]
               )}
             </button>
           ) : (
             <div className="avatar hero-avatar flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-[#7fb7a8] bg-[#163430] text-4xl font-bold text-[#e6e2d8]">
-              {profile.name[0]}
+              {profile.photoUrl
+                ? <img src={profile.photoUrl} alt={`${profile.name}'s profile`} className="h-full w-full object-cover" />
+                : profile.name[0]}
             </div>
           )}
 
           {isCurrentUser && (
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Profielfoto wijzigen"
+              onClick={() => navigate('/profile/edit')}
+              aria-label="Edit profile photo"
               className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#7fb7a8] bg-[#0a1621] text-[#7fb7a8] shadow-lg shadow-black/30"
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -178,20 +197,17 @@ export function ProfileScreen() {
           )}
         </div>
 
-        {isCurrentUser && (
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handlePhotoChange}
-            className="hidden"
-          />
-        )}
-
         <h1>{profile.name}, {profile.age}</h1>
         <p><MapPin />{profile.suburb}</p>
-        <span className="verified"><ShieldCheck />Verified member</span>
+        {profile.verified && <span className="verified"><ShieldCheck />Verified member</span>}
+        {isCurrentUser && (
+          <button type="button" className="edit-profile-button" onClick={() => navigate('/profile/edit')}>
+            <Pencil aria-hidden="true" />Edit profile
+          </button>
+        )}
       </div>
+
+      {profileLoadError && <p className="edit-form-error" role="alert">{profileLoadError}</p>}
 
       <div className="stats-grid">
         <div><strong>{profileMeetups}</strong><span>Confirmed meetups</span></div>
@@ -226,7 +242,11 @@ export function ProfileScreen() {
 
       <div className="section-heading compact">
         <h2>{isCurrentUser ? 'Your sports' : 'Sports'}</h2>
-        {isCurrentUser && <span>Edit</span>}
+        {isCurrentUser && (
+          <button type="button" className="text-action" onClick={() => navigate('/profile/sports/edit')}>
+            Edit
+          </button>
+        )}
       </div>
 
       <div className="sport-list">
@@ -380,7 +400,7 @@ export function ProfileScreen() {
       )}
 
       {statusMessage ? (
-        <p className="mt-4 rounded-xl border border-[#22384a] bg-[#132433] px-3 py-2 text-sm text-[#dfe5ea]">
+        <p className="profile-status-message" role="status">
           {statusMessage}
         </p>
       ) : null}
@@ -393,7 +413,7 @@ export function ProfileScreen() {
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 font-medium text-[#e6e2d8]"
           >
             <LogOut className="h-4 w-4" />
-            {isUpdatingPhoto ? copy.updatingPhoto : copy.logOut}
+            {copy.logOut}
           </button>
         </div>
       )}

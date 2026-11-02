@@ -1,10 +1,12 @@
 import { ArrowLeft, ChevronRight } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ActivityCard } from '../components/ActivityCard'
 import { SportIcon } from '../components/SportIcon'
 import { activities, communityMembers, currentUser } from '../data/mockData'
 import { getConfirmedMeetupsForUserAndSport } from '../lib/checkins'
+import { getCurrentProfile, type CurrentProfile } from '../lib/profile'
+import { supabase } from '../lib/supabase'
 
 type ActivityTab = 'upcoming' | 'past'
 
@@ -12,10 +14,44 @@ export function SportProfileScreen() {
   const navigate = useNavigate()
   const { name, sport } = useParams()
   const [activeTab, setActiveTab] = useState<ActivityTab>('upcoming')
+  const [savedProfile, setSavedProfile] = useState<CurrentProfile | null>(null)
+  const [profileError, setProfileError] = useState('')
   const isCurrentUser = !name
-  const profileName = name ? decodeURIComponent(name) : currentUser.name
+  const profileName = name ? decodeURIComponent(name) : savedProfile?.firstName ?? currentUser.name
+
+  useEffect(() => {
+    let active = true
+    async function loadProfile() {
+      if (!isCurrentUser || !supabase) return
+
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError) throw userError
+        if (!userData.user) return
+        const profileData = await getCurrentProfile(userData.user.id)
+        if (active && profileData) setSavedProfile(profileData)
+      } catch (error) {
+        if (active) setProfileError(error instanceof Error ? error.message : 'Unable to load this profile.')
+      }
+    }
+
+    void loadProfile()
+    return () => {
+      active = false
+    }
+  }, [isCurrentUser])
+
   const profile = isCurrentUser
-    ? currentUser
+    ? savedProfile
+      ? {
+          name: savedProfile.firstName,
+          sports: savedProfile.sports.map((item) => ({
+            name: item.name,
+            level: item.skill,
+            meetups: getConfirmedMeetupsForUserAndSport(savedProfile.firstName, item.name).length,
+          })),
+        }
+      : currentUser
     : communityMembers.find((member) => member.name === profileName)
   const selectedSport = profile?.sports.find((item) => item.name === sport)
   const meetupEntries = useMemo(
@@ -140,6 +176,7 @@ export function SportProfileScreen() {
           </div>
         )}
       </section>
+      {profileError && <p className="edit-form-error" role="alert">{profileError}</p>}
     </div>
   )
 }

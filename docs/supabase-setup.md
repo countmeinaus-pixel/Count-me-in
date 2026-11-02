@@ -46,6 +46,7 @@ In Supabase, open Authentication > URL Configuration and add these Redirect URLs
 - `https://count-me-in-nine.vercel.app/reset-password`
 
 If the production domain changes, add its `/reset-password` URL here as well.
+The Vercel rewrite in `vercel.json` sends app routes such as `/reset-password` to the React app, while preserving the URL fragment Supabase uses for recovery tokens.
 
 ## 5) Activity creation database
 

@@ -42,14 +42,16 @@ export function SportProfileScreen() {
   const sportActivities = activities.filter(
     (activity) => activity.sport === selectedSport.name && activity.host === profile.name,
   )
-  const hostedActivities = sportActivities.filter((activity) => activity.host === profile.name)
+  const hostedActivities = meetupEntries.length > 0
+    ? new Set(meetupEntries.filter((entry) => entry.hosted).map((entry) => entry.activityId))
+    : new Set(sportActivities.filter((activity) => activity.host === profile.name).map((activity) => activity.id))
   const visibleActivities = sportActivities.filter((activity) => (
     activeTab === 'upcoming' ? activity.startsAt >= today : activity.startsAt < today
   ))
   const lastMeetup = meetupEntries
     .map((entry) => new Date(entry.activityDate))
     .sort((left, right) => right.getTime() - left.getTime())[0]
-  const meetupCount = selectedSport.meetups + meetupEntries.length
+  const meetupCount = meetupEntries.length > 0 ? meetupEntries.length : selectedSport.meetups
 
   return (
     <div className="screen sport-profile-page">
@@ -78,7 +80,7 @@ export function SportProfileScreen() {
           <span>Confirmed meetups</span>
         </div>
         <div>
-          <strong>{hostedActivities.length}</strong>
+          <strong>{hostedActivities.size}</strong>
           <span>Hosted</span>
         </div>
         <div>

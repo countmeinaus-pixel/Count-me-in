@@ -14,7 +14,7 @@ import {
 } from '../data/mockData'
 import { getSavedActivity, type SavedActivityDetails } from '../lib/activities'
 import {
-  getEarnedPatchesForUser,
+  getPatchProgressForUser,
   hasConfirmedMeetupForUser,
   recordMeetupCheckIn,
 } from '../lib/checkins'
@@ -124,6 +124,11 @@ export function ActivityDetailScreen() {
       activityId: mockActivity.id,
       activityTitle: mockActivity.title,
       activityDate: mockActivity.startsAt.toISOString(),
+      sport: mockActivity.sport,
+      startsAt: mockActivity.startsAt.toISOString(),
+      hosted: mockActivity.host === currentUser.name,
+      oceanActivity: mockActivity.details.Location?.toLowerCase() === 'ocean',
+      terrain: mockActivity.details.Terrain,
     })
 
     recordMeetupCheckIn({
@@ -132,6 +137,11 @@ export function ActivityDetailScreen() {
       activityId: mockActivity.id,
       activityTitle: mockActivity.title,
       activityDate: mockActivity.startsAt.toISOString(),
+      sport: mockActivity.sport,
+      startsAt: mockActivity.startsAt.toISOString(),
+      hosted: true,
+      oceanActivity: mockActivity.details.Location?.toLowerCase() === 'ocean',
+      terrain: mockActivity.details.Terrain,
     })
 
     if (hostCheckIn) {
@@ -175,7 +185,7 @@ export function ActivityDetailScreen() {
     }
   }
 
-  const earnedPatches = getEarnedPatchesForUser(currentUser.name).filter((patch) => patch.earned).slice(0, 2)
+  const earnedPatches = getPatchProgressForUser(currentUser.name).filter((patch) => patch.earned)
   const savedDetails = savedActivity
   const sportFacts = savedDetails
     ? [
@@ -372,7 +382,7 @@ export function ActivityDetailScreen() {
                 {earnedPatches.length > 0 && (
                   <div className="earned-patches">
                     {earnedPatches.map((patch) => (
-                      <span key={patch.id}>{patch.label}</span>
+                      <span key={patch.id}>{patch.name}</span>
                     ))}
                   </div>
                 )}

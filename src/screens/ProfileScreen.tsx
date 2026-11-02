@@ -1,29 +1,19 @@
-import { ArrowLeft, ChevronRight, LogOut, MapPin, Pencil, Settings2, ShieldCheck, Users, Waves } from 'lucide-react'
+import { ArrowLeft, ChevronRight, LogOut, MapPin, Pencil, Settings2, ShieldCheck } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MateCard } from '../components/MateCard'
+import { PatchIcon } from '../components/PatchIcon'
 import { SportIcon } from '../components/SportIcon'
 import { communityMembers, currentUser } from '../data/mockData'
 import {
-  getConfirmedMeetupCountForUser,
+  getConfirmedMeetupsForUser,
   getConfirmedMeetupsForUserAndSport,
-  getEarnedPatchesForUser,
+  getPatchProgressForUser,
   getLollipopChartForUser,
 } from '../lib/checkins'
 import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
 import { updateProfilePhoto } from '../lib/profile'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
-
-const patchIcons = {
-  'first-meetup': ShieldCheck,
-  regular: Users,
-  crew: Users,
-  'early-bird': ShieldCheck,
-  'salt-water': Waves,
-  trailhead: Waves,
-  host: Users,
-  'all-rounder': ShieldCheck,
-} as const
 
 const initialFriends = ['Matt', 'Hamish', 'Sam', 'Luca'].map((name) => ({ name }))
 
@@ -35,7 +25,6 @@ export function ProfileScreen() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
   const [statusMessage, setStatusMessage] = useState('')
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false)
-  const [selectedPatchId, setSelectedPatchId] = useState<string | null>(null)
   const [friends, setFriends] = useState(initialFriends)
   const [openFriendMenu, setOpenFriendMenu] = useState<string | null>(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -51,16 +40,19 @@ export function ProfileScreen() {
         suburb: 'Adelaide',
         verified: true,
         sports: [
-          { name: 'Running', level: 'Intermediate' },
-          { name: 'Hiking', level: 'Beginner' },
+          { name: 'Running', level: 'Intermediate', meetups: 0 },
+          { name: 'Hiking', level: 'Beginner', meetups: 0 },
         ],
         stats: { meetups: 4, hosted: 1, sports: 2 },
       }
-  const profileMeetups = profile.stats.meetups + getConfirmedMeetupCountForUser(profile.name)
-  const patchList = useMemo(
-    () => getEarnedPatchesForUser(isCurrentUser ? currentUser.name : profile.name),
-    [isCurrentUser, profile.name],
-  )
+  const confirmedMeetups = useMemo(() => getConfirmedMeetupsForUser(profile.name), [profile.name])
+  const profileMeetups = confirmedMeetups.length > 0 ? confirmedMeetups.length : profile.stats.meetups
+  const hostedActivities = confirmedMeetups.length > 0
+    ? new Set(confirmedMeetups.filter((entry) => entry.hosted).map((entry) => entry.activityId)).size
+    : profile.stats.hosted
+  const sportCount = profile.stats.sports
+  const patchList = useMemo(() => getPatchProgressForUser(profile.name), [profile.name])
+  const earnedPatches = patchList.filter((patch) => patch.earned)
   const chartData = useMemo(
     () => getLollipopChartForUser(isCurrentUser ? currentUser.name : profile.name, 6),
     [isCurrentUser, profile.name],
@@ -203,8 +195,8 @@ export function ProfileScreen() {
 
       <div className="stats-grid">
         <div><strong>{profileMeetups}</strong><span>Confirmed meetups</span></div>
-        <div><strong>{profile.stats.hosted}</strong><span>Hosted</span></div>
-        <div><strong>{profile.stats.sports}</strong><span>Sports</span></div>
+        <div><strong>{hostedActivities}</strong><span>Hosted</span></div>
+        <div><strong>{sportCount}</strong><span>Sports</span></div>
       </div>
 
       <div className="chart-block">
@@ -215,10 +207,17 @@ export function ProfileScreen() {
 
         <div className="lollipop-chart">
           {chartData.map((month) => (
-            <div key={month.label} className={`lollipop-column ${month.isCurrent ? 'current' : ''}`}>
-              {month.value > 0 && <span className="chart-value">{month.value}</span>}
-              <div className="chart-stem" />
-              <span className={`chart-dot ${month.value > 0 ? 'filled' : ''}`} />
+            <div
+              key={month.label}
+              className={`lollipop-column ${month.isCurrent ? 'current' : ''}`}
+              aria-label={`${month.label}: ${month.value} confirmed ${month.value === 1 ? 'meetup' : 'meetups'}`}
+            >
+              <span className="chart-value">{month.value}</span>
+              <div
+                className={`chart-bar ${month.isCurrent ? 'current' : ''} ${month.value === 0 ? 'empty' : ''}`}
+                style={{ height: `${Math.max(4, (month.value / month.maximum) * 64)}px` }}
+                aria-hidden="true"
+              />
               <small>{month.label}</small>
             </div>
           ))}
@@ -233,7 +232,7 @@ export function ProfileScreen() {
       <div className="sport-list">
         {profile.sports.map((sport) => {
           const localMeetups = getConfirmedMeetupsForUserAndSport(profile.name, sport.name).length
-          const meetupCount = sport.meetups + localMeetups
+          const meetupCount = isCurrentUser ? localMeetups : sport.meetups
           const sportPath = `/profile/${encodeURIComponent(profile.name)}/sports/${encodeURIComponent(sport.name)}`
 
           return (
@@ -263,37 +262,21 @@ export function ProfileScreen() {
 
       <div className="section-heading compact">
         <h2>Patches</h2>
-        <span>{patchList.filter((patch) => patch.earned).length} of {patchList.length}</span>
+        <button type="button" className="text-action" onClick={() => navigate('/profile/patches')}>View all</button>
       </div>
 
-      <div className="patch-grid">
-        {patchList.map((patch) => {
-          const Icon = patchIcons[patch.id as keyof typeof patchIcons] ?? ShieldCheck
-          const selected = selectedPatchId === patch.id
-          const earned = patch.earned
-
-          return (
-            <div key={patch.id} className="patch-cell">
-              <button
-                type="button"
-                className={`patch-item ${selected ? 'selected' : ''} ${earned ? 'earned' : 'locked'}`}
-                onClick={() => setSelectedPatchId((current) => (current === patch.id ? null : patch.id))}
-                aria-label={`View patch: ${patch.label}`}
-              >
-                <Icon />
-                <span>{patch.label}</span>
-              </button>
-
-              {selected && (
-                <div className="patch-tooltip" role="dialog" aria-live="polite">
-                  <strong>{patch.label}</strong>
-                  <p>{patch.reason}</p>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      {earnedPatches.length > 0 ? (
+        <div className="earned-patch-grid">
+          {earnedPatches.map((patch) => (
+            <button type="button" key={patch.id} className="earned-patch-card" onClick={() => navigate('/profile/patches')}>
+              <PatchIcon name={patch.icon} />
+              <span>{patch.name}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="profile-patches-empty">No patches yet. Your first meetup earns one.</p>
+      )}
 
       <div className="section-heading compact">
         <h2>Friends</h2>

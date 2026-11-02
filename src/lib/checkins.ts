@@ -1,4 +1,5 @@
-import { activities } from '../data/mockData'
+import { activities, demoConfirmedMeetups } from '../data/mockData'
+import { patchDefinitions, type PatchDefinition } from '../data/patches'
 
 export type ConfirmedMeetup = {
   user: string
@@ -7,22 +8,36 @@ export type ConfirmedMeetup = {
   activityTitle: string
   activityDate: string
   confirmedAt: string
+  sport: string
+  startsAt: string
+  hosted: boolean
+  oceanActivity?: boolean
+  terrain?: string
+}
+
+type StoredConfirmedMeetup = Omit<ConfirmedMeetup, 'sport' | 'startsAt' | 'hosted'>
+  & Partial<Pick<ConfirmedMeetup, 'sport' | 'startsAt' | 'hosted'>>
+
+export type PatchProgress = PatchDefinition & {
+  progress: number
+  earned: boolean
+  earnedAt: string | null
 }
 
 const STORAGE_KEY = 'count-me-in-confirmed-meetups-v1'
 
-function readPersistedCheckIns(): ConfirmedMeetup[] {
+function readPersistedCheckIns(): StoredConfirmedMeetup[] {
   if (typeof window === 'undefined') return []
 
   try {
     const value = window.localStorage.getItem(STORAGE_KEY)
-    return value ? (JSON.parse(value) as ConfirmedMeetup[]) : []
+    return value ? (JSON.parse(value) as StoredConfirmedMeetup[]) : []
   } catch {
     return []
   }
 }
 
-function writePersistedCheckIns(entries: ConfirmedMeetup[]) {
+function writePersistedCheckIns(entries: StoredConfirmedMeetup[]) {
   if (typeof window === 'undefined') return
 
   try {
@@ -33,7 +48,22 @@ function writePersistedCheckIns(entries: ConfirmedMeetup[]) {
 }
 
 export function getConfirmedMeetupsForUser(user: string): ConfirmedMeetup[] {
-  return readPersistedCheckIns().filter((entry) => entry.user === user)
+  const demoEntries = demoConfirmedMeetups.filter((entry) => entry.user === user)
+  const entries = [
+    ...demoEntries,
+    ...readPersistedCheckIns().filter((entry) => entry.user === user),
+  ]
+  const uniqueEntries = [...new Map(entries.map((entry) => [entry.activityId, entry])).values()]
+
+  return uniqueEntries.map((entry) => {
+    const activity = activities.find((item) => item.id === entry.activityId)
+    return {
+      ...entry,
+      sport: entry.sport ?? activity?.sport ?? '',
+      startsAt: entry.startsAt ?? activity?.startsAt.toISOString() ?? entry.activityDate,
+      hosted: entry.hosted ?? false,
+    }
+  })
 }
 
 export function hasConfirmedMeetupForUser(user: string, activityId: number): boolean {
@@ -45,10 +75,7 @@ export function getConfirmedMeetupCountForUser(user: string): number {
 }
 
 export function getConfirmedMeetupsForUserAndSport(user: string, sport: string): ConfirmedMeetup[] {
-  return getConfirmedMeetupsForUser(user).filter((entry) => {
-    const activity = activities.find((item) => item.id === entry.activityId)
-    return activity?.sport === sport
-  })
+  return getConfirmedMeetupsForUser(user).filter((entry) => entry.sport === sport)
 }
 
 export function recordMeetupCheckIn({
@@ -57,18 +84,27 @@ export function recordMeetupCheckIn({
   activityId,
   activityTitle,
   activityDate,
+  sport,
+  startsAt,
+  hosted,
+  oceanActivity,
+  terrain,
 }: {
   user: string
   partner: string
   activityId: number
   activityTitle: string
   activityDate: string
+  sport: string
+  startsAt: string
+  hosted: boolean
+  oceanActivity?: boolean
+  terrain?: string
 }) {
   const entries = readPersistedCheckIns()
   const duplicate = entries.some(
     (entry) =>
       entry.user === user &&
-      entry.partner === partner &&
       entry.activityId === activityId,
   )
 
@@ -83,6 +119,11 @@ export function recordMeetupCheckIn({
     activityTitle,
     activityDate,
     confirmedAt: new Date().toISOString(),
+    sport,
+    startsAt,
+    hosted,
+    oceanActivity,
+    terrain,
   }
 
   const updated = [...entries, nextEntry]
@@ -110,21 +151,63 @@ export function getLollipopChartForUser(user: string, months = 6) {
     })
   }
 
-  return labels
+  const maximum = Math.max(1, ...labels.map((month) => month.value))
+  return labels.map((month) => ({ ...month, maximum }))
 }
 
-export function getEarnedPatchesForUser(user: string) {
-  const count = getConfirmedMeetupCountForUser(user)
-  const patches = [
-    { id: 'first-meetup', label: 'First meetup', reason: 'You completed your first meetup and joined a callout.', earned: count >= 1 },
-    { id: 'regular', label: 'Regular', reason: 'You attended multiple meetups with the same crew.', earned: count >= 5 },
-    { id: 'crew', label: 'Crew', reason: 'You built a reliable crew over ten confirmed meetups.', earned: count >= 10 },
-    { id: 'early-bird', label: 'Early bird', reason: 'You joined a meetup before 7 am.', earned: count >= 3 },
-    { id: 'salt-water', label: 'Salt water', reason: 'You joined a sea or surf-based session and explored the coast.', earned: count >= 5 },
-    { id: 'trailhead', label: 'Trailhead', reason: 'You hit the trails several times with the crew.', earned: count >= 5 },
-    { id: 'host', label: 'Host', reason: 'You hosted a crew activity that got confirmed.', earned: count >= 3 },
-    { id: 'all-rounder', label: 'All rounder', reason: 'You confirmed meetups across four different sports.', earned: count >= 4 },
-  ]
+function getPatchMetricProgress(metric: PatchDefinition['metric'], entries: ConfirmedMeetup[]) {
+  switch (metric) {
+    case 'meetups':
+      return { progress: entries.length, qualifyingEntries: entries }
+    case 'earlyBird': {
+      const qualifyingEntries = entries.filter((entry) => new Date(entry.startsAt).getHours() < 7)
+      return { progress: qualifyingEntries.length, qualifyingEntries }
+    }
+    case 'saltWater': {
+      const qualifyingEntries = entries.filter((entry) => (
+        ['Spearfishing', 'Surfing', 'Kitesurfing', 'SUP / kayak', 'Scuba diving'].includes(entry.sport)
+        || (entry.sport === 'Swimming' && entry.oceanActivity)
+      ))
+      return { progress: qualifyingEntries.length, qualifyingEntries }
+    }
+    case 'trailhead': {
+      const qualifyingEntries = entries.filter((entry) => (
+        entry.sport === 'Hiking'
+        || (entry.sport === 'Running' && entry.terrain === 'Trail')
+      ))
+      return { progress: qualifyingEntries.length, qualifyingEntries }
+    }
+    case 'hosted': {
+      const qualifyingEntries = entries.filter((entry) => entry.hosted)
+      const uniqueActivities = [...new Map(qualifyingEntries.map((entry) => [entry.activityId, entry])).values()]
+      return { progress: uniqueActivities.length, qualifyingEntries: uniqueActivities }
+    }
+    case 'sports': {
+      const qualifyingEntries: ConfirmedMeetup[] = []
+      const sports = new Set<string>()
+      for (const entry of entries) {
+        if (entry.sport && !sports.has(entry.sport)) {
+          sports.add(entry.sport)
+          qualifyingEntries.push(entry)
+        }
+      }
+      return { progress: sports.size, qualifyingEntries }
+    }
+  }
+}
 
-  return patches
+export function getPatchProgressForUser(user: string): PatchProgress[] {
+  const entries = getConfirmedMeetupsForUser(user)
+    .sort((left, right) => left.confirmedAt.localeCompare(right.confirmedAt))
+
+  return patchDefinitions.map((definition) => {
+    const { progress, qualifyingEntries } = getPatchMetricProgress(definition.metric, entries)
+    const earned = progress >= definition.target
+    return {
+      ...definition,
+      progress: Math.min(progress, definition.target),
+      earned,
+      earnedAt: earned ? qualifyingEntries[definition.target - 1]?.confirmedAt ?? null : null,
+    }
+  })
 }

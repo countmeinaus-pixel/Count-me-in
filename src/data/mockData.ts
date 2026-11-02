@@ -53,14 +53,31 @@ export const currentUser = {
   suburb: 'Port Noarlunga',
   verified: true,
   sports: [
-    { name: 'Spearfishing', level: 'Intermediate', meetups: 2 },
+    { name: 'Spearfishing', level: 'Intermediate', meetups: 3 },
     { name: 'Hiking', level: 'Intermediate', meetups: 2 },
-    { name: 'Running', level: 'Intermediate', meetups: 1 },
-    { name: 'Kitesurfing', level: 'Beginner', meetups: 1 },
-    { name: 'Gym', level: 'Experienced', meetups: 1 },
+    { name: 'Running', level: 'Intermediate', meetups: 0 },
+    { name: 'Kitesurfing', level: 'Beginner', meetups: 2 },
+    { name: 'Gym', level: 'Experienced', meetups: 0 },
   ],
   stats: { meetups: 7, hosted: 2, sports: 5 },
 }
+
+function getDemoMeetupDate(monthsAgo: number, day: number, hour: number) {
+  const date = new Date()
+  date.setMonth(date.getMonth() - monthsAgo, day)
+  date.setHours(hour, 0, 0, 0)
+  return date.toISOString()
+}
+
+export const demoConfirmedMeetups = [
+  { user: 'Jai', partner: 'Matt', sport: 'Spearfishing', activityId: -1, activityTitle: 'Port Noarlunga reef dive', activityDate: getDemoMeetupDate(5, 6, 6), startsAt: getDemoMeetupDate(5, 6, 6), confirmedAt: getDemoMeetupDate(5, 6, 11), hosted: true },
+  { user: 'Jai', partner: 'Luca', sport: 'Spearfishing', activityId: -2, activityTitle: 'South reef spearfishing', activityDate: getDemoMeetupDate(4, 12, 8), startsAt: getDemoMeetupDate(4, 12, 8), confirmedAt: getDemoMeetupDate(4, 12, 12), hosted: false },
+  { user: 'Jai', partner: 'Dave', sport: 'Spearfishing', activityId: -3, activityTitle: 'Coastal spearfishing session', activityDate: getDemoMeetupDate(3, 18, 7), startsAt: getDemoMeetupDate(3, 18, 7), confirmedAt: getDemoMeetupDate(3, 18, 11), hosted: false },
+  { user: 'Jai', partner: 'Hamish', sport: 'Hiking', activityId: -4, activityTitle: 'Hills trail walk', activityDate: getDemoMeetupDate(2, 9, 8), startsAt: getDemoMeetupDate(2, 9, 8), confirmedAt: getDemoMeetupDate(2, 9, 13), hosted: true },
+  { user: 'Jai', partner: 'Sam', sport: 'Hiking', activityId: -5, activityTitle: 'Mount Lofty hike', activityDate: getDemoMeetupDate(1, 16, 8), startsAt: getDemoMeetupDate(1, 16, 8), confirmedAt: getDemoMeetupDate(1, 16, 13), hosted: false },
+  { user: 'Jai', partner: 'Luca', sport: 'Kitesurfing', activityId: -6, activityTitle: 'Brighton kitesurf session', activityDate: getDemoMeetupDate(1, 23, 9), startsAt: getDemoMeetupDate(1, 23, 9), confirmedAt: getDemoMeetupDate(1, 23, 12), hosted: false },
+  { user: 'Jai', partner: 'Matt', sport: 'Kitesurfing', activityId: -7, activityTitle: 'Glenelg kitesurf session', activityDate: getDemoMeetupDate(0, 1, 8), startsAt: getDemoMeetupDate(0, 1, 8), confirmedAt: getDemoMeetupDate(0, 1, 11), hosted: false },
+]
 
 export const filters = ['My sports', ...new Set(currentUser.sports.map((sport) => sport.name))]
 
@@ -116,6 +133,51 @@ export const communityMembers: CommunityMember[] = [
     stats: { meetups: 18, hosted: 3, sports: 3 },
   },
 ]
+
+let nextDemoMeetupActivityId = -8
+const demoPartners = ['Matt', 'Luca', 'Sam', 'Hamish', 'Raj', 'Ben', 'Tom', 'Dave', 'Jai']
+
+function createDemoMeetups(
+  user: string,
+  sports: Array<{ name: string; meetups: number }>,
+  hostedCount: number,
+) {
+  const meetups = sports.flatMap((sport) => (
+    Array.from({ length: sport.meetups }, () => ({
+      sport: sport.name,
+      activityId: nextDemoMeetupActivityId--,
+    }))
+  ))
+  let hostedRemaining = hostedCount
+
+  return meetups.map(({ sport, activityId }, index) => {
+    const monthsAgo = 5 - Math.floor(index * 6 / Math.max(meetups.length, 1))
+    const day = monthsAgo === 0 ? 1 : 3 + (index % 23)
+    const hour = index % 4 === 0 ? 6 : 8 + (index % 3)
+    const date = getDemoMeetupDate(monthsAgo, day, hour)
+    const partner = demoPartners[(index + sports.length) % demoPartners.length]
+
+    return {
+      user,
+      partner: partner === user ? 'Jai' : partner,
+      sport,
+      activityId,
+      activityTitle: `${sport} meetup`,
+      activityDate: date,
+      startsAt: date,
+      confirmedAt: getDemoMeetupDate(monthsAgo, day, Math.min(hour + 3, 23)),
+      hosted: hostedRemaining-- > 0,
+    }
+  })
+}
+
+demoConfirmedMeetups.push(
+  ...communityMembers.flatMap((member) => createDemoMeetups(
+    member.name,
+    member.sports,
+    member.stats.hosted,
+  )),
+)
 
 export const activities: Activity[] = [
   {

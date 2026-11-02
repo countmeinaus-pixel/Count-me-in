@@ -1138,55 +1138,37 @@ h3 { font: 700 21px/24px var(--font-display); }
 .lollipop-chart {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   align-items: end;
-  min-height: 110px;
+  min-height: 112px;
   padding: 12px 4px 0;
 }
 .lollipop-column {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: end;
+  gap: 5px;
   min-height: 100px;
 }
 .chart-value {
   font: 700 12px var(--font-display);
-  color: var(--accent);
+  color: var(--text-secondary);
+  line-height: 16px;
 }
-.chart-stem {
-  width: 2px;
-  height: 42px;
-  background: var(--border-strong);
-  border-radius: 999px;
-}
-.chart-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.chart-bar {
+  width: min(28px, 70%);
+  min-height: 4px;
+  border-radius: var(--radius-sm) var(--radius-sm) 2px 2px;
   background: var(--seafoam);
-  box-shadow: 0 0 0 2px rgba(127, 183, 168, 0.12);
 }
-.lollipop-column.current .chart-dot {
-  width: 14px;
-  height: 14px;
-  background: var(--accent);
-}
+.chart-bar.current { background: var(--accent); }
+.chart-bar.empty { background: var(--surface-3); }
+.lollipop-column.current .chart-value { color: var(--accent); }
 .lollipop-column small {
   color: var(--text-secondary);
   font-size: 10px;
 }
-
-.patch-grid button.earned {
-  border-color: var(--seafoam);
-  background: rgba(127, 183, 168, 0.08);
-}
-.patch-grid button.locked {
-  border-color: var(--border);
-  background: var(--surface-1);
-  opacity: 0.7;
-}
-.patch-grid button.locked svg { color: var(--text-muted); }
 
 @media (min-width: 980px) {
   .sticky-action {
@@ -1706,79 +1688,185 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .sport-create-link svg { width: 18px; height: 18px; }
 
-.patch-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-}
-.patch-cell {
-  position: relative;
-}
-.patch-grid button {
-  min-height: 100px;
-  width: 100%;
+.profile-patches-empty {
+  margin: 0;
+  padding: 16px;
+  border-radius: var(--radius-lg);
   background: var(--surface-1);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.earned-patch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.earned-patch-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-height: 88px;
+  padding: 12px 6px;
   border: 1px solid var(--seafoam);
   border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 8px;
+  background: var(--seafoam-subtle);
   color: var(--text-primary);
-  padding: 12px 8px;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
-.patch-grid button:hover,
-.patch-grid button.selected {
-  background: rgba(127, 183, 168, 0.08);
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
-.patch-grid button.earned svg { color: var(--seafoam); }
-.patch-grid button.locked svg { color: var(--text-muted); }
-.patch-grid svg { color: var(--seafoam); }
-.patch-grid span { font: 500 12px var(--font-display); text-transform: uppercase; }
+.earned-patch-card svg { width: 24px; height: 24px; color: var(--seafoam); }
+.earned-patch-card span { font: 500 13px/1.2 var(--font-display); text-align: center; }
 
-.patch-tooltip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 10px);
-  transform: translateX(-50%);
-  width: min(220px, calc(100vw - 52px));
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(127, 183, 168, 0.55);
-  background: rgba(11, 21, 28, 0.96);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-  z-index: 20;
+.patches-page {
+  display: grid;
+  gap: 24px;
+  padding-bottom: var(--bottom-nav-clearance);
 }
-.patch-tooltip::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  transform: translateX(-50%);
-  border: 7px solid transparent;
-  border-top-color: rgba(11, 21, 28, 0.96);
+.patches-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.patch-tooltip strong {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--text-primary);
-  font: 700 12px var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.patch-tooltip p {
-  margin: 0;
+.patches-header > div { flex: 1; }
+.patches-header h1 { font-size: 32px; }
+.patches-header .eyebrow { margin-bottom: 2px; }
+.patches-summary {
   color: var(--text-secondary);
-  line-height: 1.4;
   font-size: 12px;
+  white-space: nowrap;
 }
+.patch-category { display: grid; gap: 12px; }
+.patch-category h2 {
+  color: var(--text-secondary);
+  font: 500 14px/1.2 var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.all-patches-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.all-patch-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  text-align: left;
+}
+.all-patch-card.earned { border-color: var(--seafoam); }
+.all-patch-card.locked { opacity: 0.78; }
+.all-patch-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.all-patch-card.earned .all-patch-icon {
+  background: var(--seafoam-subtle);
+  color: var(--seafoam);
+}
+.all-patch-icon > svg { width: 24px; height: 24px; }
+.patch-earned-mark,
+.patch-lock-mark {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--surface-1);
+  border-radius: 50%;
+  background: var(--seafoam);
+  color: var(--on-seafoam);
+}
+.patch-earned-mark svg { width: 11px; height: 11px; }
+.patch-lock-mark {
+  width: 16px;
+  height: 16px;
+  padding: 2px;
+  background: var(--surface-3);
+  color: var(--text-secondary);
+}
+.all-patch-card strong { font: 700 18px/1.1 var(--font-display); }
+.all-patch-card > small {
+  min-height: 34px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 17px;
+}
+.patch-earned-date {
+  color: var(--seafoam);
+  font-size: 11px;
+}
+.patch-progress { display: grid; width: 100%; gap: 5px; }
+.patch-progress-track {
+  overflow: hidden;
+  height: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+}
+.patch-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--seafoam);
+}
+.patch-progress small { color: var(--text-secondary); font-size: 11px; }
+.patch-sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px;
+  background: var(--scrim);
+}
+.patch-sheet {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: min(100%, 440px);
+  padding: 28px 20px 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface-2);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
+  text-align: center;
+}
+.patch-sheet-close { position: absolute; top: 12px; right: 12px; }
+.patch-sheet-icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+.patch-sheet-icon.earned {
+  background: var(--seafoam-subtle);
+  color: var(--seafoam);
+}
+.patch-sheet-icon svg { width: 36px; height: 36px; }
+.patch-sheet .eyebrow { margin: 0; color: var(--seafoam); }
+.patch-sheet h2 { font: 700 28px/1.1 var(--font-display); }
+.patch-sheet-description,
+.patch-sheet-rule { max-width: 320px; color: var(--text-secondary); font-size: 14px; line-height: 20px; }
+.patch-sheet-rule { color: var(--text-primary); }
+.patch-sheet-earned { color: var(--seafoam); font-size: 13px; }
+.patch-sheet > .patch-progress { max-width: 300px; }
 
 .friends-list {
   display: grid;

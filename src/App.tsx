@@ -10,6 +10,7 @@ import { MatesScreen } from './screens/MatesScreen'
 import { NotificationsScreen } from './screens/NotificationsScreen'
 import { OnboardingScreen } from './screens/OnboardingScreen'
 import { PasswordResetScreen } from './screens/PasswordResetScreen'
+import { PatchesScreen } from './screens/PatchesScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
 import { SportProfileScreen } from './screens/SportProfileScreen'
 
@@ -47,6 +48,7 @@ function AppShell() {
         <Route path="/profile/:name?" element={<ProfileScreen />} />
         <Route path="/profile/sports/:sport" element={<SportProfileScreen />} />
         <Route path="/profile/:name/sports/:sport" element={<SportProfileScreen />} />
+        <Route path="/profile/patches" element={<PatchesScreen />} />
       </Routes>
       {showNav && <BottomNav active={activeTab} hasUnreadChats />}
     </>

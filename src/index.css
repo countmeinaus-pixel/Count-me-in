@@ -1566,6 +1566,145 @@ h3 { font: 700 21px/24px var(--font-display); }
 .sport-list p:last-child { border-bottom: 0; }
 .sport-name { font-weight: 500; }
 .sport-level { color: var(--seafoam); font-size: 12px; }
+.sport-profile-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 20px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 64px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.sport-profile-row:last-child { border-bottom: 0; }
+.sport-profile-row:focus-visible {
+  outline: 2px solid var(--seafoam);
+  outline-offset: -2px;
+}
+.sport-profile-row-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.sport-profile-row-name > svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  color: var(--seafoam);
+}
+.sport-profile-row-name strong,
+.sport-profile-row-name small { display: block; }
+.sport-profile-row-name strong { font-weight: 500; }
+.sport-profile-row-name small {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.sport-profile-row-count {
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sport-profile-row-count.empty { color: var(--text-muted); }
+.sport-profile-row-chevron {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.sport-profile-page { display: grid; gap: 20px; }
+.sport-profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sport-profile-title {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+  text-align: center;
+}
+.sport-profile-title h1 { font-size: 28px; }
+.sport-profile-title .eyebrow { margin-bottom: 2px; }
+.sport-profile-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  color: var(--seafoam);
+}
+.sport-profile-icon svg { width: 24px; height: 24px; }
+.sport-profile-spacer { width: 44px; flex: 0 0 auto; }
+.sport-profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+}
+.sport-profile-stats > div {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 6px;
+  text-align: center;
+}
+.sport-profile-stats > div + div { border-left: 1px solid var(--border); }
+.sport-profile-stats strong {
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--accent);
+  font: 700 24px/1.1 var(--font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sport-profile-stats span { color: var(--text-secondary); font-size: 11px; }
+.sport-activity-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--border);
+}
+.sport-activity-tabs button {
+  min-height: 44px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font: 500 16px var(--font-display);
+}
+.sport-activity-tabs button.selected {
+  border-bottom-color: var(--seafoam);
+  color: var(--text-primary);
+}
+.sport-activity-list { display: grid; gap: 12px; }
+.sport-create-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 700 16px var(--font-display);
+}
+.sport-create-link svg { width: 18px; height: 18px; }
 
 .patch-grid {
   display: grid;
@@ -1739,6 +1878,22 @@ h3 { font: 700 21px/24px var(--font-display); }
 .friend-menu button:hover {
   background: rgba(127, 183, 168, 0.08);
 }
+.profile-friends-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.profile-friend-card { position: relative; min-width: 0; }
+.profile-friend-card .mate-card { width: 100%; height: 100%; padding-top: 48px; }
+.profile-friend-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+}
+.mate-card-avatar { overflow: hidden; }
+.mate-card-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.mate-card-meta { flex-wrap: wrap; line-height: 1.4; }
 
 .profile-page {
   padding-bottom: var(--bottom-nav-clearance);

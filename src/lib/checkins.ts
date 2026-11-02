@@ -1,3 +1,5 @@
+import { activities } from '../data/mockData'
+
 export type ConfirmedMeetup = {
   user: string
   partner: string
@@ -40,6 +42,13 @@ export function hasConfirmedMeetupForUser(user: string, activityId: number): boo
 
 export function getConfirmedMeetupCountForUser(user: string): number {
   return getConfirmedMeetupsForUser(user).length
+}
+
+export function getConfirmedMeetupsForUserAndSport(user: string, sport: string): ConfirmedMeetup[] {
+  return getConfirmedMeetupsForUser(user).filter((entry) => {
+    const activity = activities.find((item) => item.id === entry.activityId)
+    return activity?.sport === sport
+  })
 }
 
 export function recordMeetupCheckIn({

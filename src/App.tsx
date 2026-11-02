@@ -11,6 +11,7 @@ import { NotificationsScreen } from './screens/NotificationsScreen'
 import { OnboardingScreen } from './screens/OnboardingScreen'
 import { PasswordResetScreen } from './screens/PasswordResetScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
+import { SportProfileScreen } from './screens/SportProfileScreen'
 
 function AppShell() {
   const location = useLocation()
@@ -24,7 +25,7 @@ function AppShell() {
         ? 'create'
         : path === '/chats'
           ? 'chats'
-          : path === '/profile'
+          : path.startsWith('/profile')
             ? 'profile'
             : 'home'
 
@@ -44,6 +45,8 @@ function AppShell() {
         <Route path="/create" element={<CreateActivityScreen />} />
         <Route path="/chats" element={<ChatsScreen />} />
         <Route path="/profile/:name?" element={<ProfileScreen />} />
+        <Route path="/profile/sports/:sport" element={<SportProfileScreen />} />
+        <Route path="/profile/:name/sports/:sport" element={<SportProfileScreen />} />
       </Routes>
       {showNav && <BottomNav active={activeTab} hasUnreadChats />}
     </>

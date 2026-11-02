@@ -1,8 +1,15 @@
-import { ArrowLeft, LogOut, MapPin, Pencil, Settings2, ShieldCheck, Users, Waves } from 'lucide-react'
+import { ArrowLeft, ChevronRight, LogOut, MapPin, Pencil, Settings2, ShieldCheck, Users, Waves } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { MateCard } from '../components/MateCard'
+import { SportIcon } from '../components/SportIcon'
 import { communityMembers, currentUser } from '../data/mockData'
-import { getConfirmedMeetupCountForUser, getEarnedPatchesForUser, getLollipopChartForUser } from '../lib/checkins'
+import {
+  getConfirmedMeetupCountForUser,
+  getConfirmedMeetupsForUserAndSport,
+  getEarnedPatchesForUser,
+  getLollipopChartForUser,
+} from '../lib/checkins'
 import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
 import { updateProfilePhoto } from '../lib/profile'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
@@ -18,12 +25,7 @@ const patchIcons = {
   'all-rounder': ShieldCheck,
 } as const
 
-const initialFriends = [
-  { name: 'Matt', sport: 'Spearfishing', online: true },
-  { name: 'Hamish', sport: 'Hiking', online: true },
-  { name: 'Sam', sport: 'Running', online: false },
-  { name: 'Luca', sport: 'Kitesurfing', online: true },
-]
+const initialFriends = ['Matt', 'Hamish', 'Sam', 'Luca'].map((name) => ({ name }))
 
 export function ProfileScreen() {
   const navigate = useNavigate()
@@ -54,9 +56,7 @@ export function ProfileScreen() {
         ],
         stats: { meetups: 4, hosted: 1, sports: 2 },
       }
-  const profileMeetups = isCurrentUser
-    ? currentUser.stats.meetups + getConfirmedMeetupCountForUser(currentUser.name)
-    : 12
+  const profileMeetups = profile.stats.meetups + getConfirmedMeetupCountForUser(profile.name)
   const patchList = useMemo(
     () => getEarnedPatchesForUser(isCurrentUser ? currentUser.name : profile.name),
     [isCurrentUser, profile.name],
@@ -231,12 +231,34 @@ export function ProfileScreen() {
       </div>
 
       <div className="sport-list">
-        {profile.sports.map((sport) => (
-          <p key={sport.name}>
-            <span className="sport-name">{sport.name}</span>
-            <span className="sport-level">{sport.level}</span>
-          </p>
-        ))}
+        {profile.sports.map((sport) => {
+          const localMeetups = getConfirmedMeetupsForUserAndSport(profile.name, sport.name).length
+          const meetupCount = sport.meetups + localMeetups
+          const sportPath = `/profile/${encodeURIComponent(profile.name)}/sports/${encodeURIComponent(sport.name)}`
+
+          return (
+            <button
+              type="button"
+              key={sport.name}
+              className="sport-profile-row"
+              onClick={() => navigate(isCurrentUser
+                ? `/profile/sports/${encodeURIComponent(sport.name)}`
+                : sportPath)}
+            >
+              <span className="sport-profile-row-name">
+                <SportIcon sport={sport.name} />
+                <span>
+                  <strong>{sport.name}</strong>
+                  <small>{sport.level}</small>
+                </span>
+              </span>
+              <span className={`sport-profile-row-count ${meetupCount === 0 ? 'empty' : ''}`}>
+                {meetupCount === 0 ? 'No meetups yet' : `${meetupCount} ${meetupCount === 1 ? 'meetup' : 'meetups'}`}
+              </span>
+              <ChevronRight className="sport-profile-row-chevron" aria-hidden="true" />
+            </button>
+          )
+        })}
       </div>
 
       <div className="section-heading compact">
@@ -278,32 +300,18 @@ export function ProfileScreen() {
         <span>{friends.length}</span>
       </div>
 
-      <div className="friends-list">
-        {friends.map((friend) => (
-          <div
-            key={friend.name}
-            className="friend-row"
-            onClick={() => navigate(`/profile/${encodeURIComponent(friend.name)}`)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                navigate(`/profile/${encodeURIComponent(friend.name)}`)
-              }
-            }}
-          >
-            <div className="friend-meta">
-              <div className="friend-avatar">{friend.name[0]}</div>
-              <div>
-                <strong>{friend.name}</strong>
-                <span>{friend.sport}</span>
-              </div>
-            </div>
+      <div className="profile-friends-grid">
+        {friends.map((friend) => {
+          const member = communityMembers.find((person) => person.name === friend.name)
+          if (!member) return null
 
-            <div className="friend-status">
-              <span className={`presence ${friend.online ? 'online' : ''}`} />
-              <div className="friend-menu-wrap" onClick={(event) => event.stopPropagation()}>
+          return (
+            <div key={friend.name} className="profile-friend-card">
+              <MateCard
+                member={member}
+                onClick={() => navigate(`/profile/${encodeURIComponent(friend.name)}`)}
+              />
+              <div className="friend-menu-wrap profile-friend-menu" onClick={(event) => event.stopPropagation()}>
                 <button
                   type="button"
                   className="friend-menu-button"
@@ -354,8 +362,8 @@ export function ProfileScreen() {
                 )}
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {isCurrentUser && (

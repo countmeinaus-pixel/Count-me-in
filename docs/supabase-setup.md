@@ -72,3 +72,13 @@ To enable this:
 3. Paste it into the editor and choose **Run**.
 
 The migration only adds a nullable `date_of_birth` column. It does not guess existing users' birthdays from their age.
+
+## 7) Profile table permissions
+
+If onboarding or profile saving reports `permission denied for table profiles`, the tables have Row Level Security policies but are missing the SQL privileges required by the signed-in app role. Apply this migration:
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103110000_grant_authenticated_profile_access.sql`.
+3. Paste the SQL into the editor and choose **Run**.
+
+These grants allow authenticated users to perform the profile and sport-table operations used by the app. Existing Row Level Security policies continue to restrict profile, sport, and availability rows to the signed-in user's own records where applicable.

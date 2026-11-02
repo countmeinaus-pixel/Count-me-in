@@ -131,6 +131,11 @@ on public.sports for select using (true);
 create policy "Sports are insertable by authenticated users"
 on public.sports for insert with check (auth.role() = 'authenticated');
 
+grant select, insert, update on table public.profiles to authenticated;
+grant select, insert, update, delete on table public.profile_sports to authenticated;
+grant select, insert, update on table public.profile_availability to authenticated;
+grant select on table public.sports to authenticated;
+
 create policy "Users can view activity chats they belong to"
 on public.activity_chat_threads for select using (
   organiser_id = auth.uid() or

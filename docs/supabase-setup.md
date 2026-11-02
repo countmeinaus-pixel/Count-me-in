@@ -82,3 +82,22 @@ If onboarding or profile saving reports `permission denied for table profiles`, 
 3. Paste the SQL into the editor and choose **Run**.
 
 These grants allow authenticated users to perform the profile and sport-table operations used by the app. Existing Row Level Security policies continue to restrict profile, sport, and availability rows to the signed-in user's own records where applicable.
+
+## 8) Moderation roles, reports and blocks
+
+This migration adds protected user roles, a report queue for profiles and activities, retained report evidence, and block records. RLS hides blocked users' profiles, sports, availability and activities from each other, and prevents invitations between them. Chat blocking will be connected when chat data is stored in Supabase.
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103120000_moderation_roles_reports_blocks.sql`.
+3. Paste the SQL into the editor and choose **Run**.
+4. To make your own account an admin, replace `YOUR_LOGIN_EMAIL` in the query below with the email used for your Supabase sign-in, then run it in a new query:
+
+   ```sql
+   insert into public.user_roles (user_id, role)
+   select id, 'admin'
+   from auth.users
+   where lower(email) = lower('YOUR_LOGIN_EMAIL')
+   on conflict (user_id) do update set role = excluded.role;
+   ```
+
+The app cannot grant admin roles to itself. Only a project administrator using SQL Editor can assign or change roles. This first step creates the secure database foundation; reporting and blocking controls in the app, the moderator dashboard, sanctions and chat moderation are separate remaining work.

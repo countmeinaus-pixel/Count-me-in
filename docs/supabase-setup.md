@@ -128,3 +128,11 @@ This migration creates a public `activity-covers` storage bucket for activity ba
 1. Open Supabase **SQL Editor** and choose **New query**.
 2. Copy the full contents of `supabase/migrations/20261103143000_activity_cover_images.sql`.
 3. Paste the SQL into the editor and choose **Run**.
+
+## 12) Activity editing for hosts and admins
+
+This migration lets the activity host or an admin update an activity. It also lets admins remove an old activity banner from storage when replacing it. The app checks permissions before showing edit controls, and Row Level Security enforces the same access in Supabase.
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103150000_activity_management.sql`.
+3. Paste the SQL into the editor and choose **Run**.

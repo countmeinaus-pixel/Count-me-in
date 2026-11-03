@@ -979,6 +979,12 @@ h3 { font: 700 21px/24px var(--font-display); }
 .detail-content { padding: 0 20px calc(200px + env(safe-area-inset-bottom, 0px)); margin-top: -18px; position: relative; }
 .detail-content h1 { margin-bottom: 8px; }
 .date { color: var(--seafoam); font-weight: 600; }
+.activity-share-feedback {
+  margin: 8px 0 12px;
+  color: var(--seafoam);
+  font-size: 13px;
+}
+.activity-share-feedback.error { color: var(--danger); }
 
 .facts-grid {
   display: grid;

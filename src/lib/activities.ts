@@ -15,11 +15,13 @@ export type SavedActivityDetails = {
   autoAccept: boolean
   sportDetails: Record<string, string>
   hero: string
+  coverImageUrl: string | null
   host: string
   hostAge: number | null
   hostPhoto: string | null
   hostVerified: boolean
   viewerIsHost: boolean
+  viewerCanEdit: boolean
 }
 
 export async function getSavedActivity(id: string): Promise<SavedActivityDetails | null> {
@@ -52,6 +54,23 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
     : {}
   const { data: viewerData, error: viewerError } = await supabase.auth.getUser()
   if (viewerError && viewerError.name !== 'AuthSessionMissingError') throw viewerError
+  const viewerId = viewerData.user?.id ?? null
+  const viewerRoleResult = viewerId
+    ? await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', viewerId)
+        .maybeSingle()
+    : { data: null, error: null }
+  if (viewerRoleResult.error) throw viewerRoleResult.error
+  if (
+    viewerRoleResult.data &&
+    viewerRoleResult.data.role !== 'user' &&
+    viewerRoleResult.data.role !== 'moderator' &&
+    viewerRoleResult.data.role !== 'admin'
+  ) {
+    throw new Error('Your account has an invalid moderation role.')
+  }
 
   return {
     id: activity.id,
@@ -67,10 +86,13 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
     autoAccept: activity.auto_accept,
     sportDetails,
     hero: activity.cover_image_url ?? getDefaultActivityHero(sportResult.data.name),
+    coverImageUrl: activity.cover_image_url,
     host: hostResult.data.first_name,
     hostAge: hostResult.data.age,
     hostPhoto: hostResult.data.photo_url,
     hostVerified: hostResult.data.selfie_verified,
-    viewerIsHost: viewerData.user?.id === activity.host_id,
+    viewerIsHost: viewerId === activity.host_id,
+    viewerCanEdit:
+      viewerId === activity.host_id || viewerRoleResult.data?.role === 'admin',
   }
 }

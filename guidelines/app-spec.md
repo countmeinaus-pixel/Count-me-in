@@ -147,6 +147,7 @@ Use ProgressSteps on steps 2 to 9.
 Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until required fields are filled, and shows which field is missing on tap.
 
 ### Manage activity (host)
+- The host can edit the activity's title, time, place, spots, level, notes and banner. Admins can edit any saved activity for support and moderation. Supabase Row Level Security enforces these permissions.
 - Requests list: avatar, name, level, message, "Accept" (primary sm) and "Decline" (ghost sm).
 - Going list.
 - Actions: "Edit activity", "Cancel activity" (destructive, confirmation sheet).

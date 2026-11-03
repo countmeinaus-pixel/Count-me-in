@@ -6,6 +6,7 @@ import {
 } from "react-router-dom"
 import { BottomNav, type Tab } from "./components/BottomNav"
 import { ActivityDetailScreen } from "./screens/ActivityDetailScreen"
+import { EditActivityScreen } from "./screens/EditActivityScreen"
 import { AuthScreen } from "./screens/AuthScreen"
 import { ChatThreadScreen } from "./screens/ChatThreadScreen"
 import { ChatsScreen } from "./screens/ChatsScreen"
@@ -56,6 +57,7 @@ function AppShell() {
       "/profile/edit",
       "/profile/sports/edit",
     ].includes(path) &&
+    !/^\/activity\/[^/]+\/edit$/.test(path) &&
     !path.startsWith("/more") &&
     !(path.startsWith("/chats/") && path !== "/chats")
 
@@ -78,6 +80,7 @@ const router = createBrowserRouter([
       { path: "/reset-password", element: <PasswordResetScreen /> },
       { path: "/onboarding", element: <OnboardingScreen /> },
       { path: "/activity/:id", element: <ActivityDetailScreen /> },
+      { path: "/activity/:id/edit", element: <EditActivityScreen /> },
       { path: "/activities", element: <MyActivitiesScreen /> },
       { path: "/friends", element: <MatesScreen friendsOnly /> },
       { path: "/mates", element: <MatesScreen /> },

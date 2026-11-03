@@ -8,7 +8,7 @@ import {
 } from "lucide-react"
 import QRCode from "qrcode"
 import { useEffect, useRef, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { Button } from "../components/Button"
 import { ReportDialog } from "../components/ReportDialog"
 import {
@@ -43,6 +43,7 @@ import {
 export function ActivityDetailScreen() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const mockActivity = activities.find((item) => String(item.id) === id)
   const [savedActivity, setSavedActivity] =
     useState<SavedActivityDetails | null>(null)
@@ -64,6 +65,7 @@ export function ActivityDetailScreen() {
   )
   const [joinFeedback, setJoinFeedback] = useState("")
   const [reportOpen, setReportOpen] = useState(false)
+  const [shareFeedback, setShareFeedback] = useState("")
   const [confirmed, setConfirmed] = useState(() =>
     mockActivity
       ? hasConfirmedMeetupForUser(currentUser.name, mockActivity.id)
@@ -197,6 +199,32 @@ export function ActivityDetailScreen() {
     if (!savedActivity) return
     const result = await getActivityJoinState(savedActivity.id)
     setJoinState(result)
+  }
+
+  async function handleShareActivity() {
+    setShareFeedback("")
+    const url = window.location.href
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: activity.title, url })
+        setShareFeedback("Activity shared.")
+        return
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareFeedback("Activity link copied.")
+    } catch (error) {
+      setShareFeedback(
+        error instanceof Error
+          ? `Unable to copy the activity link: ${error.message}`
+          : "Unable to copy the activity link. Please copy the page address from your browser.",
+      )
+    }
   }
 
   async function handleJoinActivity() {
@@ -440,6 +468,7 @@ export function ActivityDetailScreen() {
     activityStart.getDate() === new Date().getDate()
   const isHost =
     savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
+  const canEditActivity = savedDetails?.viewerCanEdit ?? false
   const isJoined =
     isHost ||
     (savedDetails
@@ -477,6 +506,7 @@ export function ActivityDetailScreen() {
           className="icon-button hero-share"
           aria-label="Share"
           type="button"
+          onClick={() => void handleShareActivity()}
         >
           <Share2 />
         </button>
@@ -486,6 +516,25 @@ export function ActivityDetailScreen() {
         <p className="eyebrow">{activity.sport}</p>
         <h1>{activity.title}</h1>
         <p className="date">{displayDate}</p>
+        {typeof location.state?.statusMessage === "string" && (
+          <p className="activity-share-feedback" role="status">
+            {location.state.statusMessage}
+          </p>
+        )}
+        {shareFeedback && (
+          <p className={`activity-share-feedback ${shareFeedback.startsWith("Unable") ? "error" : ""}`} role="status">
+            {shareFeedback}
+          </p>
+        )}
+        {canEditActivity && savedActivity && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate(`/activity/${savedActivity.id}/edit`)}
+          >
+            Edit activity
+          </Button>
+        )}
         {isSavedActivity && !isHost && (
           <button
             type="button"
@@ -627,8 +676,12 @@ export function ActivityDetailScreen() {
       <div className="sticky-action">
         <div className="sticky-action-group">
           {isHost ? (
-            <Button size="lg" disabled>
-              Manage activity
+            <Button
+              size="lg"
+              onClick={() => savedActivity && navigate(`/activity/${savedActivity.id}/edit`)}
+              disabled={!savedActivity}
+            >
+              {savedActivity ? "Edit activity" : "Demo activity"}
             </Button>
           ) : isJoined ? (
             savedDetails ? (

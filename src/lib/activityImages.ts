@@ -60,3 +60,15 @@ export async function deleteActivityCover(path: string, userId: string) {
   const { error } = await supabase.storage.from(activityCoverBucket).remove([path])
   if (error) throw error
 }
+
+export function getActivityCoverPath(url: string | null) {
+  if (!url) return null
+
+  const marker = `/storage/v1/object/public/${activityCoverBucket}/`
+  const pathname = new URL(url).pathname
+  const markerIndex = pathname.indexOf(marker)
+  if (markerIndex === -1) return null
+
+  const path = decodeURIComponent(pathname.slice(markerIndex + marker.length))
+  return path || null
+}

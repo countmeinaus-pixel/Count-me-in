@@ -29,6 +29,7 @@ import { PrivacySettingsScreen } from "./screens/PrivacySettingsScreen"
 import { SportProfileScreen } from "./screens/SportProfileScreen"
 import { MatesScreen } from "./screens/MatesScreen"
 import { hasUnreadChatThreads } from "./lib/chat"
+import { ModerationScreen } from "./screens/ModerationScreen"
 
 function AppShell() {
   const location = useLocation()
@@ -98,6 +99,7 @@ const router = createBrowserRouter([
       { path: "/more/language", element: <LanguageSettingsScreen /> },
       { path: "/more/about", element: <MoreAboutScreen /> },
       { path: "/more/help", element: <MoreHelpScreen /> },
+      { path: "/more/moderation", element: <ModerationScreen /> },
     ],
   },
 ])

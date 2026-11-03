@@ -1,32 +1,55 @@
-import { useEffect, useState } from 'react'
-import { MorePageHeader } from '../components/MorePageHeader'
-import { useBackToMore } from '../lib/moreNavigation'
+import { useEffect, useState } from "react"
+import { MorePageHeader } from "../components/MorePageHeader"
+import { useBackToMore } from "../lib/moreNavigation"
 import {
-  getBlockedUsers,
   getProfileVisibility,
   removeBlockedUser,
   saveProfileVisibility,
   type ProfileVisibility,
-} from '../lib/localPreferences'
+} from "../lib/localPreferences"
+import {
+  getBlockedProfiles,
+  unblockProfile,
+  type BlockedProfile,
+} from "../lib/moderation"
 
 const visibilityOptions: Array<{ value: ProfileVisibility; label: string }> = [
-  { value: 'members', label: 'All Count Me In members' },
-  { value: 'activityConnections', label: 'People I’ve shared an activity with' },
-  { value: 'hidden', label: 'Hidden from member search' },
+  { value: "members", label: "All Count Me In members" },
+  {
+    value: "activityConnections",
+    label: "People I’ve shared an activity with",
+  },
+  { value: "hidden", label: "Hidden from member search" },
 ]
 
 export function PrivacySettingsScreen() {
   const backToMore = useBackToMore()
-  const [visibility, setVisibility] = useState<ProfileVisibility>('members')
-  const [blockedUsers, setBlockedUsers] = useState<string[]>([])
-  const [error, setError] = useState('')
+  const [visibility, setVisibility] = useState<ProfileVisibility>("members")
+  const [blockedUsers, setBlockedUsers] = useState<BlockedProfile[]>([])
+  const [error, setError] = useState("")
+  const [isLoadingBlocks, setIsLoadingBlocks] = useState(true)
 
   useEffect(() => {
-    try {
-      setVisibility(getProfileVisibility())
-      setBlockedUsers(getBlockedUsers())
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load privacy settings.')
+    let active = true
+    async function loadSettings() {
+      try {
+        setVisibility(getProfileVisibility())
+        const blockedProfiles = await getBlockedProfiles()
+        if (active) setBlockedUsers(blockedProfiles)
+      } catch (loadError) {
+        if (active)
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Unable to load blocked members.",
+          )
+      } finally {
+        if (active) setIsLoadingBlocks(false)
+      }
+    }
+    void loadSettings()
+    return () => {
+      active = false
     }
   }, [])
 
@@ -34,19 +57,30 @@ export function PrivacySettingsScreen() {
     try {
       saveProfileVisibility(nextVisibility)
       setVisibility(nextVisibility)
-      setError('')
+      setError("")
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to save profile visibility.')
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to save profile visibility.",
+      )
     }
   }
 
-  function unblockUser(name: string) {
+  async function unblockUser(profile: BlockedProfile) {
     try {
-      removeBlockedUser(name)
-      setBlockedUsers((current) => current.filter((blockedName) => blockedName !== name))
-      setError('')
+      await unblockProfile(profile.id)
+      removeBlockedUser(profile.name)
+      setBlockedUsers((current) =>
+        current.filter((blockedProfile) => blockedProfile.id !== profile.id),
+      )
+      setError("")
     } catch (removeError) {
-      setError(removeError instanceof Error ? removeError.message : 'Unable to unblock this member.')
+      setError(
+        removeError instanceof Error
+          ? removeError.message
+          : "Unable to unblock this member.",
+      )
     }
   }
 
@@ -55,7 +89,11 @@ export function PrivacySettingsScreen() {
       <MorePageHeader title="Privacy and safety" onBack={backToMore} />
       <section className="more-setting-section">
         <h2>Who can see your profile?</h2>
-        <div className="more-choice-list" role="radiogroup" aria-label="Profile visibility">
+        <div
+          className="more-choice-list"
+          role="radiogroup"
+          aria-label="Profile visibility"
+        >
           {visibilityOptions.map((option) => (
             <button
               type="button"
@@ -70,26 +108,45 @@ export function PrivacySettingsScreen() {
             </button>
           ))}
         </div>
-        <p className="more-settings-note">Your choice is saved on this device. Profile visibility is not enforced for other members until the Supabase privacy rules are added.</p>
+        <p className="more-settings-note">
+          This preference is saved on this device. It does not change profile
+          visibility for other members yet.
+        </p>
       </section>
 
       <section className="more-setting-section">
         <h2>Blocked members</h2>
-        {blockedUsers.length > 0 ? (
+        {isLoadingBlocks ? (
+          <p className="more-settings-note">Loading blocked members…</p>
+        ) : blockedUsers.length > 0 ? (
           <ul className="blocked-user-list">
-            {blockedUsers.map((name) => (
-              <li key={name}>
-                <span>{name}</span>
-                <button type="button" className="text-action" onClick={() => unblockUser(name)}>Unblock</button>
+            {blockedUsers.map((profile) => (
+              <li key={profile.id}>
+                <span>{profile.name}</span>
+                <button
+                  type="button"
+                  className="text-action"
+                  onClick={() => void unblockUser(profile)}
+                >
+                  Unblock
+                </button>
               </li>
             ))}
           </ul>
         ) : (
           <p className="more-settings-note">You haven’t blocked anyone.</p>
         )}
-        <p className="more-settings-note">Blocked members are hidden from Find your crew and your Friends list on this device. Blocking is not yet synced across devices.</p>
+        <p className="more-settings-note">
+          Blocked members cannot see your profile or activities, and you cannot
+          see theirs. Chat blocking will be connected when chats are stored in
+          Supabase.
+        </p>
       </section>
-      {error && <p className="more-status-message error" role="alert">{error}</p>}
+      {error && (
+        <p className="more-status-message error" role="alert">
+          {error}
+        </p>
+      )}
     </main>
   )
 }

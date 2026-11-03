@@ -85,7 +85,7 @@ These grants allow authenticated users to perform the profile and sport-table op
 
 ## 8) Moderation roles, reports and blocks
 
-This migration adds protected user roles, a report queue for profiles and activities, retained report evidence, and block records. RLS hides blocked users' profiles, sports, availability and activities from each other, and prevents invitations between them. Chat blocking will be connected when chat data is stored in Supabase.
+This migration adds protected user roles, a report queue for profiles and activities, retained report evidence, and block records. RLS hides blocked users' profiles, sports, availability and activities from each other, and prevents invitations between them. The app now provides profile/activity reporting, a staff-only report queue, and persisted profile blocks. Chat blocking will be connected when chat data is stored in Supabase.
 
 1. Open Supabase **SQL Editor** and choose **New query**.
 2. Copy the full contents of `supabase/migrations/20261103120000_moderation_roles_reports_blocks.sql`.
@@ -100,4 +100,4 @@ This migration adds protected user roles, a report queue for profiles and activi
    on conflict (user_id) do update set role = excluded.role;
    ```
 
-The app cannot grant admin roles to itself. Only a project administrator using SQL Editor can assign or change roles. This first step creates the secure database foundation; reporting and blocking controls in the app, the moderator dashboard, sanctions and chat moderation are separate remaining work.
+The app cannot grant admin roles to itself. Only a project administrator using SQL Editor can assign or change roles. Moderator appointments, sanctions, chat moderation and activity-image management are still separate remaining work.

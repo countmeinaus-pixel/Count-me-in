@@ -1,8 +1,16 @@
-import { ArrowLeft, Check, ChevronRight, MapPin, Share2 } from 'lucide-react'
-import QRCode from 'qrcode'
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { Button } from '../components/Button'
+import {
+  ArrowLeft,
+  Check,
+  ChevronRight,
+  Flag,
+  MapPin,
+  Share2,
+} from "lucide-react"
+import QRCode from "qrcode"
+import { useEffect, useRef, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { Button } from "../components/Button"
+import { ReportDialog } from "../components/ReportDialog"
 import {
   activities,
   communityMembers,
@@ -11,29 +19,38 @@ import {
   getActivitySpotsLabel,
   getActivitySpotsLeft,
   type Activity,
-} from '../data/mockData'
-import { getSavedActivity, type SavedActivityDetails } from '../lib/activities'
+} from "../data/mockData"
+import { getSavedActivity, type SavedActivityDetails } from "../lib/activities"
 import {
   getPatchProgressForUser,
   hasConfirmedMeetupForUser,
   recordMeetupCheckIn,
-} from '../lib/checkins'
+} from "../lib/checkins"
 
 export function ActivityDetailScreen() {
   const { id } = useParams()
   const navigate = useNavigate()
   const mockActivity = activities.find((item) => String(item.id) === id)
-  const [savedActivity, setSavedActivity] = useState<SavedActivityDetails | null>(null)
-  const [isLoadingSavedActivity, setIsLoadingSavedActivity] = useState(Boolean(id && !mockActivity))
-  const [loadError, setLoadError] = useState('')
+  const [savedActivity, setSavedActivity] =
+    useState<SavedActivityDetails | null>(null)
+  const [isLoadingSavedActivity, setIsLoadingSavedActivity] = useState(
+    Boolean(id && !mockActivity),
+  )
+  const [loadError, setLoadError] = useState("")
   const [qrOpen, setQrOpen] = useState(false)
-  const [scanMode, setScanMode] = useState<'qr' | 'camera' | 'success'>('qr')
+  const [scanMode, setScanMode] = useState<"qr" | "camera" | "success">("qr")
   const [joinRequested, setJoinRequested] = useState(false)
-  const [confirmed, setConfirmed] = useState(() => mockActivity ? hasConfirmedMeetupForUser(currentUser.name, mockActivity.id) : false)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [confirmed, setConfirmed] = useState(() =>
+    mockActivity
+      ? hasConfirmedMeetupForUser(currentUser.name, mockActivity.id)
+      : false,
+  )
   const qrCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const activity: Activity | SavedActivityDetails | null = mockActivity ?? savedActivity
+  const activity: Activity | SavedActivityDetails | null =
+    mockActivity ?? savedActivity
   const isSavedActivity = savedActivity !== null
 
   useEffect(() => {
@@ -41,20 +58,25 @@ export function ActivityDetailScreen() {
     if (mockActivity) {
       setSavedActivity(null)
       setIsLoadingSavedActivity(false)
-      setLoadError('')
+      setLoadError("")
       return
     }
 
     let active = true
     setSavedActivity(null)
     setIsLoadingSavedActivity(true)
-    setLoadError('')
+    setLoadError("")
     void getSavedActivity(id)
       .then((result) => {
         if (active) setSavedActivity(result)
       })
       .catch((error: unknown) => {
-        if (active) setLoadError(error instanceof Error ? error.message : 'Unable to load this activity.')
+        if (active)
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load this activity.",
+          )
       })
       .finally(() => {
         if (active) setIsLoadingSavedActivity(false)
@@ -69,7 +91,7 @@ export function ActivityDetailScreen() {
     if (!mockActivity || !qrOpen || !qrCanvasRef.current) return
 
     const payload = JSON.stringify({
-      type: 'count-me-in',
+      type: "count-me-in",
       user: currentUser.name,
       partner: mockActivity.host,
       activityId: mockActivity.id,
@@ -80,8 +102,8 @@ export function ActivityDetailScreen() {
       width: 220,
       margin: 1,
       color: {
-        dark: '#0a1621',
-        light: '#ffffff',
+        dark: "#0a1621",
+        light: "#ffffff",
       },
     }).catch(() => undefined)
   }, [mockActivity, qrOpen])
@@ -97,10 +119,19 @@ export function ActivityDetailScreen() {
   if (!activity) {
     return (
       <main className="screen">
-        <p role={loadError ? 'alert' : undefined} className={loadError ? 'wizard-error' : 'text-[var(--text-secondary)]'}>
-          {isLoadingSavedActivity ? 'Loading activity…' : loadError || 'This activity could not be found.'}
+        <p
+          role={loadError ? "alert" : undefined}
+          className={
+            loadError ? "wizard-error" : "text-[var(--text-secondary)]"
+          }
+        >
+          {isLoadingSavedActivity
+            ? "Loading activity…"
+            : loadError || "This activity could not be found."}
         </p>
-        <Button variant="secondary" onClick={() => navigate(-1)}>Back</Button>
+        <Button variant="secondary" onClick={() => navigate(-1)}>
+          Back
+        </Button>
       </main>
     )
   }
@@ -112,7 +143,7 @@ export function ActivityDetailScreen() {
     }
 
     setQrOpen(false)
-    setScanMode('qr')
+    setScanMode("qr")
   }
 
   function confirmMeetup() {
@@ -127,7 +158,7 @@ export function ActivityDetailScreen() {
       sport: mockActivity.sport,
       startsAt: mockActivity.startsAt.toISOString(),
       hosted: mockActivity.host === currentUser.name,
-      oceanActivity: mockActivity.details.Location?.toLowerCase() === 'ocean',
+      oceanActivity: mockActivity.details.Location?.toLowerCase() === "ocean",
       terrain: mockActivity.details.Terrain,
     })
 
@@ -140,7 +171,7 @@ export function ActivityDetailScreen() {
       sport: mockActivity.sport,
       startsAt: mockActivity.startsAt.toISOString(),
       hosted: true,
-      oceanActivity: mockActivity.details.Location?.toLowerCase() === 'ocean',
+      oceanActivity: mockActivity.details.Location?.toLowerCase() === "ocean",
       terrain: mockActivity.details.Terrain,
     })
 
@@ -150,19 +181,19 @@ export function ActivityDetailScreen() {
   }
 
   async function startCameraScan() {
-    setScanMode('camera')
+    setScanMode("camera")
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setTimeout(() => {
         confirmMeetup()
-        setScanMode('success')
+        setScanMode("success")
       }, 1200)
       return
     }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: { facingMode: "environment" },
       })
       streamRef.current = stream
 
@@ -175,64 +206,89 @@ export function ActivityDetailScreen() {
         stream.getTracks().forEach((track) => track.stop())
         streamRef.current = null
         confirmMeetup()
-        setScanMode('success')
+        setScanMode("success")
       }, 1400)
     } catch {
       setTimeout(() => {
         confirmMeetup()
-        setScanMode('success')
+        setScanMode("success")
       }, 1100)
     }
   }
 
-  const earnedPatches = getPatchProgressForUser(currentUser.name).filter((patch) => patch.earned)
+  const earnedPatches = getPatchProgressForUser(currentUser.name).filter(
+    (patch) => patch.earned,
+  )
   const savedDetails = savedActivity
   const sportFacts = savedDetails
     ? [
         ...Object.entries(savedDetails.sportDetails).map(([key, value]) => ({
-          label: key.replace(/_/g, ' '),
+          label: key.replace(/_/g, " "),
           value,
         })),
         {
-          label: 'Duration',
-          value: savedDetails.durationMinutes % 60 === 0
-            ? `${savedDetails.durationMinutes / 60} ${savedDetails.durationMinutes === 60 ? 'hour' : 'hours'}`
-            : `${Math.floor(savedDetails.durationMinutes / 60)} hr ${savedDetails.durationMinutes % 60} min`,
+          label: "Duration",
+          value:
+            savedDetails.durationMinutes % 60 === 0
+              ? `${savedDetails.durationMinutes / 60} ${
+                  savedDetails.durationMinutes === 60 ? "hour" : "hours"
+                }`
+              : `${Math.floor(savedDetails.durationMinutes / 60)} hr ${savedDetails.durationMinutes % 60} min`,
         },
         {
-          label: 'Spots',
-          value: savedDetails.spotsTotal === 1 ? '1 buddy wanted' : `${savedDetails.spotsTotal} spots`,
+          label: "Spots",
+          value:
+            savedDetails.spotsTotal === 1
+              ? "1 buddy wanted"
+              : `${savedDetails.spotsTotal} spots`,
         },
       ]
     : [
-        ...Object.entries(mockActivity?.details ?? {}).map(([label, value]) => ({ label, value })),
-        { label: 'Spots', value: mockActivity ? getActivitySpotsLabel(mockActivity) : '' },
+        ...Object.entries(mockActivity?.details ?? {}).map(
+          ([label, value]) => ({ label, value }),
+        ),
+        {
+          label: "Spots",
+          value: mockActivity ? getActivitySpotsLabel(mockActivity) : "",
+        },
       ]
   const displayDate = savedDetails
     ? formatActivityDate(new Date(savedDetails.startsAt), {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        hour: 'numeric',
-        minute: '2-digit',
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "numeric",
+        minute: "2-digit",
       })
-    : mockActivity ? formatActivityDate(mockActivity.startsAt) : ''
-  const hostName = savedDetails?.host ?? mockActivity?.host ?? ''
-  const hostAge = savedDetails?.hostAge ?? (hostName === currentUser.name
-    ? currentUser.age
-    : communityMembers.find((member) => member.name === hostName)?.age)
-  const attendees = savedDetails ? [savedDetails.host] : mockActivity?.attendees ?? []
-  const activityStart = savedDetails ? new Date(savedDetails.startsAt) : mockActivity?.startsAt
-  const isActivityDay = activityStart !== undefined &&
+    : mockActivity
+      ? formatActivityDate(mockActivity.startsAt)
+      : ""
+  const hostName = savedDetails?.host ?? mockActivity?.host ?? ""
+  const hostAge =
+    savedDetails?.hostAge ??
+    (hostName === currentUser.name
+      ? currentUser.age
+      : communityMembers.find((member) => member.name === hostName)?.age)
+  const attendees = savedDetails
+    ? [savedDetails.host]
+    : (mockActivity?.attendees ?? [])
+  const activityStart = savedDetails
+    ? new Date(savedDetails.startsAt)
+    : mockActivity?.startsAt
+  const isActivityDay =
+    activityStart !== undefined &&
     activityStart.getFullYear() === new Date().getFullYear() &&
     activityStart.getMonth() === new Date().getMonth() &&
     activityStart.getDate() === new Date().getDate()
-  const isHost = savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
+  const isHost =
+    savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
   const isJoined = isHost || attendees.includes(currentUser.name)
   const spotsLabel = savedDetails
-    ? `${savedDetails.spotsTotal} ${savedDetails.spotsTotal === 1 ? 'spot' : 'spots'} available`
+    ? `${savedDetails.spotsTotal} ${
+        savedDetails.spotsTotal === 1 ? "spot" : "spots"
+      } available`
     : mockActivity?.spotsTotal === 1
-      ? '1 buddy wanted'
+      ? "1 buddy wanted"
       : `${mockActivity ? getActivitySpotsLeft(mockActivity) : 0} spots left`
 
   return (
@@ -240,10 +296,19 @@ export function ActivityDetailScreen() {
       <section className="detail-hero">
         <img src={activity.hero} alt={activity.title} />
         <div className="hero-scrim" />
-        <button className="icon-button hero-back" aria-label="Back" onClick={() => navigate(-1)} type="button">
+        <button
+          className="icon-button hero-back"
+          aria-label="Back"
+          onClick={() => navigate(-1)}
+          type="button"
+        >
           <ArrowLeft />
         </button>
-        <button className="icon-button hero-share" aria-label="Share" type="button">
+        <button
+          className="icon-button hero-share"
+          aria-label="Share"
+          type="button"
+        >
           <Share2 />
         </button>
       </section>
@@ -252,31 +317,61 @@ export function ActivityDetailScreen() {
         <p className="eyebrow">{activity.sport}</p>
         <h1>{activity.title}</h1>
         <p className="date">{displayDate}</p>
+        {isSavedActivity && !isHost && (
+          <button
+            type="button"
+            className="detail-report-action"
+            onClick={() => setReportOpen(true)}
+          >
+            <Flag aria-hidden="true" />
+            Report activity
+          </button>
+        )}
 
         <div className="facts-grid">
           {sportFacts.map((fact) => (
-            <div key={fact.label}><span>{fact.label}</span><strong>{fact.value}</strong></div>
+            <div key={fact.label}>
+              <span>{fact.label}</span>
+              <strong>{fact.value}</strong>
+            </div>
           ))}
         </div>
 
         <div className="meta-row">
           <MapPin />
           <div>
-            <strong>{savedDetails?.meetingPoint ?? mockActivity?.place ?? ''}</strong>
-            <span>{savedDetails?.suburb ?? mockActivity?.suburb ?? ''}</span>
+            <strong>
+              {savedDetails?.meetingPoint ?? mockActivity?.place ?? ""}
+            </strong>
+            <span>{savedDetails?.suburb ?? mockActivity?.suburb ?? ""}</span>
           </div>
           <ChevronRight />
         </div>
 
         <div className="host-card">
           <div className="avatar-large">
-            {savedDetails?.hostPhoto ? <img src={savedDetails.hostPhoto} alt="" /> : hostName[0]}
-            {savedDetails?.hostVerified !== false && <span><Check /></span>}
+            {savedDetails?.hostPhoto ? (
+              <img src={savedDetails.hostPhoto} alt="" />
+            ) : (
+              hostName[0]
+            )}
+            {savedDetails?.hostVerified !== false && (
+              <span>
+                <Check />
+              </span>
+            )}
           </div>
           <div className="grow">
             <p className="eyebrow">Hosted by</p>
-            <strong>{hostName}{hostAge ? `, ${hostAge}` : ''}</strong>
-            <span>{savedDetails ? 'Hosting this activity' : mockActivity?.hostMeta ?? ''}</span>
+            <strong>
+              {hostName}
+              {hostAge ? `, ${hostAge}` : ""}
+            </strong>
+            <span>
+              {savedDetails
+                ? "Hosting this activity"
+                : (mockActivity?.hostMeta ?? "")}
+            </span>
           </div>
           <ChevronRight />
         </div>
@@ -302,7 +397,7 @@ export function ActivityDetailScreen() {
             type="button"
             className="avatar small empty"
             aria-label="View more profiles"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate("/profile")}
           >
             +
           </button>
@@ -317,26 +412,48 @@ export function ActivityDetailScreen() {
       <div className="sticky-action">
         <div className="sticky-action-group">
           {isHost ? (
-            <Button size="lg" disabled>Manage activity</Button>
+            <Button size="lg" disabled>
+              Manage activity
+            </Button>
           ) : isJoined ? (
             <>
-              <Button variant="secondary" onClick={() => navigate('/chats')} size="lg">Open chat</Button>
+              <Button
+                variant="secondary"
+                onClick={() => navigate("/chats")}
+                size="lg"
+              >
+                Open chat
+              </Button>
               <Button
                 onClick={() => setQrOpen(true)}
                 size="lg"
                 disabled={!isActivityDay || confirmed || isSavedActivity}
-                title={!isActivityDay ? 'Check-in opens on the activity day.' : undefined}
+                title={
+                  !isActivityDay
+                    ? "Check-in opens on the activity day."
+                    : undefined
+                }
               >
-                {confirmed ? 'Confirmed' : 'Check in'}
+                {confirmed ? "Confirmed" : "Check in"}
               </Button>
             </>
           ) : (
             <>
               {joinRequested && (
-                <Button variant="secondary" onClick={() => setJoinRequested(false)} size="lg">Cancel request</Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setJoinRequested(false)}
+                  size="lg"
+                >
+                  Cancel request
+                </Button>
               )}
-              <Button onClick={() => setJoinRequested(true)} size="lg" disabled={joinRequested}>
-                {joinRequested ? 'Requested' : 'Count me in'}
+              <Button
+                onClick={() => setJoinRequested(true)}
+                size="lg"
+                disabled={joinRequested}
+              >
+                {joinRequested ? "Requested" : "Count me in"}
               </Button>
             </>
           )}
@@ -344,15 +461,29 @@ export function ActivityDetailScreen() {
       </div>
 
       {qrOpen && !isSavedActivity && (
-        <div className="checkin-modal" role="dialog" aria-modal="true" aria-label="Check in">
+        <div
+          className="checkin-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Check in"
+        >
           <div className="checkin-sheet">
             <div className="checkin-drag" aria-hidden="true" />
             <div className="checkin-header">
-              <h3>{scanMode === 'success' ? 'Meetup confirmed' : 'QR check-in'}</h3>
-              <button type="button" aria-label="Close check-in" onClick={closeQr} className="close-button">×</button>
+              <h3>
+                {scanMode === "success" ? "Meetup confirmed" : "QR check-in"}
+              </h3>
+              <button
+                type="button"
+                aria-label="Close check-in"
+                onClick={closeQr}
+                className="close-button"
+              >
+                ×
+              </button>
             </div>
 
-            {scanMode === 'qr' && (
+            {scanMode === "qr" && (
               <>
                 <div className="qr-card">
                   <canvas ref={qrCanvasRef} />
@@ -362,11 +493,21 @@ export function ActivityDetailScreen() {
                   </div>
                 </div>
 
-                <Button variant="secondary" onClick={startCameraScan} size="lg">Scan their code</Button>
+                <Button variant="secondary" onClick={startCameraScan} size="lg">
+                  Scan their code
+                </Button>
               </>
             )}
+            {reportOpen && savedActivity && (
+              <ReportDialog
+                targetType="activity"
+                targetId={savedActivity.id}
+                targetLabel={`activity: ${savedActivity.title}`}
+                onClose={() => setReportOpen(false)}
+              />
+            )}
 
-            {scanMode === 'camera' && (
+            {scanMode === "camera" && (
               <div className="camera-stage">
                 <div className="camera-frame">
                   <video ref={videoRef} playsInline muted />
@@ -375,7 +516,7 @@ export function ActivityDetailScreen() {
               </div>
             )}
 
-            {scanMode === 'success' && (
+            {scanMode === "success" && (
               <div className="success-stage">
                 <div className="success-icon">✓</div>
                 <p>Meetup confirmed. Enjoy it, mate.</p>
@@ -386,7 +527,9 @@ export function ActivityDetailScreen() {
                     ))}
                   </div>
                 )}
-                <Button onClick={closeQr} size="lg">Back to activity</Button>
+                <Button onClick={closeQr} size="lg">
+                  Back to activity
+                </Button>
               </div>
             )}
           </div>

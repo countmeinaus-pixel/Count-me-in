@@ -92,20 +92,32 @@ export function AuthScreen() {
       return
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
     })
 
-    setIsBusy(false)
-
     if (signInError) {
+      setIsBusy(false)
       const isInvalidCredentials = signInError.status === 400 || signInError.message.toLowerCase().includes('invalid login credentials')
       setError(isInvalidCredentials ? copy.invalidLogin : signInError.message)
       return
     }
 
-    navigate('/onboarding')
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('onboarding_complete')
+      .eq('id', signInData.user.id)
+      .maybeSingle()
+
+    setIsBusy(false)
+
+    if (profileError) {
+      setError(profileError.message)
+      return
+    }
+
+    navigate(profile?.onboarding_complete ? '/' : '/onboarding')
   }
 
   async function handlePasswordReset() {

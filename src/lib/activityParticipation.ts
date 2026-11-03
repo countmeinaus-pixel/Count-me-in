@@ -1,0 +1,434 @@
+import { supabase } from "./supabase"
+import {
+  getDefaultActivityHero,
+  type Activity,
+  type ActivityIcon,
+} from "../data/mockData"
+
+export type JoinRequestStatus = "pending" | "accepted" | "declined" | "cancelled"
+
+export type ActivityJoinParticipant = {
+  id: string
+  name: string
+}
+
+export type PendingActivityJoinRequest = ActivityJoinParticipant & {
+  message: string
+}
+
+export type ActivityJoinState = {
+  status: JoinRequestStatus | null
+  acceptedParticipants: ActivityJoinParticipant[]
+  pendingRequests: PendingActivityJoinRequest[]
+}
+
+export type MySavedActivity = Omit<Activity, "id"> & {
+  id: string
+  joinStatus: "hosting" | "requested" | "going"
+  pendingRequestCount: number
+}
+
+export type FeedActivity = Omit<Activity, "id"> & {
+  id: string
+  viewerJoinStatus: "pending" | "accepted" | null
+}
+
+function requireSupabase() {
+  if (!supabase) throw new Error("Supabase is not configured yet.")
+  return supabase
+}
+
+function isJoinRequestStatus(value: string): value is JoinRequestStatus {
+  return (
+    value === "pending" ||
+    value === "accepted" ||
+    value === "declined" ||
+    value === "cancelled"
+  )
+}
+
+export async function getActivityJoinState(
+  activityId: string,
+): Promise<ActivityJoinState> {
+  const client = requireSupabase()
+  const { data: userData, error: userError } = await client.auth.getUser()
+  if (userError) throw userError
+  if (!userData.user) throw new Error("Sign in to view activity members.")
+
+  const { data: requests, error: requestsError } = await client
+    .from("activity_join_requests")
+    .select("user_id, request_message, status")
+    .eq("activity_id", activityId)
+  if (requestsError) throw requestsError
+
+  const rows = requests ?? []
+  const profileIds = [...new Set(rows.map((request) => request.user_id))]
+  const { data: profiles, error: profilesError } = profileIds.length
+    ? await client
+        .from("profiles")
+        .select("id, first_name")
+        .in("id", profileIds)
+    : { data: [], error: null }
+  if (profilesError) throw profilesError
+
+  const namesById = new Map(
+    (profiles ?? []).map((profile) => [profile.id, profile.first_name]),
+  )
+  const acceptedParticipants = rows
+    .filter((request) => request.status === "accepted")
+    .flatMap((request) => {
+      const name = namesById.get(request.user_id)
+      return name ? [{ id: request.user_id, name }] : []
+    })
+  const pendingRequests = rows
+    .filter(
+      (request) =>
+        request.status === "pending" && request.user_id !== userData.user.id,
+    )
+    .flatMap((request) => {
+      const name = namesById.get(request.user_id)
+      return name
+        ? [
+            {
+              id: request.user_id,
+              name,
+              message: request.request_message,
+            },
+          ]
+        : []
+    })
+  const viewerRequest = rows.find(
+    (request) => request.user_id === userData.user.id,
+  )
+
+  return {
+    status:
+      viewerRequest && isJoinRequestStatus(viewerRequest.status)
+        ? viewerRequest.status
+        : null,
+    acceptedParticipants,
+    pendingRequests,
+  }
+}
+
+export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
+  const client = requireSupabase()
+  const { data: sessionData, error: sessionError } =
+    await client.auth.getSession()
+  if (sessionError) throw sessionError
+  const viewerId = sessionData.session?.user.id ?? null
+
+  const { data: activityRows, error: activitiesError } = await client
+    .from("activities")
+    .select(
+      "id, host_id, sport_id, title, starts_at, meeting_point, suburb, spots_total, level_wanted, notes, sport_details, cover_image_url",
+    )
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+  if (activitiesError) throw activitiesError
+
+  const rows = activityRows ?? []
+  if (!rows.length) return []
+
+  const activityIds = rows.map((activity) => activity.id)
+  const profileIds = [...new Set(rows.map((activity) => activity.host_id))]
+  const sportIds = [...new Set(rows.map((activity) => activity.sport_id))]
+  const [requestsResult, profilesResult, sportsResult] = await Promise.all([
+    viewerId
+      ? client
+          .from("activity_join_requests")
+          .select("activity_id, user_id, status")
+          .in("activity_id", activityIds)
+          .in("status", ["pending", "accepted"])
+      : Promise.resolve({ data: [], error: null }),
+    client.from("profiles").select("id, first_name").in("id", profileIds),
+    client.from("sports").select("id, name").in("id", sportIds),
+  ])
+  if (requestsResult.error) throw requestsResult.error
+  if (profilesResult.error) throw profilesResult.error
+  if (sportsResult.error) throw sportsResult.error
+
+  const requests = requestsResult.data ?? []
+  const acceptedProfileIds = requests
+    .filter((request) => request.status === "accepted")
+    .map((request) => request.user_id)
+  const acceptedProfilesResult = acceptedProfileIds.length
+    ? await client
+        .from("profiles")
+        .select("id, first_name")
+        .in("id", acceptedProfileIds)
+    : { data: [], error: null }
+  if (acceptedProfilesResult.error) throw acceptedProfilesResult.error
+
+  const profileNames = new Map(
+    [...(profilesResult.data ?? []), ...(acceptedProfilesResult.data ?? [])].map(
+      (profile) => [profile.id, profile.first_name],
+    ),
+  )
+  const sportNames = new Map(
+    (sportsResult.data ?? []).map((sport) => [sport.id, sport.name]),
+  )
+
+  return rows.flatMap((activity): FeedActivity[] => {
+    const sport = sportNames.get(activity.sport_id)
+    const host = profileNames.get(activity.host_id)
+    if (!sport || !host) return []
+
+    const activityRequests = requests.filter(
+      (request) => request.activity_id === activity.id,
+    )
+    const acceptedRequests = activityRequests.filter(
+      (request) => request.status === "accepted",
+    )
+    const acceptedNames = acceptedRequests.flatMap((request) => {
+      const name = profileNames.get(request.user_id)
+      return name ? [name] : []
+    })
+    const sportDetails =
+      typeof activity.sport_details === "object" &&
+      activity.sport_details !== null &&
+      !Array.isArray(activity.sport_details)
+        ? Object.values(activity.sport_details).filter(
+            (value): value is string => typeof value === "string",
+          )
+        : []
+    const viewerRequest = activityRequests.find(
+      (request) => request.user_id === viewerId,
+    )
+
+    return [
+      {
+        id: activity.id,
+        sport,
+        title: activity.title,
+        startsAt: new Date(activity.starts_at),
+        facts: sportDetails.slice(0, 3).join(" · "),
+        details: {},
+        place: activity.meeting_point,
+        suburb: activity.suburb,
+        host,
+        spotsTotal: activity.spots_total,
+        spotsTaken: acceptedRequests.length,
+        level: activity.level_wanted,
+        icon: getSportIcon(sport),
+        hero: activity.cover_image_url ?? getDefaultActivityHero(sport),
+        hostMeta: "",
+        notes: activity.notes,
+        attendees: [host, ...acceptedNames],
+        viewerJoinStatus:
+          viewerRequest?.status === "pending" ||
+          viewerRequest?.status === "accepted"
+            ? viewerRequest.status
+            : null,
+      },
+    ]
+  })
+}
+
+export async function getMySavedActivities(): Promise<MySavedActivity[]> {
+  const client = requireSupabase()
+  const { data: userData, error: userError } = await client.auth.getUser()
+  if (userError?.name === "AuthSessionMissingError") return []
+  if (userError) throw userError
+  if (!userData.user) return []
+
+  const userId = userData.user.id
+  const [hostedResult, ownRequestsResult] = await Promise.all([
+    client
+      .from("activities")
+      .select(
+        "id, host_id, sport_id, title, starts_at, meeting_point, suburb, spots_total, level_wanted, notes, sport_details, cover_image_url",
+      )
+      .eq("host_id", userId),
+    client
+      .from("activity_join_requests")
+      .select("activity_id, status")
+      .eq("user_id", userId)
+      .in("status", ["pending", "accepted"]),
+  ])
+  if (hostedResult.error) throw hostedResult.error
+  if (ownRequestsResult.error) throw ownRequestsResult.error
+
+  const hostedActivities = hostedResult.data ?? []
+  const ownRequests = ownRequestsResult.data ?? []
+  const activityIds = [
+    ...new Set([
+      ...hostedActivities.map((activity) => activity.id),
+      ...ownRequests.map((request) => request.activity_id),
+    ]),
+  ]
+  if (activityIds.length === 0) return []
+
+  const [activitiesResult, requestsResult] = await Promise.all([
+    client
+      .from("activities")
+      .select(
+        "id, host_id, sport_id, title, starts_at, meeting_point, suburb, spots_total, level_wanted, notes, sport_details, cover_image_url",
+      )
+      .in("id", activityIds),
+    client
+      .from("activity_join_requests")
+      .select("activity_id, user_id, status")
+      .in("activity_id", activityIds)
+      .in("status", ["pending", "accepted"]),
+  ])
+  if (activitiesResult.error) throw activitiesResult.error
+  if (requestsResult.error) throw requestsResult.error
+
+  const activities = activitiesResult.data ?? []
+  const requests = requestsResult.data ?? []
+  const profileIds = [
+    ...new Set([
+      ...activities.map((activity) => activity.host_id),
+      ...requests
+        .filter((request) => request.status === "accepted")
+        .map((request) => request.user_id),
+    ]),
+  ]
+  const sportIds = [...new Set(activities.map((activity) => activity.sport_id))]
+  const [profilesResult, sportsResult] = await Promise.all([
+    client.from("profiles").select("id, first_name").in("id", profileIds),
+    client.from("sports").select("id, name").in("id", sportIds),
+  ])
+  if (profilesResult.error) throw profilesResult.error
+  if (sportsResult.error) throw sportsResult.error
+
+  const profileNames = new Map(
+    (profilesResult.data ?? []).map((profile) => [
+      profile.id,
+      profile.first_name,
+    ]),
+  )
+  const sportNames = new Map(
+    (sportsResult.data ?? []).map((sport) => [sport.id, sport.name]),
+  )
+
+  return activities
+    .flatMap((activity): MySavedActivity[] => {
+      const sport = sportNames.get(activity.sport_id)
+      const host = profileNames.get(activity.host_id)
+      if (!sport || !host) return []
+
+      const ownRequest = ownRequests.find(
+        (request) => request.activity_id === activity.id,
+      )
+      const isHost = activity.host_id === userId
+      if (!isHost && !ownRequest) return []
+
+      const activityRequests = requests.filter(
+        (request) => request.activity_id === activity.id,
+      )
+      const acceptedRequests = activityRequests.filter(
+        (request) => request.status === "accepted",
+      )
+      const acceptedNames = acceptedRequests.flatMap((request) => {
+        const name = profileNames.get(request.user_id)
+        return name ? [name] : []
+      })
+      const sportDetails =
+        typeof activity.sport_details === "object" &&
+        activity.sport_details !== null &&
+        !Array.isArray(activity.sport_details)
+          ? Object.values(activity.sport_details).filter(
+              (value): value is string => typeof value === "string",
+            )
+          : []
+      const icon: ActivityIcon = getSportIcon(sport)
+      const isUpcoming = Date.parse(activity.starts_at) >= Date.now()
+      if (!isUpcoming) return []
+
+      return [
+        {
+          id: activity.id,
+          sport,
+          title: activity.title,
+          startsAt: new Date(activity.starts_at),
+          facts: sportDetails.slice(0, 3).join(" · "),
+          details: {},
+          place: activity.meeting_point,
+          suburb: activity.suburb,
+          host,
+          spotsTotal: activity.spots_total,
+          spotsTaken: acceptedRequests.length,
+          level: activity.level_wanted,
+          icon,
+          hero: activity.cover_image_url ?? getDefaultActivityHero(sport),
+          hostMeta: "",
+          notes: activity.notes,
+          attendees: [host, ...acceptedNames],
+          joinStatus: isHost
+            ? "hosting"
+            : ownRequest?.status === "accepted"
+              ? "going"
+              : "requested",
+          pendingRequestCount: isHost
+            ? activityRequests.filter((request) => request.status === "pending")
+                .length
+            : 0,
+        },
+      ]
+    })
+    .sort((left, right) => left.startsAt.getTime() - right.startsAt.getTime())
+}
+
+function getSportIcon(sport: string): ActivityIcon {
+  const normalizedSport = sport.toLowerCase()
+  if (normalizedSport.includes("fish") || normalizedSport.includes("scuba"))
+    return "fish"
+  if (normalizedSport.includes("run") || normalizedSport.includes("jog"))
+    return "run"
+  if (normalizedSport.includes("bike") || normalizedSport.includes("cycling"))
+    return "bike"
+  if (
+    normalizedSport.includes("surf") ||
+    normalizedSport.includes("swim") ||
+    normalizedSport.includes("kite") ||
+    normalizedSport.includes("kayak") ||
+    normalizedSport.includes("sailing")
+  )
+    return "waves"
+  if (normalizedSport.includes("gym")) return "gym"
+  return "mountain"
+}
+
+export async function requestToJoinActivity(
+  activityId: string,
+  message = "",
+): Promise<"pending" | "accepted"> {
+  const { data, error } = await requireSupabase().rpc(
+    "request_to_join_activity",
+    {
+      target_activity_id: activityId,
+      request_message: message.trim(),
+    },
+  )
+  if (error) throw error
+  if (data !== "pending" && data !== "accepted") {
+    throw new Error("The join request was not saved. Please try again.")
+  }
+  return data
+}
+
+export async function respondToActivityJoinRequest(
+  activityId: string,
+  userId: string,
+  response: "accepted" | "declined",
+) {
+  const { error } = await requireSupabase().rpc(
+    "respond_to_activity_join_request",
+    {
+      target_activity_id: activityId,
+      target_user_id: userId,
+      response,
+    },
+  )
+  if (error) throw error
+}
+
+export async function cancelActivityJoinRequest(activityId: string) {
+  const { error } = await requireSupabase().rpc(
+    "cancel_activity_join_request",
+    { target_activity_id: activityId },
+  )
+  if (error) throw error
+}

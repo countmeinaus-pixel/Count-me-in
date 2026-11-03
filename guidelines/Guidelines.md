@@ -176,8 +176,9 @@ Build these once and reuse them. Each lists its variants and states.
 - 56px. Back chevron on the left (ghost icon button), title in `h3` centered or left, optional action on the right.
 
 **BottomNav**
-- 5 items: Home, My activities, Create (center, orange square button 48px with plus icon, radius `--radius-md`), Chats, Profile.
+- 5 items: Home, Friends, My activities (center), Chats, More.
 - bg `--surface-1`, top border `--border`. Active icon and label `--text-primary`, inactive `--text-muted`. Unread dot `--accent`.
+- The Create activity action is a primary button below the My activities page heading.
 
 **BottomSheet**
 - bg `--surface-2`, top radius `--radius-xl`, drag handle, scrim `--scrim`.

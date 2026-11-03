@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, Bike, CalendarDays, Check, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, ListFilter, MapPin, Mountain, Waves } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { ActivityCard } from '../components/ActivityCard'
+import { ActivityCard, type ActivityCardData } from '../components/ActivityCard'
 import { Button } from '../components/Button'
 import { activities, communityMembers, currentUser } from '../data/mockData'
 import { MateCard } from '../components/MateCard'
+import {
+  getSavedActivityFeed,
+  type FeedActivity,
+} from '../lib/activityParticipation'
+import { hasDemoJoinRequest } from '../lib/demoParticipation'
 import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 
@@ -48,6 +53,8 @@ export function HomeScreen() {
   const [firstName, setFirstName] = useState(currentUser.name)
   const [userSportNames, setUserSportNames] = useState(() => currentUser.sports.map((sport) => sport.name))
   const [sportLoadError, setSportLoadError] = useState('')
+  const [savedActivities, setSavedActivities] = useState<FeedActivity[]>([])
+  const [activityLoadError, setActivityLoadError] = useState('')
   const [filterScroll, setFilterScroll] = useState({ isScrollable: false, canScrollLeft: false, canScrollRight: false, activeDot: 0, dotCount: 0 })
   const filterOptions = useMemo(() => ['My sports', ...new Set(userSportNames)], [userSportNames])
 
@@ -58,6 +65,7 @@ export function HomeScreen() {
 
       try {
         const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError?.name === 'AuthSessionMissingError') return
         if (userError) throw userError
         if (!userData.user) return
 
@@ -79,13 +87,44 @@ export function HomeScreen() {
   }, [])
 
   useEffect(() => {
+    let active = true
+    void getSavedActivityFeed()
+      .then((result) => {
+        if (active) setSavedActivities(result)
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setActivityLoadError(
+            error instanceof Error
+              ? error.message
+              : 'Unable to load saved activities.',
+          )
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
     if (!filterOptions.includes(filter)) setFilter('My sports')
   }, [filter, filterOptions])
 
   const visible = useMemo(() => {
-    if (filter === 'My sports') return activities
-    return activities.filter((item) => item.sport === filter)
-  }, [filter])
+    const savedCards: ActivityCardData[] = savedActivities.map(
+      ({ viewerJoinStatus, ...activity }) => ({
+        ...activity,
+        joinStatus: viewerJoinStatus ?? undefined,
+      }),
+    )
+    const demoCards: ActivityCardData[] = activities.map((activity) => ({
+      ...activity,
+      joinStatus: hasDemoJoinRequest(activity.id) ? 'pending' : undefined,
+    }))
+    const allActivities = [...savedCards, ...demoCards]
+    if (filter === 'My sports') return allActivities
+    return allActivities.filter((item) => item.sport === filter)
+  }, [filter, savedActivities])
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 60_000)
@@ -177,7 +216,7 @@ export function HomeScreen() {
   }, [calendarMode, calendarOffset, now])
 
   const calendarActivityMap = useMemo(() => {
-    const map = new Map<string, typeof activities>()
+    const map = new Map<string, ActivityCardData[]>()
     visible.forEach((activity) => {
       const key = toDateKey(activity.startsAt)
       const existing = map.get(key) ?? []
@@ -273,15 +312,23 @@ export function HomeScreen() {
               <Button onClick={() => navigate('/create')}>Create activity</Button>
             </div>
           ) : (
-            <div className="card-list">
-              {visible.map((activity) => (
-                <ActivityCard
-                  key={activity.id}
-                  activity={activity}
-                  onClick={() => navigate(`/activity/${activity.id}`)}
-                />
-              ))}
-            </div>
+            <>
+              {activityLoadError && (
+                <p className="activity-feed-notice" role="status">
+                  Saved activities could not be loaded. Showing demo activities.
+                  {" "}{activityLoadError}
+                </p>
+              )}
+              <div className="card-list">
+                {visible.map((activity) => (
+                  <ActivityCard
+                    key={activity.id}
+                    activity={activity}
+                    onClick={() => navigate(`/activity/${activity.id}`)}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </>
       )}
@@ -438,7 +485,14 @@ export function HomeScreen() {
                   {selectedDayActivities.map((activity) => (
                     <ActivityCard
                       key={activity.id}
-                      activity={activity}
+                      activity={{
+                        ...activity,
+                        joinStatus:
+                          typeof activity.id === 'number' &&
+                          hasDemoJoinRequest(activity.id)
+                            ? 'pending'
+                            : activity.joinStatus,
+                      }}
                       onClick={() => navigate(`/activity/${activity.id}`)}
                     />
                   ))}

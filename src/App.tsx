@@ -38,10 +38,10 @@ function AppShell() {
   const activeTab: Tab | null =
     path === "/notifications"
       ? null
-      : path === "/activities"
+      : path === "/activities" || path === "/create"
         ? "activities"
-        : path === "/create"
-          ? "create"
+        : path === "/friends" || path === "/mates"
+          ? "friends"
           : path.startsWith("/chats")
             ? "chats"
             : path.startsWith("/profile")
@@ -79,6 +79,7 @@ const router = createBrowserRouter([
       { path: "/onboarding", element: <OnboardingScreen /> },
       { path: "/activity/:id", element: <ActivityDetailScreen /> },
       { path: "/activities", element: <MyActivitiesScreen /> },
+      { path: "/friends", element: <MatesScreen friendsOnly /> },
       { path: "/mates", element: <MatesScreen /> },
       { path: "/notifications", element: <NotificationsScreen /> },
       { path: "/create", element: <CreateActivityScreen /> },

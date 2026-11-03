@@ -1,15 +1,15 @@
-import { CalendarDays, Home, MessageCircle, Plus } from 'lucide-react'
+import { CalendarDays, Home, MessageCircle, UsersRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { supabase } from '../lib/supabase'
 
-export type Tab = 'home' | 'activities' | 'create' | 'chats' | 'more'
+export type Tab = 'home' | 'friends' | 'activities' | 'chats' | 'more'
 
 const items = [
   ['home', 'Home', Home, '/'],
+  ['friends', 'Friends', UsersRound, '/friends'],
   ['activities', 'My activities', CalendarDays, '/activities'],
-  ['create', 'Create', Plus, '/create'],
   ['chats', 'Chats', MessageCircle, '/chats'],
 ] as const
 
@@ -58,7 +58,7 @@ export function BottomNav({ active, hasUnreadChats = true }: { active: Tab | nul
         <button
           key={id}
           type="button"
-          className={`${active === id ? 'active' : ''} ${id === 'create' ? 'create' : ''}`}
+          className={active === id ? 'active' : ''}
           onClick={() => navigate(href)}
           aria-label={label}
           aria-current={active === id ? 'page' : undefined}

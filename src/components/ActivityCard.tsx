@@ -1,7 +1,12 @@
 import { Check, Fish, Footprints, MapPin, Mountain, Waves, Bike, Dumbbell } from 'lucide-react'
 import { formatActivityDate, getActivitySpotsLabel, type Activity } from '../data/mockData'
 
-export function ActivityCard({ activity, onClick }: { activity: Activity; onClick: () => void }) {
+export type ActivityCardData = Omit<Activity, 'id'> & {
+  id: number | string
+  joinStatus?: 'pending' | 'accepted'
+}
+
+export function ActivityCard({ activity, onClick }: { activity: ActivityCardData; onClick: () => void }) {
   const Icon = activity.icon === 'fish'
     ? Fish
     : activity.icon === 'mountain'
@@ -22,6 +27,11 @@ export function ActivityCard({ activity, onClick }: { activity: Activity; onClic
       </div>
 
       <h3>{activity.title}</h3>
+      {activity.joinStatus && (
+        <span className={`activity-card-join-status ${activity.joinStatus}`}>
+          {activity.joinStatus === 'pending' ? 'Requested' : 'Going'}
+        </span>
+      )}
       <p className="card-facts">{activity.facts}</p>
       <p className="card-place"><MapPin />{activity.place}</p>
 

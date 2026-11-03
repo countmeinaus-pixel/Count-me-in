@@ -14,10 +14,10 @@ Count Me In helps men in Adelaide find a mate for the sports and outdoor activit
 
 Bottom navigation with 5 tabs:
 1. **Home**: feed of upcoming activities in Adelaide.
-2. **My activities**: activities I'm hosting or have joined (Upcoming / Past).
-3. **Create** (center orange button): start a new activity.
+2. **Friends**: friends and their profiles.
+3. **My activities** (centre): activities I'm hosting or have joined (Upcoming / Past). A "Create activity" button below the page heading starts a new activity.
 4. **Chats**: one group chat per activity I'm part of.
-5. **Profile**: my profile, stats, achievement patches, settings, About.
+5. **More**: my profile, stats, achievement patches, settings, About.
 
 ## Activities and presets
 
@@ -29,6 +29,7 @@ Every activity has the **common fields** plus the **preset fields** of its sport
 - Date
 - Start time
 - Meeting point (free text, for example "Car park at Port Noarlunga jetty") and suburb
+- Optional activity banner. Recommend 1200 × 600 px (2:1); resize the long edge to 1200 px and compress to JPEG in the browser before upload.
 - Group size: "1 buddy" or "Small group" (2 to 8 spots, stepper)
 - Level wanted: Any, Beginner friendly, Intermediate, Experienced
 - Notes (optional, max 300 characters)
@@ -72,6 +73,7 @@ Beginner, Intermediate, Experienced.
 
 - Tapping "Count me in" sends a join request with an optional short message.
 - The host accepts or declines. Hosts can switch on "Auto-accept" when creating the activity.
+- Show the user's request state on the activity card on Home and in My activities.
 - Once accepted, you join the activity's group chat (host plus all accepted members).
 - When an activity is full, the button changes to "Full" (disabled) with a "Join waitlist" ghost button.
 
@@ -134,9 +136,9 @@ Use ProgressSteps on steps 2 to 9.
 3. Toast "Request sent to Matt". Button state: "Requested" (secondary, disabled look) with "Cancel request" ghost.
 4. Simulate host acceptance after 3 seconds: Toast "You're in", button becomes "Open chat", activity appears in My activities, chat appears in Chats with a system message "You joined the activity".
 
-### Create activity flow (from the center + button)
-1. **What are you up to?**: SportTile grid including "Open activity".
-2. **The details**: preset fields for the chosen sport (see table), using Inputs, Chips and steppers.
+### Create activity flow (from the Create activity button on My activities)
+1. **What are you up to?**: SportTile grid with the full sports catalogue, including "Open activity". Show the user's profile sports first, but allow any catalogue sport to be selected.
+2. **The details**: preset fields for the chosen sport (see table), using Inputs, Chips and steppers. Show a default banner with an option to upload a custom image and the recommended image size.
 3. **When and where**: date picker (next 30 days), start time, meeting point, suburb.
 4. **Who are you after?**: "1 buddy" or "Small group" toggle; spots stepper if group; level wanted Chips; Auto-accept toggle; notes.
 5. **Review**: preview of the ActivityCard exactly as others will see it, plus all details. "Post activity" (primary). "Edit" links per section.

@@ -817,6 +817,29 @@ h3 { font: 700 21px/24px var(--font-display); }
   font: 500 12px var(--font-body);
 }
 
+.activity-card-join-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 8px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  font: 500 12px var(--font-body);
+}
+.activity-card-join-status.pending {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+.activity-card-join-status.accepted {
+  background: var(--seafoam-subtle);
+  color: var(--seafoam);
+}
+.activity-feed-notice {
+  margin: 12px 0;
+  color: var(--warning);
+  font-size: 13px;
+}
+
 .spots {
   display: flex;
   align-items: center;
@@ -838,6 +861,51 @@ h3 { font: 700 21px/24px var(--font-display); }
   background: var(--seafoam);
 }
 .spots i.open { background: transparent; border: 1px solid var(--border-strong); }
+
+.activity-join-requests {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.activity-join-requests h2 {
+  color: var(--text-primary);
+  font: 700 20px/24px var(--font-display);
+}
+.activity-join-request {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+}
+.activity-join-request p {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.activity-join-request-actions {
+  display: flex;
+  gap: 8px;
+}
+.activity-join-request-actions .button { flex: 1; }
+.activity-join-error {
+  margin-top: 16px;
+  color: var(--danger);
+  font-size: 14px;
+}
+.activity-join-feedback {
+  margin-top: 10px;
+  color: var(--seafoam);
+  font-size: 14px;
+}
+.activity-demo-notice {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
 
 .bottom-nav {
   position: fixed;
@@ -881,14 +949,6 @@ h3 { font: 700 21px/24px var(--font-display); }
     background: rgba(127, 183, 168, 0.12);
   }
 
-  .bottom-nav .create {
-    width: auto;
-    min-width: 88px;
-  }
-
-  .bottom-nav .create svg {
-    margin-top: 0;
-  }
 }
 .bottom-nav button {
   border: 0;
@@ -903,16 +963,6 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .bottom-nav button svg { width: 22px; height: 22px; }
 .bottom-nav button.active { color: var(--text-primary); }
-.bottom-nav .create svg {
-  width: 46px;
-  height: 46px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  background: var(--accent);
-  color: var(--on-accent);
-  margin-top: -22px;
-}
-.bottom-nav .create span { margin-top: -2px; }
 
 .detail-layout {
   width: min(100%, 1240px);
@@ -1220,6 +1270,14 @@ h3 { font: 700 21px/24px var(--font-display); }
   padding-bottom: var(--bottom-nav-clearance);
 }
 
+.my-activities-create {
+  width: auto;
+  gap: 8px;
+  padding: 0 16px;
+  margin-bottom: 4px;
+}
+.my-activities-create svg { width: 18px; height: 18px; }
+
 .my-activities-grid {
   display: grid;
   gap: 18px;
@@ -1238,7 +1296,9 @@ h3 { font: 700 21px/24px var(--font-display); }
   text-transform: uppercase;
   color: var(--seafoam);
 }
-.status-line .host-status { color: var(--accent); }
+.status-line .host-status,
+.status-line .hosting-status { color: var(--accent); }
+.status-line .requested-status { color: var(--warning); }
 
 @media (min-width: 980px) {
   .segment-bar {
@@ -3090,6 +3150,8 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--on-seafoam);
 }
 .wizard-progress-step.done { color: var(--seafoam); cursor: pointer; }
+.wizard-progress-step.done:hover { color: var(--text-primary); }
+.wizard-progress-step.done:hover span { background: var(--surface-3); color: var(--seafoam); }
 .wizard-progress-step:disabled { cursor: default; }
 .wizard-step-count {
   margin: 8px 0 24px;
@@ -3175,6 +3237,21 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .wizard-cover-preview span { color: var(--text-secondary); font-size: 12px; }
 .wizard-cover-preview strong { font: 700 18px var(--font-display); }
+.wizard-cover-controls { display: grid; gap: 8px; }
+.wizard-cover-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.wizard-cover-guidance,
+.wizard-progress-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.wizard-progress-hint { margin: -18px 0 24px; text-align: center; }
+.wizard-progress-step.done:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: 2px solid var(--seafoam);
+  outline-offset: 3px;
+}
 .wizard-field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

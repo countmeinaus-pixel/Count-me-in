@@ -101,3 +101,30 @@ This migration adds protected user roles, a report queue for profiles and activi
    ```
 
 The app cannot grant admin roles to itself. Only a project administrator using SQL Editor can assign or change roles. Moderator appointments, sanctions, chat moderation and activity-image management are still separate remaining work.
+
+## 9) Activity join requests
+
+This migration adds private join requests with host-only accept/decline actions, capacity checks, and support for auto-accept. Requests are changed through database functions so users cannot accept themselves or bypass the activity's available spots.
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103130000_activity_join_requests.sql`.
+3. Paste the SQL into the editor and choose **Run**.
+
+This migration depends on the existing `activities`, `profiles`, and moderation `blocked_users` schema.
+Requests on saved activities are stored in Supabase; their status is visible on the activity detail and Home cards. Demo activities use browser-only storage and clearly indicate that they do not contact a host.
+
+## 10) Full activity catalogue in create flow
+
+The create-activity flow lists every sport in the shared catalogue, not only sports saved on the user's profile. This migration adds any missing catalogue entries, grants the table privileges the signed-in flow needs, and lets signed-in users host an activity using any catalogue sport, including **Open activity**. Row Level Security still restricts activity changes to the host. Profile sports remain listed first as a convenience.
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103140000_activity_catalog_options.sql`.
+3. Paste the SQL into the editor and choose **Run**.
+
+## 11) Activity banner images
+
+This migration creates a public `activity-covers` storage bucket for activity banners. Signed-in users can upload and remove images only in their own user-ID folder. The browser resizes the long edge to 1200 px and compresses the image to JPEG before upload.
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103143000_activity_cover_images.sql`.
+3. Paste the SQL into the editor and choose **Run**.

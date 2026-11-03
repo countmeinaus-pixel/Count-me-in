@@ -39,7 +39,9 @@ export function formatActivityDate(date: Date, options: Intl.DateTimeFormatOptio
 }
 
 export function getActivitySpotsLabel(activity: Pick<Activity, 'spotsTotal' | 'spotsTaken'>) {
-  if (activity.spotsTotal === 1) return '1 buddy wanted'
+  if (activity.spotsTotal === 1) {
+    return activity.spotsTaken > 0 ? 'Full' : '1 buddy wanted'
+  }
   return `${activity.spotsTaken} of ${activity.spotsTotal} spots`
 }
 

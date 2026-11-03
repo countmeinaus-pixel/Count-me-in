@@ -20,6 +20,19 @@ import {
   getActivitySpotsLeft,
   type Activity,
 } from "../data/mockData"
+import {
+  cancelActivityJoinRequest,
+  getActivityJoinState,
+  requestToJoinActivity,
+  respondToActivityJoinRequest,
+  type ActivityJoinState,
+} from "../lib/activityParticipation"
+import {
+  getDemoJoinRequestKey,
+  hasDemoJoinRequest,
+  removeDemoJoinRequest,
+  saveDemoJoinRequest,
+} from "../lib/demoParticipation"
 import { getSavedActivity, type SavedActivityDetails } from "../lib/activities"
 import {
   getPatchProgressForUser,
@@ -37,9 +50,19 @@ export function ActivityDetailScreen() {
     Boolean(id && !mockActivity),
   )
   const [loadError, setLoadError] = useState("")
+  const [joinState, setJoinState] = useState<ActivityJoinState | null>(null)
+  const [isLoadingJoinState, setIsLoadingJoinState] = useState(false)
+  const [joinError, setJoinError] = useState("")
+  const [isUpdatingJoin, setIsUpdatingJoin] = useState(false)
+  const [respondingToUserId, setRespondingToUserId] = useState<string | null>(
+    null,
+  )
   const [qrOpen, setQrOpen] = useState(false)
   const [scanMode, setScanMode] = useState<"qr" | "camera" | "success">("qr")
-  const [joinRequested, setJoinRequested] = useState(false)
+  const [joinRequested, setJoinRequested] = useState(() =>
+    hasDemoJoinRequest(mockActivity?.id),
+  )
+  const [joinFeedback, setJoinFeedback] = useState("")
   const [reportOpen, setReportOpen] = useState(false)
   const [confirmed, setConfirmed] = useState(() =>
     mockActivity
@@ -56,6 +79,8 @@ export function ActivityDetailScreen() {
   useEffect(() => {
     if (!id) return
     if (mockActivity) {
+      setJoinRequested(hasDemoJoinRequest(mockActivity.id))
+      setJoinFeedback("")
       setSavedActivity(null)
       setIsLoadingSavedActivity(false)
       setLoadError("")
@@ -86,6 +111,38 @@ export function ActivityDetailScreen() {
       active = false
     }
   }, [id, mockActivity])
+
+  useEffect(() => {
+    if (!savedActivity) {
+      setJoinState(null)
+      setIsLoadingJoinState(false)
+      return
+    }
+
+    let active = true
+    setJoinState(null)
+    setJoinError("")
+    setIsLoadingJoinState(true)
+    void getActivityJoinState(savedActivity.id)
+      .then((result) => {
+        if (active) setJoinState(result)
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setJoinError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load activity join requests.",
+          )
+      })
+      .finally(() => {
+        if (active) setIsLoadingJoinState(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [savedActivity])
 
   useEffect(() => {
     if (!mockActivity || !qrOpen || !qrCanvasRef.current) return
@@ -136,12 +193,108 @@ export function ActivityDetailScreen() {
     )
   }
 
+  async function refreshJoinState() {
+    if (!savedActivity) return
+    const result = await getActivityJoinState(savedActivity.id)
+    setJoinState(result)
+  }
+
+  async function handleJoinActivity() {
+    if (mockActivity) {
+      try {
+        saveDemoJoinRequest(mockActivity.id)
+      } catch {
+        setJoinError(
+          "This demo request could not be saved in this browser. Try a real activity to send a request to its host.",
+        )
+        return
+      }
+      setJoinRequested(true)
+      setJoinError("")
+      return
+    }
+    if (!savedActivity) return
+
+    setIsUpdatingJoin(true)
+    setJoinError("")
+    try {
+      const status = await requestToJoinActivity(savedActivity.id)
+      await refreshJoinState()
+      setJoinFeedback(
+        status === "accepted"
+          ? "You’re in. The host accepts this activity automatically."
+          : "Your request was sent to the host and is waiting for review.",
+      )
+    } catch (error) {
+      setJoinError(
+        error instanceof Error
+          ? error.message
+          : "Unable to send your join request.",
+      )
+    } finally {
+      setIsUpdatingJoin(false)
+    }
+  }
+
+  async function handleCancelJoinRequest() {
+    if (mockActivity) {
+      try {
+        removeDemoJoinRequest(mockActivity.id)
+      } catch {
+        setJoinError(
+          "This demo request could not be removed from this browser.",
+        )
+        return
+      }
+      setJoinRequested(false)
+      setJoinError("")
+      return
+    }
+    if (!savedActivity) return
+
+    setIsUpdatingJoin(true)
+    setJoinError("")
+    try {
+      await cancelActivityJoinRequest(savedActivity.id)
+      await refreshJoinState()
+      setJoinFeedback("")
+    } catch (error) {
+      setJoinError(
+        error instanceof Error
+          ? error.message
+          : "Unable to cancel your join request.",
+      )
+    } finally {
+      setIsUpdatingJoin(false)
+    }
+  }
+
+  async function handleJoinRequestResponse(
+    userId: string,
+    response: "accepted" | "declined",
+  ) {
+    if (!savedActivity) return
+    setRespondingToUserId(userId)
+    setJoinError("")
+    try {
+      await respondToActivityJoinRequest(savedActivity.id, userId, response)
+      await refreshJoinState()
+    } catch (error) {
+      setJoinError(
+        error instanceof Error
+          ? error.message
+          : "Unable to update this join request.",
+      )
+    } finally {
+      setRespondingToUserId(null)
+    }
+  }
+
   function closeQr() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop())
       streamRef.current = null
     }
-
     setQrOpen(false)
     setScanMode("qr")
   }
@@ -270,7 +423,12 @@ export function ActivityDetailScreen() {
       ? currentUser.age
       : communityMembers.find((member) => member.name === hostName)?.age)
   const attendees = savedDetails
-    ? [savedDetails.host]
+    ? [
+        savedDetails.host,
+        ...(joinState?.acceptedParticipants.map(
+          (participant) => participant.name,
+        ) ?? []),
+      ]
     : (mockActivity?.attendees ?? [])
   const activityStart = savedDetails
     ? new Date(savedDetails.startsAt)
@@ -282,11 +440,22 @@ export function ActivityDetailScreen() {
     activityStart.getDate() === new Date().getDate()
   const isHost =
     savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
-  const isJoined = isHost || attendees.includes(currentUser.name)
+  const isJoined =
+    isHost ||
+    (savedDetails
+      ? joinState?.status === "accepted"
+      : attendees.includes(currentUser.name))
+  const isFull =
+    Boolean(savedDetails) &&
+    (joinState?.acceptedParticipants.length ?? 0) >=
+      (savedDetails?.spotsTotal ?? 0) &&
+    joinState?.status !== "accepted"
   const spotsLabel = savedDetails
-    ? `${savedDetails.spotsTotal} ${
-        savedDetails.spotsTotal === 1 ? "spot" : "spots"
-      } available`
+    ? isFull
+      ? "Full"
+      : savedDetails.spotsTotal === 1
+        ? "1 buddy wanted"
+        : `${savedDetails.spotsTotal - (joinState?.acceptedParticipants.length ?? 0)} spots left`
     : mockActivity?.spotsTotal === 1
       ? "1 buddy wanted"
       : `${mockActivity ? getActivitySpotsLeft(mockActivity) : 0} spots left`
@@ -403,6 +572,52 @@ export function ActivityDetailScreen() {
           </button>
         </div>
 
+        {isHost && (joinState?.pendingRequests.length ?? 0) > 0 && (
+          <section className="activity-join-requests">
+            <h2>Join requests</h2>
+            {joinState?.pendingRequests.map((request) => (
+              <article className="activity-join-request" key={request.id}>
+                <div>
+                  <strong>{request.name}</strong>
+                  {request.message && <p>{request.message}</p>}
+                </div>
+                <div className="activity-join-request-actions">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={respondingToUserId !== null}
+                    onClick={() =>
+                      void handleJoinRequestResponse(request.id, "declined")
+                    }
+                  >
+                    Decline
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={respondingToUserId !== null}
+                    onClick={() =>
+                      void handleJoinRequestResponse(request.id, "accepted")
+                    }
+                  >
+                    Accept
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
+        {joinError && (
+          <p className="activity-join-error" role="alert">
+            {joinError}
+          </p>
+        )}
+        {joinFeedback && (
+          <p className="activity-join-feedback" role="status">
+            {joinFeedback}
+          </p>
+        )}
+
         <div className="notes-box">
           <h2>From {hostName}</h2>
           <p>{activity.notes}</p>
@@ -416,25 +631,45 @@ export function ActivityDetailScreen() {
               Manage activity
             </Button>
           ) : isJoined ? (
+            savedDetails ? (
+              <Button size="lg" disabled>
+                You’re in
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate("/chats")}
+                  size="lg"
+                >
+                  Open chat
+                </Button>
+                <Button
+                  onClick={() => setQrOpen(true)}
+                  size="lg"
+                  disabled={!isActivityDay || confirmed || isSavedActivity}
+                  title={
+                    !isActivityDay
+                      ? "Check-in opens on the activity day."
+                      : undefined
+                  }
+                >
+                  {confirmed ? "Confirmed" : "Check in"}
+                </Button>
+              </>
+            )
+          ) : savedDetails?.id && joinState?.status === "pending" ? (
             <>
               <Button
                 variant="secondary"
-                onClick={() => navigate("/chats")}
+                onClick={() => void handleCancelJoinRequest()}
                 size="lg"
+                disabled={isUpdatingJoin}
               >
-                Open chat
+                Cancel request
               </Button>
-              <Button
-                onClick={() => setQrOpen(true)}
-                size="lg"
-                disabled={!isActivityDay || confirmed || isSavedActivity}
-                title={
-                  !isActivityDay
-                    ? "Check-in opens on the activity day."
-                    : undefined
-                }
-              >
-                {confirmed ? "Confirmed" : "Check in"}
+              <Button size="lg" disabled>
+                Requested
               </Button>
             </>
           ) : (
@@ -442,22 +677,40 @@ export function ActivityDetailScreen() {
               {joinRequested && (
                 <Button
                   variant="secondary"
-                  onClick={() => setJoinRequested(false)}
+                  onClick={() => void handleCancelJoinRequest()}
                   size="lg"
+                  disabled={isUpdatingJoin}
                 >
                   Cancel request
                 </Button>
               )}
               <Button
-                onClick={() => setJoinRequested(true)}
+                onClick={() => void handleJoinActivity()}
                 size="lg"
-                disabled={joinRequested}
+                disabled={
+                  joinRequested ||
+                  isUpdatingJoin ||
+                  (Boolean(savedDetails) &&
+                    (isLoadingJoinState || !joinState || isFull))
+                }
               >
-                {joinRequested ? "Requested" : "Count me in"}
+                {joinRequested
+                  ? "Requested"
+                  : isUpdatingJoin
+                    ? "Sending request…"
+                    : isFull
+                      ? "Full"
+                      : "Count me in"}
               </Button>
             </>
           )}
         </div>
+        {mockActivity && (
+          <p className="activity-demo-notice" role="note">
+            Demo activity — this request is only saved in this browser and is
+            not sent to the host.
+          </p>
+        )}
       </div>
 
       {qrOpen && !isSavedActivity && (

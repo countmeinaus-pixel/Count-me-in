@@ -7,6 +7,7 @@ import {
   Dumbbell,
   Fish,
   Footprints,
+  ImagePlus,
   MapPin,
   Mountain,
   MountainSnow,
@@ -15,48 +16,101 @@ import {
   Waves,
   Wind,
 } from 'lucide-react'
-import { useEffect, useMemo, useState, type ComponentType } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { activities, getDefaultActivityHero } from '../data/mockData'
+import { compressActivityCover, deleteActivityCover, uploadActivityCover } from '../lib/activityImages'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
-type SportOption = { id: number; name: string; icon: string | null; skill: string }
+type SportOption = {
+  id: number
+  name: string
+  icon: string | null
+  profileSkill: string | null
+}
 type InviteSuggestion = { id: string; first_name: string; suburb: string }
 type PresetField = {
   key: string
   label: string
   placeholder?: string
   options?: string[]
-  type?: 'text' | 'number'
+  type?: 'text' | 'number' | 'textarea'
   min?: number
   max?: number
   step?: number
+  maxLength?: number
 }
 
 const steps = ['Sport', 'Details', 'Level', 'Add people', 'Review']
 const levels = ['Beginner friendly', 'Intermediate', 'Experienced']
 const presetFields: Record<string, PresetField[]> = {
   Spearfishing: [
-    { key: 'target_depth', label: 'Target depth', options: ['0-5 m', '5-10 m', '10-15 m', '15 m+'] },
+    { key: 'spot', label: 'Spot', placeholder: 'For example, Port Noarlunga reef' },
+    { key: 'target_depth', label: 'Depth', options: ['0 to 5 m', '5 to 10 m', '10 to 15 m', '15 m+'] },
     { key: 'entry', label: 'Entry', options: ['Shore dive', 'Boat dive'] },
+    { key: 'duration_hours', label: 'Duration (hours)', type: 'number', min: 0.25, max: 24, step: 0.25 },
+    { key: 'own_gear', label: 'Own gear needed', options: ['Yes', 'No'] },
   ],
   Kitesurfing: [
-    { key: 'kite_size', label: 'Kite size (m²)', type: 'number', min: 1, max: 30, step: 0.5 },
-    { key: 'style', label: 'Style', options: ['Freeride', 'Freestyle', 'Wave'] },
     { key: 'spot', label: 'Spot', placeholder: 'For example, Brighton' },
+    { key: 'discipline', label: 'Discipline', options: ['Freeride', 'Freestyle', 'Foil', 'Wave'] },
+    { key: 'duration_hours', label: 'Duration (hours)', type: 'number', min: 0.25, max: 24, step: 0.25 },
   ],
   Hiking: [
+    { key: 'destination', label: 'Trail or destination', placeholder: 'For example, Mount Lofty Summit' },
     { key: 'distance_km', label: 'Distance (km)', type: 'number', min: 0.1, max: 200, step: 0.1 },
-    { key: 'difficulty', label: 'Difficulty', options: ['Easy', 'Moderate', 'Steep'] },
+    { key: 'elevation', label: 'Elevation', options: ['Flat', 'Moderate', 'Steep'] },
+    { key: 'duration_hours', label: 'Estimated duration (hours)', type: 'number', min: 0.25, max: 24, step: 0.25 },
   ],
   Running: [
     { key: 'distance_km', label: 'Distance (km)', type: 'number', min: 0.1, max: 200, step: 0.1 },
-    { key: 'pace', label: 'Pace', options: ['Relaxed', 'Steady', 'Fast'] },
-    { key: 'terrain', label: 'Terrain', options: ['Road', 'Trail', 'Beach'] },
+    { key: 'pace', label: 'Pace', options: ['Easy 6:30+ /km', 'Steady 5:30 to 6:30', 'Fast under 5:30'] },
+    { key: 'terrain', label: 'Terrain', options: ['Road', 'Trail', 'Track'] },
+  ],
+  Surfing: [
+    { key: 'spot', label: 'Spot', placeholder: 'For example, Middleton Point' },
+    { key: 'board', label: 'Board', options: ['Shortboard', 'Longboard', 'Any'] },
+    { key: 'duration_hours', label: 'Duration (hours)', type: 'number', min: 0.25, max: 24, step: 0.25 },
+  ],
+  Swimming: [
+    { key: 'location', label: 'Location', options: ['Ocean', 'Pool'] },
+    { key: 'distance_m', label: 'Distance (m)', type: 'number', min: 1, max: 100000, step: 50 },
+    { key: 'pace', label: 'Pace', options: ['Relaxed', 'Steady', 'Training'] },
   ],
   Gym: [
-    { key: 'focus', label: 'Focus', options: ['Strength', 'Conditioning', 'Mixed'] },
+    { key: 'gym_name', label: 'Gym name', placeholder: 'For example, your local gym' },
+    { key: 'focus', label: 'Focus', options: ['Strength', 'Hypertrophy', 'Cardio', 'Functional'] },
+    { key: 'duration_minutes', label: 'Duration (minutes)', type: 'number', min: 15, max: 1440, step: 15 },
+  ],
+  'Mountain biking': [
+    { key: 'trail_park', label: 'Trail park', placeholder: 'For example, Eagle Mountain Bike Park' },
+    { key: 'distance_km', label: 'Distance (km)', type: 'number', min: 0.1, max: 200, step: 0.1 },
+    { key: 'trail_grade', label: 'Trail grade', options: ['Green', 'Blue', 'Black'] },
+  ],
+  'Road cycling': [
+    { key: 'route', label: 'Route', placeholder: 'For example, coast to coast' },
+    { key: 'distance_km', label: 'Distance (km)', type: 'number', min: 0.1, max: 500, step: 0.1 },
+    { key: 'average_speed', label: 'Average speed', options: ['Social under 25 km/h', 'Steady 25 to 30 km/h', 'Fast 30+ km/h'] },
+  ],
+  'SUP / kayak': [
+    { key: 'location', label: 'Location', placeholder: 'For example, West Lakes' },
+    { key: 'craft', label: 'Craft', options: ['SUP', 'Kayak'] },
+    { key: 'distance_km', label: 'Distance (km)', type: 'number', min: 0.1, max: 200, step: 0.1 },
+  ],
+  'Scuba diving': [
+    { key: 'dive_site', label: 'Dive site', placeholder: 'For example, Rapid Bay jetty' },
+    { key: 'max_depth_m', label: 'Max depth (m)', type: 'number', min: 0, max: 100, step: 1 },
+    { key: 'certification', label: 'Certification needed', options: ['Open Water', 'Advanced', 'Rescue or higher'] },
+  ],
+  'Climbing / bouldering': [
+    { key: 'venue', label: 'Venue', placeholder: 'For example, Beyond Bouldering' },
+    { key: 'setting', label: 'Setting', options: ['Indoor', 'Outdoor'] },
+    { key: 'grade_range', label: 'Grade range', placeholder: 'For example, V2 to V4' },
+  ],
+  'Open activity': [
+    { key: 'activity_name', label: 'Activity name', placeholder: 'For example, Fishing off Semaphore jetty', maxLength: 120 },
+    { key: 'description', label: 'Description', type: 'textarea', maxLength: 300 },
   ],
 }
 
@@ -90,9 +144,25 @@ function formatDuration(minutes: number) {
   return `${Math.floor(minutes / 60)} hr ${minutes % 60} min`
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (typeof error !== 'object' || error === null) {
+    return error instanceof Error ? error.message : fallback
+  }
+
+  const message = 'message' in error && typeof error.message === 'string'
+    ? error.message
+    : error instanceof Error
+      ? error.message
+      : fallback
+  const code = 'code' in error && typeof error.code === 'string' ? `Code: ${error.code}` : ''
+  const hint = 'hint' in error && typeof error.hint === 'string' ? error.hint : ''
+  return [message, code, hint].filter(Boolean).join(' ')
+}
+
 export function CreateActivityScreen() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const coverInputRef = useRef<HTMLInputElement | null>(null)
   const preselectedSport = searchParams.get('sport')
   const [step, setStep] = useState(1)
   const [furthestStep, setFurthestStep] = useState(1)
@@ -112,6 +182,8 @@ export function CreateActivityScreen() {
   const [notes, setNotes] = useState('')
   const [autoAccept, setAutoAccept] = useState(false)
   const [sportDetails, setSportDetails] = useState<Record<string, string>>({})
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null)
   const [inviteSearch, setInviteSearch] = useState('')
   const [selectedInvites, setSelectedInvites] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -147,7 +219,7 @@ export function CreateActivityScreen() {
       }
 
       const user = userData.user
-      const [profileResult, profileSportsResult, inviteesResult] = await Promise.all([
+      const [profileResult, profileSportsResult, inviteesResult, catalogResult] = await Promise.all([
         client.from('profiles').select('suburb').eq('id', user.id).maybeSingle(),
         client.from('profile_sports').select('sport_id, skill').eq('profile_id', user.id),
         client
@@ -156,14 +228,16 @@ export function CreateActivityScreen() {
           .neq('id', user.id)
           .order('first_name')
           .limit(50),
+        client.from('sports').select('id, name, icon').order('name'),
       ])
 
       if (!active) return
-      if (profileResult.error || profileSportsResult.error || inviteesResult.error) {
+      if (profileResult.error || profileSportsResult.error || inviteesResult.error || catalogResult.error) {
         setError(
           profileResult.error?.message ??
             profileSportsResult.error?.message ??
             inviteesResult.error?.message ??
+            catalogResult.error?.message ??
             'Unable to load your activity details.',
         )
         setIsLoading(false)
@@ -176,39 +250,24 @@ export function CreateActivityScreen() {
       setInviteSuggestions(inviteesResult.data ?? [])
 
       const profileSports = profileSportsResult.data ?? []
-      if (profileSports.length === 0) {
-        setSports([])
-        setIsLoading(false)
-        return
-      }
-
-      const { data: catalog, error: catalogError } = await client
-        .from('sports')
-        .select('id, name, icon')
-        .in('id', profileSports.map((item) => item.sport_id))
-
-      if (!active) return
-      if (catalogError) {
-        setError(catalogError.message)
-        setIsLoading(false)
-        return
-      }
-
       const skillBySport = new Map(profileSports.map((item) => [item.sport_id, item.skill]))
-      const userSports = (catalog ?? [])
+      const availableSports = (catalogResult.data ?? [])
         .map((sport) => ({
           id: sport.id,
           name: sport.name,
           icon: sport.icon,
-          skill: skillBySport.get(sport.id) ?? 'Intermediate',
+          profileSkill: skillBySport.get(sport.id) ?? null,
         }))
-        .sort((left, right) => left.name.localeCompare(right.name))
+        .sort((left, right) =>
+          Number(right.profileSkill !== null) - Number(left.profileSkill !== null) ||
+          left.name.localeCompare(right.name),
+        )
 
-      setSports(userSports)
-      const initialSport = userSports.find((sport) => sport.name === preselectedSport)
+      setSports(availableSports)
+      const initialSport = availableSports.find((sport) => sport.name === preselectedSport)
       if (initialSport) {
         setSelectedSport(initialSport)
-        setTitle(getSuggestedTitle(initialSport.name, profileSuburb))
+        setTitle(initialSport.name === 'Open activity' ? '' : getSuggestedTitle(initialSport.name, profileSuburb))
       }
 
       const requestedInvitees = searchParams.getAll('invite')
@@ -237,6 +296,7 @@ export function CreateActivityScreen() {
 
   const selectedInvitees = inviteSuggestions.filter((person) => selectedInvites.includes(person.id))
   const sportImage = selectedSport ? getDefaultActivityHero(selectedSport.name) : activities[0].hero
+  const activityCoverImage = coverPreviewUrl ?? sportImage
   const dateTimeValue = date && time ? new Date(`${date}T${time}`).getTime() : Number.NaN
   const validDetails =
     title.trim().length > 0 &&
@@ -250,15 +310,52 @@ export function CreateActivityScreen() {
     suburb.trim().length > 0 &&
     notes.length <= 300
 
+  useEffect(() => {
+    if (!coverPreviewUrl) return
+    return () => URL.revokeObjectURL(coverPreviewUrl)
+  }, [coverPreviewUrl])
+
+  function handleCoverSelect(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Choose an image file for the activity banner.')
+      return
+    }
+
+    setCoverFile(file)
+    setCoverPreviewUrl(URL.createObjectURL(file))
+    setError('')
+  }
+
+  function handleRemoveCover() {
+    setCoverFile(null)
+    setCoverPreviewUrl(null)
+    setError('')
+  }
+
   function chooseSport(sport: SportOption) {
     setSelectedSport(sport)
     setSportDetails({})
-    if (!titleEdited) setTitle(getSuggestedTitle(sport.name, suburb))
+    setTitleEdited(false)
+    setTitle(sport.name === 'Open activity' ? '' : getSuggestedTitle(sport.name, suburb))
+    setDurationHours(sport.name === 'Gym' ? '1' : '2')
+  }
+
+  function updateSportDetail(key: string, value: string) {
+    setSportDetails((current) => ({ ...current, [key]: value }))
+    if (key === 'activity_name') setTitle(value)
+    if (key === 'duration_hours') setDurationHours(value)
+    if (key === 'duration_minutes') setDurationHours(value ? String(Number(value) / 60) : '')
   }
 
   function updateSuburb(value: string) {
     setSuburb(value)
-    if (!titleEdited && selectedSport) setTitle(getSuggestedTitle(selectedSport.name, value))
+    if (!titleEdited && selectedSport && selectedSport.name !== 'Open activity') {
+      setTitle(getSuggestedTitle(selectedSport.name, value))
+    }
   }
 
   function toggleInvite(userIdToToggle: string) {
@@ -302,10 +399,22 @@ export function CreateActivityScreen() {
     setIsPosting(true)
     setError('')
 
+    let uploadedCoverPath: string | null = null
+    let activityCreated = false
+
     try {
       const start = new Date(`${date}T${time}`)
       const durationMinutes = Math.round(Number(durationHours) * 60)
-      const coverImageUrl = getDefaultActivityHero(selectedSport.name)
+      let coverImageUrl = getDefaultActivityHero(selectedSport.name)
+      if (coverFile) {
+        const uploadedCover = await uploadActivityCover(
+          await compressActivityCover(coverFile),
+          userId,
+        )
+        uploadedCoverPath = uploadedCover.path
+        coverImageUrl = uploadedCover.url
+      }
+
       const { data: createdActivity, error: createError } = await client
         .from('activities')
         .insert({
@@ -320,13 +429,16 @@ export function CreateActivityScreen() {
           level_wanted: level,
           notes: notes.trim(),
           auto_accept: autoAccept,
-          sport_details: sportDetails,
+          sport_details: selectedSport.name === 'Open activity'
+            ? Object.fromEntries(Object.entries(sportDetails).filter(([key]) => key !== 'activity_name'))
+            : sportDetails,
           cover_image_url: coverImageUrl,
         })
         .select('id')
         .single()
 
       if (createError) throw createError
+      activityCreated = true
 
       if (selectedInvites.length > 0) {
         const { error: inviteError } = await client.from('activity_invites').insert(
@@ -349,13 +461,25 @@ export function CreateActivityScreen() {
               `The activity was saved, but invitations could not be saved or rolled back. Check your activities before trying again. ${inviteError.message} ${rollbackError.message}`,
             )
           }
+          activityCreated = false
           throw inviteError
         }
       }
 
       navigate(`/activity/${createdActivity.id}`)
     } catch (postError) {
-      setError(postError instanceof Error ? postError.message : 'Unable to post this activity.')
+      const message = getErrorMessage(postError, 'Unable to post this activity.')
+      if (uploadedCoverPath && !activityCreated) {
+        try {
+          await deleteActivityCover(uploadedCoverPath, userId)
+          setError(message)
+        } catch (cleanupError) {
+          const cleanupMessage = getErrorMessage(cleanupError, 'Unable to remove the uploaded banner.')
+          setError(`${message} The unused banner could not be removed from storage: ${cleanupMessage}`)
+        }
+      } else {
+        setError(message)
+      }
     } finally {
       setIsPosting(false)
     }
@@ -370,7 +494,7 @@ export function CreateActivityScreen() {
     )
   }
 
-  if (error) {
+  if (error && sports.length === 0) {
     return (
       <main className="screen create-wizard">
         <p className="wizard-error" role="alert">{error}</p>
@@ -384,15 +508,16 @@ export function CreateActivityScreen() {
       <main className="screen create-wizard">
         <header className="page-title">
           <p className="eyebrow">Create activity</p>
-          <h1>Choose a sport first</h1>
+          <h1>Activities are unavailable</h1>
         </header>
-        <p className="text-[var(--text-secondary)]">Add at least one sport to your profile before creating an activity.</p>
-        <Button onClick={() => navigate('/onboarding')} size="lg">Update your profile</Button>
+        <p className="text-[var(--text-secondary)]">We could not find any activity types. Please try again later.</p>
+        <Button onClick={() => navigate('/')} size="lg">Back to home</Button>
       </main>
     )
   }
 
   const preset = selectedSport ? presetFields[selectedSport.name] ?? [] : []
+  const hasPresetDuration = preset.some((field) => field.key === 'duration_hours' || field.key === 'duration_minutes')
   const SelectedSportIcon = selectedSport ? sportIcons[selectedSport.icon ?? ''] ?? Plus : Plus
 
   return (
@@ -418,7 +543,8 @@ export function CreateActivityScreen() {
               onClick={() => goToStep(stepNumber)}
               disabled={stepNumber > furthestStep || stepNumber >= step}
               aria-current={isCurrent ? 'step' : undefined}
-              aria-label={`${label}${isCompleted ? ', completed' : isCurrent ? ', current step' : ''}`}
+              aria-label={isCompleted ? `Review ${label} step` : `${label}${isCurrent ? ', current step' : ''}`}
+              title={isCompleted ? `Review ${label}` : undefined}
             >
               <span>{isCompleted ? <Check /> : stepNumber}</span>
               <small>{label}</small>
@@ -427,6 +553,7 @@ export function CreateActivityScreen() {
         })}
       </nav>
       <p className="wizard-step-count">Step {step} of {steps.length}</p>
+      {step > 1 && <p className="wizard-progress-hint">Tap a completed step above to review it.</p>}
 
       {error && <p className="wizard-error" role="alert">{error}</p>}
 
@@ -434,7 +561,7 @@ export function CreateActivityScreen() {
         <section className="wizard-section" aria-labelledby="sport-step-title">
           <div className="wizard-section-heading">
             <h2 id="sport-step-title">What are you keen to do?</h2>
-            <p>Choose one of the sports on your profile.</p>
+            <p>Choose from all sports, or create an open activity. Your profile sports are shown first.</p>
           </div>
           <div className="wizard-sport-grid">
             {sports.map((sport) => {
@@ -451,7 +578,7 @@ export function CreateActivityScreen() {
                   {isSelected && <span className="wizard-sport-check"><Check /></span>}
                   <Icon />
                   <strong>{sport.name}</strong>
-                  <small>{sport.skill}</small>
+                  <small>{sport.profileSkill ? `Your level: ${sport.profileSkill}` : 'Available to choose'}</small>
                 </button>
               )
             })}
@@ -467,26 +594,65 @@ export function CreateActivityScreen() {
           </div>
 
           <div className="wizard-cover-preview">
-            <img src={sportImage} alt={`${selectedSport.name} cover`} />
+            <img src={activityCoverImage} alt={`${selectedSport.name} activity banner preview`} />
             <div>
-              <span>Activity cover</span>
-              <strong>Default {selectedSport.name} image</strong>
+              <span>Activity banner</span>
+              <strong>{coverFile ? 'Your selected image' : `Default ${selectedSport.name} image`}</strong>
             </div>
           </div>
 
           <div className="create-form">
-            <label className="field">
-              <span>Activity title</span>
+            <div className="wizard-cover-controls">
               <input
-                maxLength={120}
-                value={title}
-                onChange={(event) => {
-                  setTitle(event.target.value)
-                  setTitleEdited(true)
-                }}
-                placeholder={`For example, ${getSuggestedTitle(selectedSport.name, suburb)}`}
+                ref={coverInputRef}
+                className="sr-only"
+                type="file"
+                accept="image/*"
+                onChange={handleCoverSelect}
+                aria-label="Choose an activity banner image"
               />
-            </label>
+              <div className="wizard-cover-buttons">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={isPosting}
+                >
+                  <ImagePlus />
+                  {coverFile ? 'Change banner image' : 'Add banner image'}
+                </Button>
+                {coverFile && (
+                  <Button type="button" variant="ghost" onClick={handleRemoveCover} disabled={isPosting}>
+                    Use default image
+                  </Button>
+                )}
+              </div>
+              <p className="wizard-cover-guidance">
+                Recommended image: 1200 × 600 px (2:1). We resize the long edge to 1200 px and compress it to JPEG when you post.
+              </p>
+            </div>
+
+            {selectedSport.name !== 'Open activity' && (
+              <label className="field">
+                <span>Activity title</span>
+                <input
+                  maxLength={120}
+                  value={title}
+                  onChange={(event) => {
+                    setTitle(event.target.value)
+                    setTitleEdited(true)
+                  }}
+                  placeholder={`For example, ${getSuggestedTitle(selectedSport.name, suburb)}`}
+                />
+              </label>
+            )}
+
+            {!hasPresetDuration && (
+              <label className="field">
+                <span>Duration (hours)</span>
+                <input type="number" min="0.25" max="24" step="0.25" value={durationHours} onChange={(event) => setDurationHours(event.target.value)} />
+              </label>
+            )}
 
             <div className="wizard-field-grid">
               <label className="field">
@@ -500,10 +666,6 @@ export function CreateActivityScreen() {
             </div>
 
             <div className="wizard-field-grid">
-              <label className="field">
-                <span>Duration (hours)</span>
-                <input type="number" min="0.25" max="24" step="0.25" value={durationHours} onChange={(event) => setDurationHours(event.target.value)} />
-              </label>
               <label className="field">
                 <span>Suburb</span>
                 <input value={suburb} onChange={(event) => updateSuburb(event.target.value)} placeholder="For example, Glenelg" />
@@ -545,20 +707,35 @@ export function CreateActivityScreen() {
                         <select
                           className={sportDetails[field.key] ? '' : 'is-placeholder'}
                           value={sportDetails[field.key] ?? ''}
-                          onChange={(event) => setSportDetails((current) => ({ ...current, [field.key]: event.target.value }))}
+                          onChange={(event) => updateSportDetail(field.key, event.target.value)}
                         >
                           <option value="">Choose if you know</option>
                           {field.options.map((option) => <option key={option} value={option}>{option}</option>)}
                         </select>
+                      ) : field.type === 'textarea' ? (
+                        <textarea
+                          value={sportDetails[field.key] ?? ''}
+                          onChange={(event) => updateSportDetail(field.key, event.target.value)}
+                          placeholder={field.placeholder ?? 'Optional'}
+                          maxLength={field.maxLength}
+                          rows={3}
+                        />
                       ) : (
                         <input
                           type={field.type ?? 'text'}
                           min={field.min}
                           max={field.max}
                           step={field.step}
-                          value={sportDetails[field.key] ?? ''}
-                          onChange={(event) => setSportDetails((current) => ({ ...current, [field.key]: event.target.value }))}
+                          value={sportDetails[field.key] ?? (
+                            field.key === 'duration_hours'
+                              ? durationHours
+                              : field.key === 'duration_minutes'
+                                ? String(Number(durationHours) * 60)
+                                : ''
+                          )}
+                          onChange={(event) => updateSportDetail(field.key, event.target.value)}
                           placeholder={field.placeholder ?? 'Optional'}
+                          maxLength={field.maxLength}
                         />
                       )}
                     </label>
@@ -658,7 +835,7 @@ export function CreateActivityScreen() {
           </div>
           <article className="wizard-review-card">
             <div className="wizard-review-cover">
-              <img src={sportImage} alt="" />
+              <img src={activityCoverImage} alt="" />
               <span><SelectedSportIcon />{selectedSport.name}</span>
             </div>
             <div className="wizard-review-content">
@@ -677,7 +854,9 @@ export function CreateActivityScreen() {
               <p>{date && time ? new Date(`${date}T${time}`).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'Date and time not set'}</p>
               <p>{formatDuration(Math.round(Number(durationHours || 0) * 60))} · {spotsTotal === 1 ? '1 buddy wanted' : `${spotsTotal} spots`}</p>
               <p><MapPin />{meetingPoint}{suburb ? `, ${suburb}` : ''}</p>
-              {Object.entries(sportDetails).filter(([, value]) => value.trim()).map(([key, value]) => (
+              {Object.entries(sportDetails)
+                .filter(([key, value]) => key !== 'activity_name' && value.trim())
+                .map(([key, value]) => (
                 <p key={key}>{key.replace(/_/g, ' ')}: {value}</p>
               ))}
               {notes.trim() && <p>{notes.trim()}</p>}

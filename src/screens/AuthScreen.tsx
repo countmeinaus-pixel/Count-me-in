@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Mail, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Eye, EyeOff, Mail, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { activities } from '../data/mockData'
@@ -25,6 +25,7 @@ export function AuthScreen() {
   const [language, setLanguage] = useState<Language>(getStoredLanguage())
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -227,14 +228,28 @@ export function AuthScreen() {
             className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-base outline-none ring-0 placeholder:text-[var(--text-muted)] focus:border-[var(--seafoam)]"
           />
 
-          <label className="mb-2 mt-5 block text-sm text-[var(--text-primary)]">{copy.passwordLabel}</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder={copy.passwordPlaceholder}
-            className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-base outline-none ring-0 placeholder:text-[var(--text-muted)] focus:border-[var(--seafoam)]"
-          />
+          <label htmlFor="auth-password" className="mb-2 mt-5 block text-sm text-[var(--text-primary)]">{copy.passwordLabel}</label>
+          <div className="relative">
+            <input
+              id="auth-password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder={copy.passwordPlaceholder}
+              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 pr-14 text-base outline-none ring-0 placeholder:text-[var(--text-muted)] focus:border-[var(--seafoam)]"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? copy.hidePassword : copy.showPassword}
+              aria-pressed={showPassword}
+              className="absolute inset-y-0 right-0 flex min-h-11 w-12 items-center justify-center rounded-r-2xl text-[var(--text-secondary)] transition hover:text-[var(--seafoam)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--seafoam)]"
+            >
+              {showPassword
+                ? <EyeOff className="h-5 w-5" aria-hidden="true" />
+                : <Eye className="h-5 w-5" aria-hidden="true" />}
+            </button>
+          </div>
 
           {!isSignUp && (
             <button

@@ -46,29 +46,79 @@ export function OnboardingScreen() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [error, setError] = useState('')
+  const [profileCheckError, setProfileCheckError] = useState('')
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [profileCheckAttempt, setProfileCheckAttempt] = useState(0)
   const calculatedAge = useMemo(() => calculateAgeFromDateOfBirth(dateOfBirth), [dateOfBirth])
 
   useEffect(() => {
+    let active = true
     async function ensureSession() {
       if (!supabase) {
-        setError(getSupabaseSetupHint())
+        setProfileCheckError(getSupabaseSetupHint())
+        setIsCheckingProfile(false)
         return
       }
 
       const { data: sessionData, error: sessionError } = await supabase.auth.getUser()
       if (sessionError || !sessionData.user) {
         navigate('/login')
+        return
       }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('onboarding_complete')
+        .eq('id', sessionData.user.id)
+        .maybeSingle()
+
+      if (!active) return
+      if (profileError) {
+        setProfileCheckError(profileError.message)
+        setIsCheckingProfile(false)
+        return
+      }
+
+      if (profile?.onboarding_complete) {
+        navigate('/', { replace: true })
+        return
+      }
+
+      setIsCheckingProfile(false)
     }
 
-    ensureSession()
-  }, [navigate])
+    void ensureSession()
+    return () => {
+      active = false
+    }
+  }, [navigate, profileCheckAttempt])
 
   const canSubmit = useMemo(() => {
     const age = calculateAgeFromDateOfBirth(dateOfBirth)
     return !!firstName.trim() && !!suburb.trim() && typeof age === 'number' && age >= 18 && age <= 99 && selectedSports.length > 0 && selectedAvailability.length > 0
   }, [dateOfBirth, firstName, selectedAvailability.length, selectedSports.length, suburb])
+
+  if (isCheckingProfile || profileCheckError) {
+    return (
+      <main className="screen onboarding-check-screen">
+        {isCheckingProfile ? (
+          <p role="status">Checking your profile…</p>
+        ) : (
+          <>
+            <p className="wizard-error" role="alert">{profileCheckError}</p>
+            <button type="button" className="button button-secondary" onClick={() => {
+              setProfileCheckError('')
+              setIsCheckingProfile(true)
+              setProfileCheckAttempt((attempt) => attempt + 1)
+            }}>
+              Try again
+            </button>
+          </>
+        )}
+      </main>
+    )
+  }
 
   function toggleSport(sport: string) {
     setSelectedSports((current) => {

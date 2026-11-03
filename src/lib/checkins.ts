@@ -1,10 +1,11 @@
 import { activities, demoConfirmedMeetups } from '../data/mockData'
 import { patchDefinitions, type PatchDefinition } from '../data/patches'
+import { supabase } from './supabase'
 
 export type ConfirmedMeetup = {
   user: string
   partner: string
-  activityId: number
+  activityId: number | string
   activityTitle: string
   activityDate: string
   confirmedAt: string
@@ -17,6 +18,8 @@ export type ConfirmedMeetup = {
 
 type StoredConfirmedMeetup = Omit<ConfirmedMeetup, 'sport' | 'startsAt' | 'hosted'>
   & Partial<Pick<ConfirmedMeetup, 'sport' | 'startsAt' | 'hosted'>>
+
+const savedMeetupsByUser = new Map<string, ConfirmedMeetup[]>()
 
 export type PatchProgress = PatchDefinition & {
   progress: number
@@ -48,10 +51,16 @@ function writePersistedCheckIns(entries: StoredConfirmedMeetup[]) {
 }
 
 export function getConfirmedMeetupsForUser(user: string): ConfirmedMeetup[] {
-  const demoEntries = demoConfirmedMeetups.filter((entry) => entry.user === user)
+  const isSavedAccount = savedMeetupsByUser.has(user)
+  const demoEntries = isSavedAccount
+    ? []
+    : demoConfirmedMeetups.filter((entry) => entry.user === user)
   const entries = [
     ...demoEntries,
-    ...readPersistedCheckIns().filter((entry) => entry.user === user),
+    ...(isSavedAccount
+      ? []
+      : readPersistedCheckIns().filter((entry) => entry.user === user)),
+    ...(savedMeetupsByUser.get(user) ?? []),
   ]
   const uniqueEntries = [...new Map(entries.map((entry) => [entry.activityId, entry])).values()]
 
@@ -64,6 +73,139 @@ export function getConfirmedMeetupsForUser(user: string): ConfirmedMeetup[] {
       hosted: entry.hosted ?? false,
     }
   })
+}
+
+export async function loadSavedMeetupsForUser(userName?: string): Promise<string | undefined> {
+  if (!supabase) return undefined
+  if (userName) savedMeetupsByUser.set(userName, [])
+
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
+  if (!userData.user) return undefined
+  let currentUserName = userName
+  if (!currentUserName) {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('first_name')
+      .eq('id', userData.user.id)
+      .single()
+    if (profileError) throw profileError
+    currentUserName = profile.first_name
+  }
+  if (!currentUserName) {
+    throw new Error('Your profile could not be found. Please complete onboarding first.')
+  }
+
+  const { data: confirmations, error: confirmationError } = await supabase
+    .from('activity_meetup_confirmations')
+    .select('activity_id, partner_id, confirmed_at')
+    .eq('user_id', userData.user.id)
+  if (confirmationError) throw confirmationError
+
+  if (!confirmations?.length) {
+    savedMeetupsByUser.set(currentUserName, [])
+    return currentUserName
+  }
+
+  const activityIds = [...new Set(confirmations.map((entry) => entry.activity_id))]
+  const partnerIds = [...new Set(confirmations.map((entry) => entry.partner_id))]
+  const [activitiesResult, profilesResult] = await Promise.all([
+    supabase
+      .from('activities')
+      .select('id, host_id, title, starts_at, sport_id, sport_details')
+      .in('id', activityIds),
+    supabase.from('profiles').select('id, first_name').in('id', partnerIds),
+  ])
+  if (activitiesResult.error) throw activitiesResult.error
+  if (profilesResult.error) throw profilesResult.error
+
+  const activityRows = activitiesResult.data ?? []
+  const sportIds = [...new Set(activityRows.map((entry) => entry.sport_id))]
+  const sportsResult = sportIds.length
+    ? await supabase.from('sports').select('id, name').in('id', sportIds)
+    : { data: [], error: null }
+  if (sportsResult.error) throw sportsResult.error
+
+  const activitiesById = new Map(activityRows.map((entry) => [entry.id, entry]))
+  const partnersById = new Map(
+    (profilesResult.data ?? []).map((profile) => [profile.id, profile.first_name]),
+  )
+  const sportsById = new Map(
+    (sportsResult.data ?? []).map((sport) => [sport.id, sport.name]),
+  )
+
+  savedMeetupsByUser.set(
+    currentUserName,
+    confirmations.flatMap((confirmation) => {
+      const activity = activitiesById.get(confirmation.activity_id)
+      if (!activity) return []
+      const sportDetails =
+        typeof activity.sport_details === 'object' &&
+        activity.sport_details !== null &&
+        !Array.isArray(activity.sport_details)
+          ? Object.fromEntries(
+              Object.entries(activity.sport_details).filter(
+                (entry): entry is [string, string] => typeof entry[1] === 'string',
+              ),
+            )
+          : {}
+      const detailEntries = Object.entries(sportDetails)
+      const terrain = detailEntries.find(([key]) => key.toLowerCase().includes('terrain'))?.[1]
+      const location = detailEntries.find(([key]) => key.toLowerCase().includes('location'))?.[1]
+      return [{
+        user: currentUserName,
+        partner: partnersById.get(confirmation.partner_id) ?? 'Activity partner',
+        activityId: activity.id,
+        activityTitle: activity.title,
+        activityDate: activity.starts_at,
+        confirmedAt: confirmation.confirmed_at,
+        sport: sportsById.get(activity.sport_id) ?? '',
+        startsAt: activity.starts_at,
+        hosted: activity.host_id === userData.user.id,
+        oceanActivity: typeof location === 'string' && location.toLowerCase() === 'ocean',
+        terrain: typeof terrain === 'string' ? terrain : undefined,
+      }]
+    }),
+  )
+  return currentUserName
+}
+
+export async function getSavedActivityCheckinCode(activityId: string): Promise<string> {
+  if (!supabase) throw new Error('Supabase is not configured yet.')
+  const { data, error } = await supabase.rpc('get_activity_checkin_code', {
+    target_activity_id: activityId,
+  })
+  if (error) throw error
+  if (typeof data !== 'string') throw new Error('Your check-in code could not be loaded.')
+  return data
+}
+
+export async function confirmSavedActivityMeetup(
+  activityId: string,
+  scannedCode: string,
+): Promise<void> {
+  if (!supabase) throw new Error('Supabase is not configured yet.')
+  const { error } = await supabase.rpc('confirm_activity_meetup', {
+    target_activity_id: activityId,
+    scanned_code: scannedCode,
+  })
+  if (error) throw error
+}
+
+export async function hasSavedActivityCheckin(activityId: string): Promise<boolean> {
+  if (!supabase) return false
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
+  if (!userData.user) return false
+
+  const { data, error } = await supabase
+    .from('activity_meetup_confirmations')
+    .select('activity_id')
+    .eq('activity_id', activityId)
+    .eq('user_id', userData.user.id)
+    .maybeSingle()
+  if (error) throw error
+  return Boolean(data)
 }
 
 export function hasConfirmedMeetupForUser(user: string, activityId: number): boolean {

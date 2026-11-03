@@ -138,8 +138,8 @@ export function PrivacySettingsScreen() {
         )}
         <p className="more-settings-note">
           Blocked members cannot see your profile or activities, and you cannot
-          see theirs. Chat blocking will be connected when chats are stored in
-          Supabase.
+          see theirs. Blocking does not remove either person from an existing
+          shared activity chat.
         </p>
       </section>
       {error && (

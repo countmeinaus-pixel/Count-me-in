@@ -4,6 +4,7 @@ import {
   RouterProvider,
   useLocation,
 } from "react-router-dom"
+import { useEffect, useState } from "react"
 import { BottomNav, type Tab } from "./components/BottomNav"
 import { ActivityDetailScreen } from "./screens/ActivityDetailScreen"
 import { EditActivityScreen } from "./screens/EditActivityScreen"
@@ -29,12 +30,39 @@ import { LanguageSettingsScreen } from "./screens/LanguageSettingsScreen"
 import { PrivacySettingsScreen } from "./screens/PrivacySettingsScreen"
 import { SportProfileScreen } from "./screens/SportProfileScreen"
 import { MatesScreen } from "./screens/MatesScreen"
-import { hasUnreadChatThreads } from "./lib/chat"
+import { getUnreadChatThreadCount, hasUnreadChatThreads } from "./lib/chat"
 import { ModerationScreen } from "./screens/ModerationScreen"
 
 function AppShell() {
   const location = useLocation()
   const path = location.pathname
+  const [hasUnreadChats, setHasUnreadChats] = useState(hasUnreadChatThreads())
+  const [chatUnreadError, setChatUnreadError] = useState("")
+
+  useEffect(() => {
+    let active = true
+    const refreshUnreadChats = () => {
+      void getUnreadChatThreadCount()
+        .then((count) => {
+          if (active) {
+            setHasUnreadChats(count > 0)
+            setChatUnreadError("")
+          }
+        })
+        .catch((error: unknown) => {
+          if (active) {
+            setChatUnreadError(error instanceof Error ? error.message : "Unread chat status could not be checked.")
+          }
+        })
+    }
+
+    refreshUnreadChats()
+    window.addEventListener("count-me-in-chat-unread-changed", refreshUnreadChats)
+    return () => {
+      active = false
+      window.removeEventListener("count-me-in-chat-unread-changed", refreshUnreadChats)
+    }
+  }, [path])
 
   const activeTab: Tab | null =
     path === "/notifications"
@@ -65,7 +93,7 @@ function AppShell() {
     <>
       <Outlet />
       {showNav && (
-        <BottomNav active={activeTab} hasUnreadChats={hasUnreadChatThreads()} />
+        <BottomNav active={activeTab} hasUnreadChats={hasUnreadChats} chatUnreadError={chatUnreadError} />
       )}
     </>
   )

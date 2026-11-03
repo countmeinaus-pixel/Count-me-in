@@ -27,6 +27,7 @@ import {
   respondToActivityJoinRequest,
   type ActivityJoinState,
 } from "../lib/activityParticipation"
+import { getActivityChatThreadId } from "../lib/chat"
 import {
   getDemoJoinRequestKey,
   hasDemoJoinRequest,
@@ -35,10 +36,25 @@ import {
 } from "../lib/demoParticipation"
 import { getSavedActivity, type SavedActivityDetails } from "../lib/activities"
 import {
+  confirmSavedActivityMeetup,
+  getSavedActivityCheckinCode,
   getPatchProgressForUser,
+  hasSavedActivityCheckin,
   hasConfirmedMeetupForUser,
+  loadSavedMeetupsForUser,
   recordMeetupCheckIn,
 } from "../lib/checkins"
+
+function getAdelaideDateKey(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-AU", {
+    timeZone: "Australia/Adelaide",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
 
 export function ActivityDetailScreen() {
   const { id } = useParams()
@@ -50,6 +66,8 @@ export function ActivityDetailScreen() {
   const [isLoadingSavedActivity, setIsLoadingSavedActivity] = useState(
     Boolean(id && !mockActivity),
   )
+  const [checkinUserName, setCheckinUserName] = useState(currentUser.name)
+  const [, setCheckinStatsVersion] = useState(0)
   const [loadError, setLoadError] = useState("")
   const [joinState, setJoinState] = useState<ActivityJoinState | null>(null)
   const [isLoadingJoinState, setIsLoadingJoinState] = useState(false)
@@ -60,8 +78,11 @@ export function ActivityDetailScreen() {
   )
   const [qrOpen, setQrOpen] = useState(false)
   const [scanMode, setScanMode] = useState<"qr" | "camera" | "success">("qr")
+  const [qrError, setQrError] = useState("")
+  const [checkinCode, setCheckinCode] = useState("")
+  const [qrPayload, setQrPayload] = useState("")
   const [joinRequested, setJoinRequested] = useState(() =>
-    hasDemoJoinRequest(mockActivity?.id),
+    mockActivity ? hasDemoJoinRequest(mockActivity.id) : false,
   )
   const [joinFeedback, setJoinFeedback] = useState("")
   const [reportOpen, setReportOpen] = useState(false)
@@ -71,9 +92,13 @@ export function ActivityDetailScreen() {
       ? hasConfirmedMeetupForUser(currentUser.name, mockActivity.id)
       : false,
   )
+  const [isLoadingConfirmation, setIsLoadingConfirmation] = useState(
+    Boolean(id && !mockActivity),
+  )
   const qrCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
+  const scannerControlsRef = useRef<{ stop: () => void } | null>(null)
+  const scanHandledRef = useRef(false)
   const activity: Activity | SavedActivityDetails | null =
     mockActivity ?? savedActivity
   const isSavedActivity = savedActivity !== null
@@ -147,33 +172,85 @@ export function ActivityDetailScreen() {
   }, [savedActivity])
 
   useEffect(() => {
-    if (!mockActivity || !qrOpen || !qrCanvasRef.current) return
-
-    const payload = JSON.stringify({
-      type: "count-me-in",
-      user: currentUser.name,
-      partner: mockActivity.host,
-      activityId: mockActivity.id,
-      activityTitle: mockActivity.title,
-    })
-
-    QRCode.toCanvas(qrCanvasRef.current, payload, {
-      width: 220,
-      margin: 1,
-      color: {
-        dark: "#0a1621",
-        light: "#ffffff",
-      },
-    }).catch(() => undefined)
-  }, [mockActivity, qrOpen])
+    if (!savedActivity) return
+    let active = true
+    setIsLoadingConfirmation(true)
+    setConfirmed(false)
+    void hasSavedActivityCheckin(savedActivity.id)
+      .then((result) => {
+        if (active) setConfirmed(result)
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setJoinError(
+            error instanceof Error ? error.message : "Unable to load check-in status.",
+          )
+      })
+      .finally(() => {
+        if (active) setIsLoadingConfirmation(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [savedActivity])
 
   useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop())
+    if (!qrOpen || !activity) return
+    let active = true
+    setQrError("")
+    setCheckinCode("")
+    setQrPayload("")
+
+    async function renderCode() {
+      try {
+        let payload: string
+        if (savedActivity) {
+          const code = await getSavedActivityCheckinCode(savedActivity.id)
+          if (!active) return
+          setCheckinCode(code)
+          payload = JSON.stringify({
+            type: "count-me-in-checkin",
+            activityId: savedActivity.id,
+            code,
+          })
+        } else if (mockActivity) {
+          payload = JSON.stringify({
+            type: "count-me-in-demo",
+            user: currentUser.name,
+            partner: mockActivity.host,
+            activityId: mockActivity.id,
+            activityTitle: mockActivity.title,
+          })
+        } else {
+          return
+        }
+        if (active) setQrPayload(payload)
+      } catch (error) {
+        if (active)
+          setQrError(
+            error instanceof Error ? error.message : "Unable to create your check-in code.",
+          )
       }
     }
-  }, [])
+
+    void renderCode()
+    return () => {
+      active = false
+    }
+  }, [activity, mockActivity, qrOpen, savedActivity])
+
+  useEffect(() => {
+    if (!qrOpen || !qrPayload || !qrCanvasRef.current) return
+    void QRCode.toCanvas(qrCanvasRef.current, qrPayload, {
+      width: 220,
+      margin: 1,
+      color: { dark: "#0a1621", light: "#ffffff" },
+    }).catch((error: unknown) => {
+      setQrError(error instanceof Error ? error.message : "Unable to draw your QR code.")
+    })
+  }, [qrOpen, qrPayload, checkinCode])
+
+  useEffect(() => () => scannerControlsRef.current?.stop(), [])
 
   if (!activity) {
     return (
@@ -204,10 +281,11 @@ export function ActivityDetailScreen() {
   async function handleShareActivity() {
     setShareFeedback("")
     const url = window.location.href
+    const activityTitle = activity?.title ?? ""
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: activity.title, url })
+        await navigator.share({ title: activityTitle, url })
         setShareFeedback("Activity shared.")
         return
       } catch (error) {
@@ -307,6 +385,9 @@ export function ActivityDetailScreen() {
     try {
       await respondToActivityJoinRequest(savedActivity.id, userId, response)
       await refreshJoinState()
+      if (response === "accepted") {
+        window.dispatchEvent(new Event("count-me-in-chat-unread-changed"))
+      }
     } catch (error) {
       setJoinError(
         error instanceof Error
@@ -318,13 +399,27 @@ export function ActivityDetailScreen() {
     }
   }
 
-  function closeQr() {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop())
-      streamRef.current = null
+  async function openSavedActivityChat() {
+    if (!savedActivity) return
+    setJoinError("")
+    try {
+      const threadId = await getActivityChatThreadId(savedActivity.id)
+      if (!threadId) {
+        setJoinError("The group chat is not ready yet. Try again in a moment.")
+        return
+      }
+      navigate(`/chats/${threadId}`)
+    } catch (error) {
+      setJoinError(error instanceof Error ? error.message : "Unable to open the activity chat.")
     }
+  }
+
+  function closeQr() {
+    scannerControlsRef.current?.stop()
+    scannerControlsRef.current = null
     setQrOpen(false)
     setScanMode("qr")
+    setQrError("")
   }
 
   function confirmMeetup() {
@@ -361,43 +456,94 @@ export function ActivityDetailScreen() {
     }
   }
 
+  async function handleScannedCode(rawValue: string) {
+    if (!savedActivity) {
+      confirmMeetup()
+      setScanMode("success")
+      return
+    }
+
+    try {
+      const payload: unknown = JSON.parse(rawValue)
+      if (
+        typeof payload !== "object" ||
+        payload === null ||
+        !("type" in payload) ||
+        !("activityId" in payload) ||
+        !("code" in payload) ||
+        payload.type !== "count-me-in-checkin" ||
+        payload.activityId !== savedActivity.id ||
+        typeof payload.code !== "string"
+      ) {
+        throw new Error("That QR code is not for this activity.")
+      }
+
+      await confirmSavedActivityMeetup(savedActivity.id, payload.code)
+      setConfirmed(true)
+      setScanMode("success")
+      try {
+        const userName = await loadSavedMeetupsForUser()
+        if (userName) setCheckinUserName(userName)
+        setCheckinStatsVersion((version) => version + 1)
+      } catch (error) {
+        setQrError(
+          error instanceof Error
+            ? `Meetup confirmed, but your stats could not be refreshed: ${error.message}`
+            : "Meetup confirmed, but your stats could not be refreshed.",
+        )
+      }
+    } catch (error) {
+      setQrError(
+        error instanceof Error ? error.message : "Unable to confirm this meetup.",
+      )
+      setScanMode("qr")
+    }
+  }
+
   async function startCameraScan() {
     setScanMode("camera")
+    setQrError("")
 
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setTimeout(() => {
+    if (!savedActivity) {
+      window.setTimeout(() => {
         confirmMeetup()
         setScanMode("success")
       }, 1200)
       return
     }
 
+    scanHandledRef.current = false
+    if (!videoRef.current) {
+      setQrError("The camera preview could not be opened.")
+      setScanMode("qr")
+      return
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      })
-      streamRef.current = stream
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-      }
-
-      setTimeout(() => {
-        stream.getTracks().forEach((track) => track.stop())
-        streamRef.current = null
-        confirmMeetup()
-        setScanMode("success")
-      }, 1400)
-    } catch {
-      setTimeout(() => {
-        confirmMeetup()
-        setScanMode("success")
-      }, 1100)
+      const { BrowserQRCodeReader } = await import("@zxing/browser")
+      const reader = new BrowserQRCodeReader()
+      scannerControlsRef.current = await reader.decodeFromVideoDevice(
+        undefined,
+        videoRef.current,
+        (result, _error, controls) => {
+          if (!result || scanHandledRef.current) return
+          scanHandledRef.current = true
+          controls.stop()
+          scannerControlsRef.current = null
+          void handleScannedCode(result.getText())
+        },
+      )
+    } catch (error) {
+      setQrError(
+        error instanceof Error
+          ? `Unable to access the camera: ${error.message}`
+          : "Unable to access the camera. Check your browser permissions and try again.",
+      )
+      setScanMode("qr")
     }
   }
 
-  const earnedPatches = getPatchProgressForUser(currentUser.name).filter(
+  const earnedPatches = getPatchProgressForUser(checkinUserName).filter(
     (patch) => patch.earned,
   )
   const savedDetails = savedActivity
@@ -463,9 +609,7 @@ export function ActivityDetailScreen() {
     : mockActivity?.startsAt
   const isActivityDay =
     activityStart !== undefined &&
-    activityStart.getFullYear() === new Date().getFullYear() &&
-    activityStart.getMonth() === new Date().getMonth() &&
-    activityStart.getDate() === new Date().getDate()
+    getAdelaideDateKey(activityStart) === getAdelaideDateKey(new Date())
   const isHost =
     savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
   const canEditActivity = savedDetails?.viewerCanEdit ?? false
@@ -676,23 +820,58 @@ export function ActivityDetailScreen() {
       <div className="sticky-action">
         <div className="sticky-action-group">
           {isHost ? (
-            <Button
-              size="lg"
-              onClick={() => savedActivity && navigate(`/activity/${savedActivity.id}/edit`)}
-              disabled={!savedActivity}
-            >
-              {savedActivity ? "Edit activity" : "Demo activity"}
-            </Button>
+            savedDetails ? (
+              <>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => navigate(`/activity/${savedDetails.id}/edit`)}
+                >
+                  Edit activity
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={() => setQrOpen(true)}
+                  disabled={!isActivityDay || confirmed || isLoadingConfirmation}
+                  title={!isActivityDay ? "Check-in opens on the activity day." : undefined}
+                >
+                  {confirmed ? "Confirmed" : "Check in"}
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="lg"
+                onClick={() => setQrOpen(true)}
+                disabled={!isActivityDay || confirmed}
+                title={!isActivityDay ? "Check-in opens on the activity day." : undefined}
+              >
+                {confirmed ? "Confirmed" : "Check in"}
+              </Button>
+            )
           ) : isJoined ? (
             savedDetails ? (
-              <Button size="lg" disabled>
-                You’re in
-              </Button>
+              <>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => void openSavedActivityChat()}
+                >
+                  Open chat
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={() => setQrOpen(true)}
+                  disabled={!isActivityDay || confirmed || isLoadingConfirmation}
+                  title={!isActivityDay ? "Check-in opens on the activity day." : undefined}
+                >
+                  {confirmed ? "Confirmed" : "Check in"}
+                </Button>
+              </>
             ) : (
               <>
                 <Button
                   variant="secondary"
-                  onClick={() => navigate("/chats")}
+                  onClick={() => void openSavedActivityChat()}
                   size="lg"
                 >
                   Open chat
@@ -700,7 +879,7 @@ export function ActivityDetailScreen() {
                 <Button
                   onClick={() => setQrOpen(true)}
                   size="lg"
-                  disabled={!isActivityDay || confirmed || isSavedActivity}
+                  disabled={!isActivityDay || confirmed || isLoadingConfirmation}
                   title={
                     !isActivityDay
                       ? "Check-in opens on the activity day."
@@ -766,7 +945,7 @@ export function ActivityDetailScreen() {
         )}
       </div>
 
-      {qrOpen && !isSavedActivity && (
+      {qrOpen && activity && (
         <div
           className="checkin-modal"
           role="dialog"
@@ -791,15 +970,23 @@ export function ActivityDetailScreen() {
 
             {scanMode === "qr" && (
               <>
+                {qrError && <p className="activity-join-error" role="alert">{qrError}</p>}
                 <div className="qr-card">
-                  <canvas ref={qrCanvasRef} />
+                  {savedActivity && !checkinCode ? (
+                    qrError ? null : <p>Loading your check-in code…</p>
+                  ) : <canvas ref={qrCanvasRef} />}
                   <div className="qr-meta">
-                    <strong>{currentUser.name}</strong>
+                    <strong>{checkinUserName}</strong>
                     <span>{activity.title}</span>
                   </div>
                 </div>
 
-                <Button variant="secondary" onClick={startCameraScan} size="lg">
+                <Button
+                  variant="secondary"
+                  onClick={() => void startCameraScan()}
+                  size="lg"
+                  disabled={Boolean(savedActivity && !checkinCode)}
+                >
                   Scan their code
                 </Button>
               </>
@@ -819,6 +1006,12 @@ export function ActivityDetailScreen() {
                   <video ref={videoRef} playsInline muted />
                 </div>
                 <p>Scanning the other person’s code…</p>
+                {qrError && <p className="activity-join-error" role="alert">{qrError}</p>}
+                {qrError && (
+                  <Button variant="secondary" onClick={() => setScanMode("qr")}>
+                    Back to my code
+                  </Button>
+                )}
               </div>
             )}
 
@@ -826,6 +1019,7 @@ export function ActivityDetailScreen() {
               <div className="success-stage">
                 <div className="success-icon">✓</div>
                 <p>Meetup confirmed. Enjoy it, mate.</p>
+                {qrError && <p role="status">{qrError}</p>}
                 {earnedPatches.length > 0 && (
                   <div className="earned-patches">
                     {earnedPatches.map((patch) => (

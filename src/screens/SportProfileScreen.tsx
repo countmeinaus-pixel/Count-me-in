@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ActivityCard } from '../components/ActivityCard'
 import { SportIcon } from '../components/SportIcon'
 import { activities, communityMembers, currentUser } from '../data/mockData'
-import { getConfirmedMeetupsForUserAndSport } from '../lib/checkins'
+import { getConfirmedMeetupsForUserAndSport, loadSavedMeetupsForUser } from '../lib/checkins'
 import { getCurrentProfile, type CurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 
@@ -16,6 +16,7 @@ export function SportProfileScreen() {
   const [activeTab, setActiveTab] = useState<ActivityTab>('upcoming')
   const [savedProfile, setSavedProfile] = useState<CurrentProfile | null>(null)
   const [profileError, setProfileError] = useState('')
+  const [checkinVersion, setCheckinVersion] = useState(0)
   const isCurrentUser = !name
   const profileName = name ? decodeURIComponent(name) : savedProfile?.firstName ?? currentUser.name
 
@@ -29,7 +30,11 @@ export function SportProfileScreen() {
         if (userError) throw userError
         if (!userData.user) return
         const profileData = await getCurrentProfile(userData.user.id)
-        if (active && profileData) setSavedProfile(profileData)
+        if (active && profileData) {
+          setSavedProfile(profileData)
+          await loadSavedMeetupsForUser(profileData.firstName)
+          if (active) setCheckinVersion((version) => version + 1)
+        }
       } catch (error) {
         if (active) setProfileError(error instanceof Error ? error.message : 'Unable to load this profile.')
       }
@@ -56,7 +61,7 @@ export function SportProfileScreen() {
   const selectedSport = profile?.sports.find((item) => item.name === sport)
   const meetupEntries = useMemo(
     () => getConfirmedMeetupsForUserAndSport(profileName, sport ?? ''),
-    [profileName, sport],
+    [profileName, sport, checkinVersion],
   )
 
   if (!profile || !selectedSport) {

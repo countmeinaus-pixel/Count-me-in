@@ -18,6 +18,7 @@ import { currentUser } from "../data/mockData"
 import {
   getConfirmedMeetupsForUser,
   getPatchProgressForUser,
+  loadSavedMeetupsForUser,
 } from "../lib/checkins"
 import { getStoredLanguage } from "../lib/i18n"
 import { getMoreOrigin } from "../lib/moreNavigation"
@@ -91,6 +92,7 @@ export function MoreScreen() {
     sports: currentUser.stats.sports,
   })
   const [profileError, setProfileError] = useState("")
+  const [checkinVersion, setCheckinVersion] = useState(0)
   const [language, setLanguage] = useState(getStoredLanguage())
   const [isStaff, setIsStaff] = useState(false)
   const [statusMessage, setStatusMessage] = useState(
@@ -101,14 +103,14 @@ export function MoreScreen() {
   const closeTo = getMoreOrigin(location.state)
   const meetupStats = useMemo(
     () => getConfirmedMeetupsForUser(profile.name),
-    [profile.name],
+    [profile.name, checkinVersion],
   )
   const hostedCount = new Set(
     meetupStats.filter((item) => item.hosted).map((item) => item.activityId),
   ).size
   const patchProgress = useMemo(
     () => getPatchProgressForUser(profile.name),
-    [profile.name],
+    [profile.name, checkinVersion],
   )
   const earnedPatches = patchProgress.filter((patch) => patch.earned).length
   const patchesTotal = patchProgress.length
@@ -149,6 +151,8 @@ export function MoreScreen() {
             photoUrl: profileResult.data.photo_url,
             sports: sportsResult.count ?? 0,
           })
+          await loadSavedMeetupsForUser(profileResult.data.first_name)
+          if (active) setCheckinVersion((version) => version + 1)
         }
       } catch (error) {
         if (active)

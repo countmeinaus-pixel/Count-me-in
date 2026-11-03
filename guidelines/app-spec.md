@@ -80,7 +80,7 @@ Beginner, Intermediate, Experienced.
 ## QR check-in (confirming a meetup)
 
 - On the day of the activity, the activity detail screen shows a "Check in" button.
-- Check in opens the QRCard with my code and a "Scan their code" button (simulate the scan in the prototype: show a camera frame, then a success state).
+- Check in opens the QRCard with my code and a "Scan their code" button. Demo activities simulate a scan; saved activities use the camera to scan a participant's real QR code.
 - Either person can scan. A successful scan confirms the meetup for both users and counts towards stats and achievement patches.
 - Success state: "Meetup confirmed. Enjoy it, mate." plus any patch earned.
 
@@ -160,6 +160,7 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 ### Chats
 - List of activity group chats: sport icon, activity title, last message, time, unread dot.
 - Chat screen: TopBar with activity title and date (tap opens activity detail), ChatBubbles, text input with send icon button. Text only.
+- Saved activity chats use Supabase Realtime. A chat is created when a join request is accepted (including auto-accept); only the host and accepted participants can read or write.
 
 ### Profile (mine and others)
 - Avatar 96 with verified tick, name, age, suburb, bio.

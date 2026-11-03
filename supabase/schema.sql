@@ -64,14 +64,22 @@ create table if not exists public.activity_chat_messages (
   id uuid primary key default gen_random_uuid(),
   thread_id uuid not null references public.activity_chat_threads(id) on delete cascade,
   sender_id uuid not null references public.profiles(id) on delete cascade,
-  body text not null,
+  body text not null check (char_length(body) between 1 and 2000),
   message_type text not null default 'message' check (message_type in ('message', 'system')),
   created_at timestamptz not null default now()
+);
+
+create table if not exists public.activity_chat_reads (
+  thread_id uuid not null references public.activity_chat_threads(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  last_read_at timestamptz not null default now(),
+  primary key (thread_id, user_id)
 );
 
 create index if not exists idx_profiles_suburb on public.profiles(suburb);
 create index if not exists idx_profile_sports_sport on public.profile_sports(sport_id);
 create index if not exists idx_chat_threads_activity on public.activity_chat_threads(activity_id);
+create unique index if not exists idx_activity_chat_threads_activity_unique on public.activity_chat_threads(activity_id);
 create index if not exists idx_chat_members_user on public.activity_chat_members(user_id);
 create index if not exists idx_chat_messages_thread on public.activity_chat_messages(thread_id, created_at desc);
 
@@ -82,6 +90,7 @@ alter table public.sports enable row level security;
 alter table public.activity_chat_threads enable row level security;
 alter table public.activity_chat_members enable row level security;
 alter table public.activity_chat_messages enable row level security;
+alter table public.activity_chat_reads enable row level security;
 
 drop policy if exists "Profiles are viewable by everyone" on public.profiles;
 drop policy if exists "Users can insert their own profile" on public.profiles;
@@ -100,6 +109,13 @@ drop policy if exists "Users can view chat membership for threads they belong to
 drop policy if exists "Users can manage their own chat membership" on public.activity_chat_members;
 drop policy if exists "Members can read chat messages" on public.activity_chat_messages;
 drop policy if exists "Members can send chat messages" on public.activity_chat_messages;
+drop policy if exists "Accepted members can read their activity chat threads" on public.activity_chat_threads;
+drop policy if exists "Accepted members can view chat membership" on public.activity_chat_members;
+drop policy if exists "Accepted members can read chat messages" on public.activity_chat_messages;
+drop policy if exists "Accepted members can send chat messages" on public.activity_chat_messages;
+drop policy if exists "Users can view their activity chat read markers" on public.activity_chat_reads;
+drop policy if exists "Users can add their activity chat read markers" on public.activity_chat_reads;
+drop policy if exists "Users can update their activity chat read markers" on public.activity_chat_reads;
 
 create policy "Profiles are viewable by everyone"
 on public.profiles for select using (true);
@@ -136,65 +152,74 @@ grant select, insert, update, delete on table public.profile_sports to authentic
 grant select, insert, update on table public.profile_availability to authenticated;
 grant select on table public.sports to authenticated;
 
-create policy "Users can view activity chats they belong to"
-on public.activity_chat_threads for select using (
-  organiser_id = auth.uid() or
-  id in (
-    select thread_id from public.activity_chat_members
-    where user_id = auth.uid() and status = 'accepted'
-  )
+create or replace function public.is_activity_chat_member(target_thread_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+  select auth.uid() is not null and exists (
+    select 1
+    from public.activity_chat_threads t
+    where t.id = target_thread_id
+      and (
+        t.organiser_id = auth.uid()
+        or exists (
+          select 1
+          from public.activity_chat_members m
+          where m.thread_id = t.id
+            and m.user_id = auth.uid()
+            and m.status = 'accepted'
+        )
+      )
+  );
+$$;
+
+revoke all on function public.is_activity_chat_member(uuid) from public, anon;
+grant execute on function public.is_activity_chat_member(uuid) to authenticated;
+
+create policy "Accepted members can read their activity chat threads"
+on public.activity_chat_threads for select
+using (public.is_activity_chat_member(id));
+
+create policy "Accepted members can view chat membership"
+on public.activity_chat_members for select
+using (public.is_activity_chat_member(thread_id));
+
+create policy "Accepted members can read chat messages"
+on public.activity_chat_messages for select
+using (public.is_activity_chat_member(thread_id));
+
+create policy "Accepted members can send chat messages"
+on public.activity_chat_messages for insert
+with check (
+  sender_id = auth.uid()
+  and message_type = 'message'
+  and public.is_activity_chat_member(thread_id)
 );
 
-create policy "Users can insert activity chat threads they organise"
-on public.activity_chat_threads for insert with check (organiser_id = auth.uid());
+create policy "Users can view their activity chat read markers"
+on public.activity_chat_reads for select
+using (user_id = auth.uid() and public.is_activity_chat_member(thread_id));
 
-create policy "Organisers can update activity chat threads"
-on public.activity_chat_threads for update using (organiser_id = auth.uid())
-with check (organiser_id = auth.uid());
+create policy "Users can add their activity chat read markers"
+on public.activity_chat_reads for insert
+with check (user_id = auth.uid() and public.is_activity_chat_member(thread_id));
 
-create policy "Users can view chat membership for threads they belong to"
-on public.activity_chat_members for select using (
-  user_id = auth.uid() or
-  thread_id in (
-    select id from public.activity_chat_threads where organiser_id = auth.uid()
-  )
-);
+create policy "Users can update their activity chat read markers"
+on public.activity_chat_reads for update
+using (user_id = auth.uid() and public.is_activity_chat_member(thread_id))
+with check (user_id = auth.uid() and public.is_activity_chat_member(thread_id));
 
-create policy "Users can manage their own chat membership"
-on public.activity_chat_members for all using (
-  user_id = auth.uid() or
-  thread_id in (
-    select id from public.activity_chat_threads where organiser_id = auth.uid()
-  )
-) with check (
-  user_id = auth.uid() or
-  thread_id in (
-    select id from public.activity_chat_threads where organiser_id = auth.uid()
-  )
-);
-
-create policy "Members can read chat messages"
-on public.activity_chat_messages for select using (
-  sender_id = auth.uid() or
-  thread_id in (
-    select id from public.activity_chat_threads where organiser_id = auth.uid()
-  ) or
-  thread_id in (
-    select thread_id from public.activity_chat_members where user_id = auth.uid() and status = 'accepted'
-  )
-);
-
-create policy "Members can send chat messages"
-on public.activity_chat_messages for insert with check (
-  sender_id = auth.uid() and (
-    thread_id in (
-      select id from public.activity_chat_threads where organiser_id = auth.uid()
-    ) or
-    thread_id in (
-      select thread_id from public.activity_chat_members where user_id = auth.uid() and status = 'accepted'
-    )
-  )
-);
+revoke all on public.activity_chat_threads from anon, authenticated;
+grant select on public.activity_chat_threads to authenticated;
+revoke all on public.activity_chat_members from anon, authenticated;
+grant select on public.activity_chat_members to authenticated;
+revoke all on public.activity_chat_messages from anon, authenticated;
+grant select, insert on public.activity_chat_messages to authenticated;
+revoke all on public.activity_chat_reads from anon, authenticated;
+grant select, insert, update on public.activity_chat_reads to authenticated;
 
 -- Seed the sport catalog
 insert into public.sports (name, icon)
@@ -864,6 +889,92 @@ begin
 end;
 $$;
 
+create or replace function public.sync_activity_group_chat_membership()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  activity_row public.activities%rowtype;
+  chat_thread_id uuid;
+  member_name text;
+begin
+  if new.status <> 'accepted'
+    or (tg_op = 'UPDATE' and old.status = 'accepted') then
+    return new;
+  end if;
+
+  select * into activity_row
+  from public.activities
+  where id = new.activity_id;
+  if not found then raise exception 'The activity for this chat could not be found.'; end if;
+
+  insert into public.activity_chat_threads (activity_id, title, organiser_id)
+  values (activity_row.id, activity_row.title, activity_row.host_id)
+  on conflict (activity_id) do update
+    set title = excluded.title,
+        organiser_id = excluded.organiser_id,
+        updated_at = now()
+  returning id into chat_thread_id;
+
+  insert into public.activity_chat_members (thread_id, user_id, status)
+  values (chat_thread_id, activity_row.host_id, 'accepted')
+  on conflict (thread_id, user_id) do update set status = 'accepted';
+
+  insert into public.activity_chat_members (thread_id, user_id, status)
+  values (chat_thread_id, new.user_id, 'accepted')
+  on conflict (thread_id, user_id) do update set status = 'accepted';
+
+  if new.user_id <> activity_row.host_id then
+    select first_name into member_name
+    from public.profiles
+    where id = new.user_id;
+    insert into public.activity_chat_messages (thread_id, sender_id, body, message_type)
+    values (chat_thread_id, new.user_id, coalesce(member_name, 'A member') || ' joined the activity.', 'system');
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.sync_activity_group_chat_membership() from public, anon, authenticated;
+drop trigger if exists sync_activity_group_chat_membership on public.activity_join_requests;
+create trigger sync_activity_group_chat_membership
+after insert or update of status on public.activity_join_requests
+for each row execute function public.sync_activity_group_chat_membership();
+
+insert into public.activity_chat_threads (activity_id, title, organiser_id)
+select distinct a.id, a.title, a.host_id
+from public.activities a
+join public.activity_join_requests r
+  on r.activity_id = a.id and r.status = 'accepted'
+on conflict (activity_id) do update
+  set title = excluded.title,
+      organiser_id = excluded.organiser_id,
+      updated_at = now();
+
+insert into public.activity_chat_members (thread_id, user_id, status)
+select t.id, member_id, 'accepted'
+from public.activity_chat_threads t
+join public.activity_join_requests r
+  on r.activity_id = t.activity_id and r.status = 'accepted'
+cross join lateral (values (t.organiser_id), (r.user_id)) as members(member_id)
+on conflict (thread_id, user_id) do update set status = 'accepted';
+
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+    and not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public'
+        and tablename = 'activity_chat_messages'
+    ) then
+    alter publication supabase_realtime add table public.activity_chat_messages;
+  end if;
+end;
+$$;
+
 revoke all on public.activity_join_requests from anon, authenticated;
 grant select on public.activity_join_requests to authenticated;
 revoke all on function public.request_to_join_activity(uuid, text) from public, anon;
@@ -872,3 +983,252 @@ revoke all on function public.respond_to_activity_join_request(uuid, uuid, text)
 grant execute on function public.respond_to_activity_join_request(uuid, uuid, text) to authenticated;
 revoke all on function public.cancel_activity_join_request(uuid) from public, anon;
 grant execute on function public.cancel_activity_join_request(uuid) to authenticated;
+
+create table if not exists public.activity_checkin_codes (
+  activity_id uuid not null references public.activities(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  code uuid not null default gen_random_uuid() unique,
+  created_at timestamptz not null default now(),
+  primary key (activity_id, user_id)
+);
+
+create table if not exists public.activity_meetup_confirmations (
+  activity_id uuid not null references public.activities(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  partner_id uuid not null references public.profiles(id) on delete cascade,
+  confirmed_at timestamptz not null default now(),
+  primary key (activity_id, user_id),
+  check (user_id <> partner_id)
+);
+
+create index if not exists idx_activity_meetup_confirmations_user
+on public.activity_meetup_confirmations(user_id, confirmed_at desc);
+
+alter table public.activity_checkin_codes enable row level security;
+alter table public.activity_meetup_confirmations enable row level security;
+
+drop policy if exists "Users can view their own activity check-in codes"
+on public.activity_checkin_codes;
+create policy "Users can view their own activity check-in codes"
+on public.activity_checkin_codes for select
+using (user_id = auth.uid());
+
+drop policy if exists "Users can view their own meetup confirmations"
+on public.activity_meetup_confirmations;
+create policy "Users can view their own meetup confirmations"
+on public.activity_meetup_confirmations for select
+using (user_id = auth.uid());
+
+revoke all on public.activity_checkin_codes from anon, authenticated;
+grant select on public.activity_checkin_codes to authenticated;
+revoke all on public.activity_meetup_confirmations from anon, authenticated;
+grant select on public.activity_meetup_confirmations to authenticated;
+
+create or replace function public.sync_activity_checkin_codes()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  activity_host_id uuid;
+begin
+  if new.status <> 'accepted'
+    or (tg_op = 'UPDATE' and old.status = 'accepted') then
+    return new;
+  end if;
+
+  select host_id into activity_host_id
+  from public.activities
+  where id = new.activity_id;
+
+  if activity_host_id is null then
+    raise exception 'The activity for this check-in could not be found.';
+  end if;
+
+  insert into public.activity_checkin_codes (activity_id, user_id)
+  values (new.activity_id, activity_host_id), (new.activity_id, new.user_id)
+  on conflict (activity_id, user_id) do nothing;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.sync_activity_checkin_codes() from public, anon, authenticated;
+drop trigger if exists sync_activity_checkin_codes on public.activity_join_requests;
+create trigger sync_activity_checkin_codes
+after insert or update of status on public.activity_join_requests
+for each row execute function public.sync_activity_checkin_codes();
+
+insert into public.activity_checkin_codes (activity_id, user_id)
+select activity_id, user_id
+from (
+  select a.id as activity_id, a.host_id as user_id
+  from public.activities a
+  where exists (
+    select 1
+    from public.activity_join_requests r
+    where r.activity_id = a.id and r.status = 'accepted'
+  )
+  union
+  select activity_id, user_id
+  from public.activity_join_requests
+  where status = 'accepted'
+) accepted_members
+on conflict (activity_id, user_id) do nothing;
+
+create or replace function public.get_activity_checkin_code(target_activity_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  viewer_id uuid := auth.uid();
+  activity_host_id uuid;
+  checkin_code uuid;
+begin
+  if viewer_id is null then
+    raise exception 'Sign in before checking in to an activity.';
+  end if;
+
+  select host_id into activity_host_id
+  from public.activities
+  where id = target_activity_id;
+
+  if activity_host_id is null then
+    raise exception 'This activity could not be found.';
+  end if;
+
+  if viewer_id <> activity_host_id and not exists (
+    select 1
+    from public.activity_join_requests
+    where activity_id = target_activity_id
+      and user_id = viewer_id
+      and status = 'accepted'
+  ) then
+    raise exception 'Only the host and accepted participants can check in.';
+  end if;
+
+  insert into public.activity_checkin_codes (activity_id, user_id)
+  values (target_activity_id, viewer_id)
+  on conflict (activity_id, user_id) do nothing;
+
+  select code into checkin_code
+  from public.activity_checkin_codes
+  where activity_id = target_activity_id and user_id = viewer_id;
+
+  return checkin_code;
+end;
+$$;
+
+revoke all on function public.get_activity_checkin_code(uuid) from public, anon;
+grant execute on function public.get_activity_checkin_code(uuid) to authenticated;
+
+create or replace function public.confirm_activity_meetup(
+  target_activity_id uuid,
+  scanned_code uuid
+)
+returns timestamptz
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  viewer_id uuid := auth.uid();
+  scanned_user_id uuid;
+  activity_host_id uuid;
+  activity_start timestamptz;
+  existing_partner_id uuid;
+  confirmed_time timestamptz := now();
+begin
+  if viewer_id is null then
+    raise exception 'Sign in before confirming a meetup.';
+  end if;
+
+  select host_id, starts_at
+  into activity_host_id, activity_start
+  from public.activities
+  where id = target_activity_id
+  for update;
+
+  if not found then
+    raise exception 'This activity could not be found.';
+  end if;
+
+  if (activity_start at time zone 'Australia/Adelaide')::date
+    <> (now() at time zone 'Australia/Adelaide')::date then
+    raise exception 'Check-in is only available on the activity day.';
+  end if;
+
+  if viewer_id <> activity_host_id and not exists (
+    select 1
+    from public.activity_join_requests
+    where activity_id = target_activity_id
+      and user_id = viewer_id
+      and status = 'accepted'
+  ) then
+    raise exception 'Only the host and accepted participants can check in.';
+  end if;
+
+  select user_id into scanned_user_id
+  from public.activity_checkin_codes
+  where activity_id = target_activity_id
+    and code = scanned_code;
+
+  if scanned_user_id is null or scanned_user_id = viewer_id then
+    raise exception 'Scan another accepted participant''s code for this activity.';
+  end if;
+
+  if scanned_user_id <> activity_host_id and not exists (
+    select 1
+    from public.activity_join_requests
+    where activity_id = target_activity_id
+      and user_id = scanned_user_id
+      and status = 'accepted'
+  ) then
+    raise exception 'That check-in code is not for an accepted participant.';
+  end if;
+
+  select partner_id into existing_partner_id
+  from public.activity_meetup_confirmations
+  where activity_id = target_activity_id and user_id = viewer_id;
+
+  if existing_partner_id is not null then
+    if existing_partner_id = scanned_user_id
+      and exists (
+        select 1
+        from public.activity_meetup_confirmations
+        where activity_id = target_activity_id
+          and user_id = scanned_user_id
+          and partner_id = viewer_id
+      ) then
+      return (
+        select confirmed_at
+        from public.activity_meetup_confirmations
+        where activity_id = target_activity_id and user_id = viewer_id
+      );
+    end if;
+    raise exception 'A meetup has already been confirmed for you for this activity.';
+  end if;
+
+  if exists (
+    select 1
+    from public.activity_meetup_confirmations
+    where activity_id = target_activity_id and user_id = scanned_user_id
+  ) then
+    raise exception 'A meetup has already been confirmed for that participant.';
+  end if;
+
+  insert into public.activity_meetup_confirmations
+    (activity_id, user_id, partner_id, confirmed_at)
+  values
+    (target_activity_id, viewer_id, scanned_user_id, confirmed_time),
+    (target_activity_id, scanned_user_id, viewer_id, confirmed_time);
+
+  return confirmed_time;
+end;
+$$;
+
+revoke all on function public.confirm_activity_meetup(uuid, uuid) from public, anon;
+grant execute on function public.confirm_activity_meetup(uuid, uuid) to authenticated;

@@ -13,7 +13,15 @@ const items = [
   ['chats', 'Chats', MessageCircle, '/chats'],
 ] as const
 
-export function BottomNav({ active, hasUnreadChats = true }: { active: Tab | null; hasUnreadChats?: boolean }) {
+export function BottomNav({
+  active,
+  hasUnreadChats = true,
+  chatUnreadError = '',
+}: {
+  active: Tab | null
+  hasUnreadChats?: boolean
+  chatUnreadError?: string
+}) {
   const navigate = useNavigate()
   const location = useLocation()
   const [profilePhoto, setProfilePhoto] = useState<{ name: string; url: string | null }>({
@@ -60,7 +68,7 @@ export function BottomNav({ active, hasUnreadChats = true }: { active: Tab | nul
           type="button"
           className={active === id ? 'active' : ''}
           onClick={() => navigate(href)}
-          aria-label={label}
+          aria-label={chatUnreadError && id === 'chats' ? `${label}. ${chatUnreadError}` : label}
           aria-current={active === id ? 'page' : undefined}
         >
           {id === 'chats' && hasUnreadChats && <span className="nav-unread-dot" aria-label="Unread chats" />}

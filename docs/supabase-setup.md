@@ -136,3 +136,21 @@ This migration lets the activity host or an admin update an activity. It also le
 1. Open Supabase **SQL Editor** and choose **New query**.
 2. Copy the full contents of `supabase/migrations/20261103150000_activity_management.sql`.
 3. Paste the SQL into the editor and choose **Run**.
+
+## 13) Activity group chats
+
+This migration creates the chat tables if they do not exist, then creates a private group chat when a join request is accepted (including auto-accept), adds a system message for the new member, and enables Supabase Realtime for text messages. Only the host and accepted participants can read or send messages. It also adds per-user read markers for unread badges. Before running it, apply the activities, profile, and activity join-request migrations above.
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103160000_activity_group_chats.sql`.
+3. Paste the SQL into the editor and choose **Run**.
+
+## 14) QR check-ins and meetup stats
+
+This migration gives the host and accepted participants a private QR code for each activity. Scanning another participant's code confirms the meetup for both accounts. The activity must be on the current Adelaide date, and a participant can confirm one meetup per activity. Confirmed meetups feed the profile stats and achievement patches.
+
+Apply the chat migration above first, then:
+
+1. Open Supabase **SQL Editor** and choose **New query**.
+2. Copy the full contents of `supabase/migrations/20261103170000_activity_checkins.sql`.
+3. Paste the SQL into the editor and choose **Run**.

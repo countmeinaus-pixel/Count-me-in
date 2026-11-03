@@ -1501,6 +1501,16 @@ h3 { font: 700 21px/24px var(--font-display); }
   border-bottom: 1px solid var(--border);
 }
 .chat-thread-title { flex: 1; min-width: 0; }
+.chat-thread-header > button.chat-thread-title,
+.chat-thread-header > button.chat-thread-sport-icon {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.chat-thread-header > button:disabled { cursor: default; }
+.chat-thread-header .chat-thread-sport-icon { padding: 0; }
 .chat-thread-title strong {
   display: block;
   overflow: hidden;
@@ -1621,6 +1631,19 @@ h3 { font: 700 21px/24px var(--font-display); }
   gap: 12px;
 }
 .chat-thread-missing p { color: var(--text-secondary); }
+.chat-demo-notice,
+.chat-error {
+  flex: 0 0 auto;
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.chat-error {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-subtle);
+  color: var(--danger);
+}
 .detail-report-action {
   display: inline-flex;
   align-items: center;

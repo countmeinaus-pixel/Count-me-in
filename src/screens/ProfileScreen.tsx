@@ -18,6 +18,7 @@ import {
   getConfirmedMeetupsForUserAndSport,
   getPatchProgressForUser,
   getLollipopChartForUser,
+  loadSavedMeetupsForUser,
 } from "../lib/checkins"
 import { getCurrentProfile, type CurrentProfile } from "../lib/profile"
 import { supabase } from "../lib/supabase"
@@ -39,6 +40,7 @@ export function ProfileScreen() {
   const { name: profileParam } = useParams()
   const [savedProfile, setSavedProfile] = useState<CurrentProfile | null>(null)
   const [profileLoadError, setProfileLoadError] = useState("")
+  const [checkinVersion, setCheckinVersion] = useState(0)
   const [statusMessage, setStatusMessage] = useState(
     typeof location.state?.statusMessage === "string"
       ? location.state.statusMessage
@@ -70,7 +72,11 @@ export function ProfileScreen() {
         if (userError) throw userError
         if (!userData.user) return
         const profileData = await getCurrentProfile(userData.user.id)
-        if (active && profileData) setSavedProfile(profileData)
+        if (active && profileData) {
+          setSavedProfile(profileData)
+          await loadSavedMeetupsForUser(profileData.firstName)
+          if (active) setCheckinVersion((version) => version + 1)
+        }
       } catch (error) {
         if (active)
           setProfileLoadError(
@@ -152,7 +158,7 @@ export function ProfileScreen() {
           })
   const confirmedMeetups = useMemo(
     () => getConfirmedMeetupsForUser(profile.name),
-    [profile.name],
+    [profile.name, checkinVersion],
   )
   const profileMeetups = savedProfile
     ? confirmedMeetups.length
@@ -178,7 +184,7 @@ export function ProfileScreen() {
   )
   const patchList = useMemo(
     () => getPatchProgressForUser(profile.name),
-    [profile.name],
+    [profile.name, checkinVersion],
   )
   const earnedPatches = patchList.filter((patch) => patch.earned)
   const chartData = useMemo(
@@ -187,7 +193,7 @@ export function ProfileScreen() {
         isCurrentUser ? currentUser.name : profile.name,
         6,
       ),
-    [isCurrentUser, profile.name],
+    [isCurrentUser, profile.name, checkinVersion],
   )
 
   async function handleReportUser(name: string) {

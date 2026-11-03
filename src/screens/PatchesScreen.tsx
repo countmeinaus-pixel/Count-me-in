@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { PatchIcon } from '../components/PatchIcon'
 import { patchCategories } from '../data/patches'
-import { getPatchProgressForUser, type PatchProgress } from '../lib/checkins'
+import { getPatchProgressForUser, loadSavedMeetupsForUser, type PatchProgress } from '../lib/checkins'
 import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 import { getMoreOrigin } from '../lib/moreNavigation'
@@ -42,6 +42,7 @@ export function PatchesScreen() {
   const [selectedPatch, setSelectedPatch] = useState<PatchProgress | null>(null)
   const [userName, setUserName] = useState(currentUser.name)
   const [profileError, setProfileError] = useState('')
+  const [, setCheckinVersion] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -53,7 +54,11 @@ export function PatchesScreen() {
         if (userError) throw userError
         if (!userData.user) return
         const profile = await getCurrentProfile(userData.user.id)
-        if (active && profile) setUserName(profile.firstName)
+        if (active && profile) {
+          setUserName(profile.firstName)
+          await loadSavedMeetupsForUser(profile.firstName)
+          if (active) setCheckinVersion((version) => version + 1)
+        }
       } catch (error) {
         if (active) setProfileError(error instanceof Error ? error.message : 'Unable to load your profile.')
       }

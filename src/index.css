@@ -2131,7 +2131,13 @@ h3 { font: 700 21px/24px var(--font-display); }
   white-space: nowrap;
 }
 .patch-category { display: grid; gap: 12px; }
-.patch-category h2 {
+.patch-category > h2,
+.patches-to-collect-title {
+  color: var(--text-primary);
+  font: 700 24px/1.1 var(--font-display);
+}
+.patches-to-collect { display: grid; gap: 24px; margin-top: 16px; }
+.patch-category h3 {
   color: var(--text-secondary);
   font: 500 14px/1.2 var(--font-display);
   letter-spacing: 0.06em;

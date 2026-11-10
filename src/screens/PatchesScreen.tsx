@@ -71,7 +71,33 @@ export function PatchesScreen() {
   }, [])
 
   const patches = getPatchProgressForUser(userName)
-  const earnedCount = patches.filter((patch) => patch.earned).length
+  const earnedPatches = patches.filter((patch) => patch.earned)
+  const lockedPatches = patches.filter((patch) => !patch.earned)
+  const earnedCount = earnedPatches.length
+
+  function renderPatchCard(patch: PatchProgress) {
+    return (
+      <button
+        type="button"
+        key={patch.id}
+        className={`all-patch-card ${patch.earned ? 'earned' : 'locked'}`}
+        onClick={() => setSelectedPatch(patch)}
+        aria-label={`${patch.name}, ${patch.earned ? 'earned' : `${patch.progress} of ${patch.target} ${patch.progressLabel}`}`}
+      >
+        <span className="all-patch-icon">
+          <PatchIcon name={patch.icon} />
+          {patch.earned
+            ? <span className="patch-earned-mark"><Check aria-hidden="true" /></span>
+            : <LockKeyhole className="patch-lock-mark" aria-hidden="true" />}
+        </span>
+        <strong>{patch.name}</strong>
+        <small>{patch.rule}</small>
+        {patch.earned
+          ? <span className="patch-earned-date">Earned {formatEarnedDate(patch.earnedAt)}</span>
+          : <PatchProgressBar patch={patch} />}
+      </button>
+    )
+  }
 
   return (
     <div className="screen patches-page">
@@ -92,39 +118,34 @@ export function PatchesScreen() {
       </header>
       {profileError && <p className="edit-form-error" role="alert">{profileError}</p>}
 
-      {patchCategories.map((category) => {
-        const categoryPatches = patches.filter((patch) => patch.category === category)
-        if (categoryPatches.length === 0) return null
+      <section className="patch-category" aria-labelledby="my-patches-heading">
+        <h2 id="my-patches-heading">My patches</h2>
+        {earnedPatches.length > 0 ? (
+          <div className="all-patches-grid">{earnedPatches.map(renderPatchCard)}</div>
+        ) : (
+          <div className="empty-state-card compact">
+            <h3>No patches yet</h3>
+            <p>Confirm your first meetup with a QR check-in to earn your first patch.</p>
+          </div>
+        )}
+      </section>
 
-        return (
-          <section key={category} className="patch-category">
-            <h2>{category}</h2>
-            <div className="all-patches-grid">
-              {categoryPatches.map((patch) => (
-                <button
-                  type="button"
-                  key={patch.id}
-                  className={`all-patch-card ${patch.earned ? 'earned' : 'locked'}`}
-                  onClick={() => setSelectedPatch(patch)}
-                  aria-label={`${patch.name}, ${patch.earned ? 'earned' : `${patch.progress} of ${patch.target} ${patch.progressLabel}`}`}
-                >
-                  <span className="all-patch-icon">
-                    <PatchIcon name={patch.icon} />
-                    {patch.earned
-                      ? <span className="patch-earned-mark"><Check aria-hidden="true" /></span>
-                      : <LockKeyhole className="patch-lock-mark" aria-hidden="true" />}
-                  </span>
-                  <strong>{patch.name}</strong>
-                  <small>{patch.rule}</small>
-                  {patch.earned
-                    ? <span className="patch-earned-date">Earned {formatEarnedDate(patch.earnedAt)}</span>
-                    : <PatchProgressBar patch={patch} />}
-                </button>
-              ))}
-            </div>
-          </section>
-        )
-      })}
+      {lockedPatches.length > 0 && (
+        <div className="patches-to-collect">
+          <h2 className="patches-to-collect-title">Patches to collect</h2>
+          {patchCategories.map((category) => {
+            const categoryPatches = lockedPatches.filter((patch) => patch.category === category)
+            if (categoryPatches.length === 0) return null
+
+            return (
+              <section key={category} className="patch-category">
+                <h3>{category}</h3>
+                <div className="all-patches-grid">{categoryPatches.map(renderPatchCard)}</div>
+              </section>
+            )
+          })}
+        </div>
+      )}
 
       {selectedPatch && (
         <div className="patch-sheet-scrim" role="presentation" onClick={() => setSelectedPatch(null)}>

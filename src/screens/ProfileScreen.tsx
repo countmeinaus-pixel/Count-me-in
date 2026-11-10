@@ -53,7 +53,7 @@ import {
 } from "../lib/moderation"
 import { getMoreOrigin } from "../lib/moreNavigation"
 import { friendNames } from "../lib/friends"
-import { useMediaQuery } from "../lib/useMediaQuery"
+import { useContentWidth } from "../lib/useMediaQuery"
 
 const initialFriends = friendNames.map((name) => ({ name }))
 
@@ -301,7 +301,9 @@ export function ProfileScreen() {
   const [recordsVersion, setRecordsVersion] = useState(0)
   const [showAllRecords, setShowAllRecords] = useState(false)
   // A preview grid: 2 by 2 on phones, 5 in a row on wider screens.
-  const recordsPreviewCount = useMediaQuery("(min-width: 768px)") ? 5 : 4
+  // Column counts match the @container app rules in index.css.
+  const contentWidth = useContentWidth()
+  const recordsPreviewCount = contentWidth >= 768 ? 5 : 4
 
   useEffect(() => {
     if (!profileId) {
@@ -351,17 +353,15 @@ export function ProfileScreen() {
   const visibleFriends = friends.filter(
     (friend) => !blockedUsers.includes(friend.name) && friend.name !== profile.name,
   )
-  // Up to 3 rows: 4 friends a row on desktop, 2 on phones.
-  const friendsPreviewCount = useMediaQuery("(min-width: 980px)") ? 12 : 6
+  // Up to 3 rows of friends: 4, 3 or 2 a row depending on the content width.
+  const friendsPreviewCount = (contentWidth >= 1200 ? 4 : contentWidth >= 760 ? 3 : 2) * 3
   const patchList = useMemo(
     () => getPatchProgressForUser(profile.name),
     [profile.name, checkinVersion],
   )
   const earnedPatches = patchList.filter((patch) => patch.earned)
   // At most 6 rows of patches (6, 4 or 3 a row); the last tile becomes "+N".
-  const isDesktop = useMediaQuery("(min-width: 980px)")
-  const isTablet = useMediaQuery("(min-width: 600px)")
-  const patchesPreviewCount = (isDesktop ? 6 : isTablet ? 4 : 3) * 6
+  const patchesPreviewCount = (contentWidth >= 1200 ? 6 : contentWidth >= 600 ? 4 : 3) * 6
   const patchesOverflow = earnedPatches.length > patchesPreviewCount
   const shownPatches = patchesOverflow
     ? earnedPatches.slice(0, patchesPreviewCount - 1)

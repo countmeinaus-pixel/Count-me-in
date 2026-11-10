@@ -48,6 +48,8 @@ h1 { font: 700 34px/37px var(--font-display); }
 h2 { font: 700 24px/28px var(--font-display); }
 h3 { font: 700 21px/24px var(--font-display); }
 
+.app-content { container: app / inline-size; }
+
 .app-shell {
   width: min(100%, 390px);
   min-height: 100dvh;
@@ -474,7 +476,7 @@ h3 { font: 700 21px/24px var(--font-display); }
 .mate-empty-state p { margin-top: 8px; color: var(--text-secondary); }
 .mate-empty-state button { min-height: 44px; margin-top: 16px; border: 0; background: transparent; color: var(--seafoam); }
 
-@media (min-width: 980px) {
+@container app (min-width: 980px) {
   .mate-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
@@ -1117,31 +1119,133 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .bottom-nav button { min-width: 0; }
 
+/* Side nav parts, only shown on desktop. */
+.side-nav-brand,
+.side-nav-toggle,
+.side-nav-spacer,
+.side-nav-create,
+.side-nav-active-chevron { display: none; }
+
+/* Desktop: a side nav on the left instead of the bottom bar. */
 @media (min-width: 980px) {
-  :root { --bottom-nav-clearance: 134px; }
+  :root { --side-nav-width: 248px; }
+  .app-content.with-nav {
+    --bottom-nav-clearance: 48px;
+    padding-left: var(--side-nav-width);
+  }
+  .app-content.with-nav.nav-collapsed { --side-nav-width: 84px; padding-left: 84px; }
 
   .bottom-nav {
-    left: 50%;
-    bottom: 28px;
-    transform: translateX(-50%);
-    width: min(92vw, 620px);
-    height: 74px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: rgba(19, 36, 51, 0.96);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
-    padding: 8px 18px 8px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--side-nav-width);
+    height: 100dvh;
+    max-width: none;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 16px 20px;
+    border-top: 0;
+    border-right: 1px solid var(--border);
+    background: var(--surface-1);
+    transition: width 0.2s ease;
+  }
+  .bottom-nav.collapsed { width: 84px; }
+
+  .side-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 76px;
+    margin: 0 -16px 12px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .side-nav-logo {
+    display: grid;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: var(--radius-lg);
+    background: var(--seafoam-subtle);
+    color: var(--seafoam);
+  }
+  .side-nav-logo svg { width: 22px; height: 22px; }
+  .side-nav-wordmark {
+    font: 700 22px/1 var(--font-display);
+    color: var(--text-primary);
+    white-space: nowrap;
   }
 
-  .bottom-nav button {
+  .bottom-nav button.side-nav-toggle {
+    position: absolute;
+    top: 64px;
+    right: -14px;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+  .bottom-nav button.side-nav-toggle svg { width: 16px; height: 16px; }
+
+  .bottom-nav button:not(.side-nav-toggle) {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 14px;
+    min-height: 48px;
+    padding: 0 16px;
     border-radius: 999px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
     transition: background 0.2s ease, color 0.2s ease;
   }
+  .bottom-nav button:not(.side-nav-toggle):hover { background: var(--surface-2); color: var(--text-primary); }
+  .bottom-nav button svg { flex: 0 0 auto; width: 20px; height: 20px; }
+  /* Active page: a filled pill with a chevron. */
+  .bottom-nav button.active:not(.side-nav-toggle),
+  .bottom-nav button.active:not(.side-nav-toggle):hover { background: var(--seafoam); color: var(--on-seafoam); }
+  .side-nav-active-chevron { display: block; margin-left: auto; }
 
-  .bottom-nav button.active {
-    background: rgba(127, 183, 168, 0.12);
+  .side-nav-spacer {
+    display: block;
+    flex: 1;
+    margin: 0 -16px 12px;
+    border-bottom: 1px solid var(--border);
   }
+  .bottom-nav .nav-profile-photo,
+  .bottom-nav .nav-profile-initial { flex: 0 0 auto; width: 24px; height: 24px; }
+  .bottom-nav button.side-nav-create:not(.side-nav-toggle) {
+    display: flex;
+    margin-top: 6px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 700;
+  }
+  .bottom-nav button.side-nav-create:not(.side-nav-toggle):hover { background: var(--accent-hover); color: var(--on-accent); }
+  .bottom-nav .nav-unread-dot { top: 12px; right: auto; left: 30px; }
 
+  /* Collapsed: icons only, centred. */
+  .bottom-nav.collapsed .side-nav-wordmark,
+  .bottom-nav.collapsed button > span:not(.nav-profile-initial):not(.nav-unread-dot),
+  .bottom-nav.collapsed .side-nav-active-chevron { display: none; }
+  .bottom-nav.collapsed .side-nav-brand { justify-content: center; padding: 0; }
+  .bottom-nav.collapsed button:not(.side-nav-toggle) { justify-content: center; padding: 0; }
+  .bottom-nav.collapsed .nav-unread-dot { left: auto; right: 14px; }
+
+  /* Bars fixed to the bottom of a page sit next to the side nav. */
+  .app-content.with-nav .sticky-action { left: calc(50% + var(--side-nav-width) / 2); bottom: 24px; }
 }
 .bottom-nav button {
   border: 0;
@@ -2222,10 +2326,11 @@ h3 { font: 700 21px/24px var(--font-display); }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
-@media (min-width: 600px) {
+/* Columns follow the content width (next to the side nav), see ProfileScreen. */
+@container app (min-width: 600px) {
   .earned-patch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
-@media (min-width: 980px) {
+@container app (min-width: 1200px) {
   .earned-patch-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 .earned-patch-card {
@@ -2344,7 +2449,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-@media (min-width: 980px) {
+@container app (min-width: 900px) {
   .all-patches-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .all-patch-card {
@@ -2573,7 +2678,10 @@ h3 { font: 700 21px/24px var(--font-display); }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-@media (min-width: 980px) {
+@container app (min-width: 760px) {
+  .profile-friends-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container app (min-width: 1200px) {
   .profile-friends-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .profile-friend-card { position: relative; min-width: 0; }
@@ -2612,11 +2720,13 @@ h3 { font: 700 21px/24px var(--font-display); }
   position: fixed;
   z-index: 40;
   inset: 0;
-  width: min(100vw, 760px);
+  /* Full width so the page scrolls wherever the pointer is; content stays 760px wide. */
+  width: 100%;
   max-width: none;
   height: 100dvh;
-  margin: 0 auto;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  margin: 0;
+  padding-block: calc(12px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-inline: max(20px, calc((100% - 720px) / 2));
   overflow-y: auto;
   scrollbar-color: var(--border-strong) var(--bg);
   scrollbar-width: thin;
@@ -3739,7 +3849,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--text-secondary);
 }
 /* Upcoming activities: stacked on phones, 3 in a row on larger screens. */
-@media (min-width: 900px) {
+@container app (min-width: 900px) {
   .profile-activities { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
   .profile-activities h3 { grid-column: 1 / -1; }
 }
@@ -3928,7 +4038,7 @@ span.user-avatar {
 .pr-list { display: grid; gap: 10px; }
 /* Profile preview: 2 by 2 on phones, 5 in a row on wider screens. */
 .pr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-@media (min-width: 768px) {
+@container app (min-width: 768px) {
   .pr-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 .pr-grid .pr-card { padding: 12px; }
@@ -4459,3 +4569,11 @@ span.user-avatar {
 .help-tour-actions .button { gap: 8px; }
 .help-tour-actions svg { width: 18px; height: 18px; }
 .flow-showcase-card .mate-card { height: 100%; }
+
+/* Home activity cards: fewer columns when the side nav leaves less room. */
+@container app (max-width: 899px) {
+  .card-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container app (max-width: 599px) {
+  .card-list { grid-template-columns: 1fr; }
+}

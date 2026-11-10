@@ -1,4 +1,4 @@
-import { CalendarDays, Home, MessageCircle, UsersRound } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Home, MessageCircle, Plus, ShieldCheck, UsersRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
@@ -13,14 +13,20 @@ const items = [
   ['chats', 'Chats', MessageCircle, '/chats'],
 ] as const
 
+// Phones: a bar at the bottom. Desktop (980px and up): a side nav on the left,
+// which can be collapsed to icons only.
 export function BottomNav({
   active,
   hasUnreadChats = true,
   chatUnreadError = '',
+  collapsed = false,
+  onToggleCollapsed,
 }: {
   active: Tab | null
   hasUnreadChats?: boolean
   chatUnreadError?: string
+  collapsed?: boolean
+  onToggleCollapsed?: () => void
 }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -61,7 +67,22 @@ export function BottomNav({
   }, [])
 
   return (
-    <nav className="bottom-nav" aria-label="Main navigation">
+    <nav className={`bottom-nav${collapsed ? ' collapsed' : ''}`} aria-label="Main navigation">
+      <div className="side-nav-brand">
+        <span className="side-nav-logo"><ShieldCheck aria-hidden="true" /></span>
+        <span className="side-nav-wordmark">Count Me In</span>
+      </div>
+      {onToggleCollapsed && (
+        <button
+          type="button"
+          className="side-nav-toggle"
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? 'Expand menu' : 'Collapse menu'}
+          aria-expanded={!collapsed}
+        >
+          {collapsed ? <ChevronRight aria-hidden="true" /> : <ChevronLeft aria-hidden="true" />}
+        </button>
+      )}
       {items.map(([id, label, Icon, href]) => (
         <button
           key={id}
@@ -75,8 +96,10 @@ export function BottomNav({
           {id === 'chats' && hasUnreadChats && <span className="nav-unread-dot" aria-label="Unread chats" />}
           <Icon />
           <span>{label}</span>
+          {active === id && <ChevronRight className="side-nav-active-chevron" aria-hidden="true" />}
         </button>
       ))}
+      <span className="side-nav-spacer" aria-hidden="true" />
       <button
         type="button"
         data-tour="nav-more"
@@ -89,6 +112,15 @@ export function BottomNav({
           ? <img className="nav-profile-photo" src={profilePhoto.url} alt="" />
           : <span className="nav-profile-initial">{profilePhoto.name[0]?.toUpperCase() ?? '?'}</span>}
         <span>More</span>
+      </button>
+      <button
+        type="button"
+        className="side-nav-create"
+        onClick={() => navigate('/create')}
+        aria-label="Create activity"
+      >
+        <Plus aria-hidden="true" />
+        <span>Create activity</span>
       </button>
     </nav>
   )

@@ -43,6 +43,7 @@ import { getUnreadChatThreadCount, hasUnreadChatThreads } from "./lib/chat"
 import { ModerationScreen } from "./screens/ModerationScreen"
 
 const pathsWithoutWelcome = ["/welcome", "/login", "/reset-password", "/onboarding"]
+const sideNavCollapsedKey = "count-me-in-side-nav-collapsed"
 
 // Read before Supabase handles the link: a password reset link (or its error,
 // such as an expired link) can land on any page, depending on Supabase settings.
@@ -86,6 +87,24 @@ function AppShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const isWideChatLayout = useMediaQuery(wideChatLayoutQuery)
+  // Desktop side nav: collapsed to icons or not, remembered on this device.
+  const [sideNavCollapsed, setSideNavCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(sideNavCollapsedKey) === "1"
+    } catch {
+      return false
+    }
+  })
+  function toggleSideNav() {
+    setSideNavCollapsed((current) => {
+      try {
+        window.localStorage.setItem(sideNavCollapsedKey, current ? "0" : "1")
+      } catch {
+        // Storage blocked: the choice lasts until the page reloads.
+      }
+      return !current
+    })
+  }
   // The app tour lives here so it can move between pages.
   const [tourOpen, setTourOpen] = useState(false)
   useEffect(() => onStartAppTour(() => setTourOpen(true)), [])
@@ -157,9 +176,18 @@ function AppShell() {
           location.pathname.startsWith("/chats") ? "/chats" : location.key
         }
       />
-      <Outlet />
+      {/* A size container: grids follow the space next to the side nav, not the window. */}
+      <div className={`app-content${showNav ? " with-nav" : ""}${sideNavCollapsed ? " nav-collapsed" : ""}`}>
+        <Outlet />
+      </div>
       {showNav && (
-        <BottomNav active={activeTab} hasUnreadChats={hasUnreadChats} chatUnreadError={chatUnreadError} />
+        <BottomNav
+          active={activeTab}
+          hasUnreadChats={hasUnreadChats}
+          chatUnreadError={chatUnreadError}
+          collapsed={sideNavCollapsed}
+          onToggleCollapsed={toggleSideNav}
+        />
       )}
       {tourOpen && (
         <AppTour

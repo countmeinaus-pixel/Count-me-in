@@ -69,17 +69,26 @@ export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpe
         )}
         <p className="eyebrow">{record.sport}</p>
         <strong className="pr-card-label">{label}</strong>
-        <span className="pr-card-value">{formatPrValue(record.type, record.value)}</span>
-        {record.note && <p className="pr-card-note">{record.note}</p>}
-        <span className={`pr-card-status ${verified ? 'is-verified' : ''}`}>
-          {hidden
-            ? 'Hidden: flagged by 3 members, waiting for a moderator'
-            : record.staffVerified
-              ? <><BadgeCheck aria-hidden="true" /> Verified by a moderator</>
-              : verified
-                ? <><BadgeCheck aria-hidden="true" /> Verified by {record.confirmCount} members</>
-                : `${record.confirmCount} of ${prVerifyThreshold} confirms${record.flagCount > 0 ? ` · ${record.flagCount} ${record.flagCount === 1 ? 'flag' : 'flags'}` : ''}`}
+        <span className="pr-card-value">
+          {formatPrValue(record.type, record.value)}
+          {verified && !hidden && (
+            <BadgeCheck
+              className="pr-card-verified-icon"
+              role="img"
+              aria-label={record.staffVerified ? 'Verified by a moderator' : `Verified by ${record.confirmCount} members`}
+            >
+              <title>{record.staffVerified ? 'Verified by a moderator' : `Verified by ${record.confirmCount} members`}</title>
+            </BadgeCheck>
+          )}
         </span>
+        {record.note && <p className="pr-card-note">{record.note}</p>}
+        {(hidden || !verified) && (
+          <span className="pr-card-status">
+            {hidden
+              ? 'Hidden: flagged by 3 members, waiting for a moderator'
+              : `${record.confirmCount} of ${prVerifyThreshold} confirms${record.flagCount > 0 ? ` · ${record.flagCount} ${record.flagCount === 1 ? 'flag' : 'flags'}` : ''}`}
+          </span>
+        )}
         {record.photoUrl && !verified && (
           <button type="button" className="pr-card-proof" onClick={() => setPhotoOpen(true)}>
             <ImageIcon aria-hidden="true" /> View proof

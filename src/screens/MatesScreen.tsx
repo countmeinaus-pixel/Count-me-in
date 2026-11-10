@@ -1,5 +1,5 @@
 import { ArrowLeft, Search } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
 import { getBlockedUsers } from "../lib/localPreferences"
@@ -9,13 +9,8 @@ import { useCommunityMembers } from "../lib/useCommunityMembers"
 
 const friendNames = ["Matt", "Hamish", "Sam", "Luca"]
 
-export function MatesScreen({
-  friendsOnly = false,
-  fromMore = false,
-}: {
-  friendsOnly?: boolean
-  fromMore?: boolean
-}) {
+// Friends and Find your crew live on one page: your friends first, everyone else below.
+export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
   const navigate = useNavigate()
   const location = useLocation()
   const backToMore = useBackToMore()
@@ -24,7 +19,7 @@ export function MatesScreen({
   const [selectedSuburb, setSelectedSuburb] = useState("")
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [blockedUsersError, setBlockedUsersError] = useState("")
-  const title = friendsOnly ? "Friends" : "Find your crew"
+  const crewSectionRef = useRef<HTMLElement | null>(null)
   const { members: communityMembers, error: membersError } =
     useCommunityMembers()
   const sports = [
@@ -70,7 +65,7 @@ export function MatesScreen({
   const filteredMembers = communityMembers.filter((member) => {
     if (blockedUsersError) return false
     if (blockedUsers.includes(member.name)) return false
-    if (friendsOnly && !friendNames.includes(member.name)) return false
+    if (friendNames.includes(member.name)) return false
     const matchesName = member.name.toLowerCase().includes(normalizedQuery)
     const matchesSport =
       !selectedSport ||
@@ -78,6 +73,20 @@ export function MatesScreen({
     const matchesSuburb = !selectedSuburb || member.suburb === selectedSuburb
     return matchesName && matchesSport && matchesSuburb
   })
+
+  const friends = communityMembers.filter(
+    (member) =>
+      friendNames.includes(member.name) &&
+      !blockedUsers.includes(member.name),
+  )
+
+  function scrollToCrew() {
+    crewSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
+  useEffect(() => {
+    if (location.hash === "#crew") crewSectionRef.current?.scrollIntoView()
+  }, [location.hash])
 
   return (
     <div className="screen mates-screen">
@@ -96,9 +105,47 @@ export function MatesScreen({
         </button>
         <div>
           <p className="eyebrow">Good people, good plans</p>
-          <h1>{title}</h1>
+          <h1>Friends</h1>
         </div>
       </header>
+
+      <section aria-labelledby="your-friends-heading">
+        <div className="mates-results-heading">
+          <h2 id="your-friends-heading">Your friends</h2>
+          <span>{friends.length} friends</span>
+        </div>
+        {friends.length > 0 ? (
+          <div className="mate-grid">
+            {friends.map((member) => (
+              <MateCard
+                key={member.id ?? member.name}
+                member={member}
+                onClick={() =>
+                  navigate(`/profile/${encodeURIComponent(member.name)}`)
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mate-empty-state">
+            <h2>Your crew starts here</h2>
+            <p>Meet someone at an activity and add him as a friend.</p>
+            <button type="button" onClick={scrollToCrew}>
+              Find your crew
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section
+        className="mates-crew-section"
+        id="crew"
+        ref={crewSectionRef}
+        aria-labelledby="find-crew-heading"
+      >
+        <div className="mates-results-heading">
+          <h2 id="find-crew-heading">Find your crew</h2>
+        </div>
 
       {(blockedUsersError || membersError) && (
         <p className="edit-form-error" role="alert">
@@ -150,7 +197,7 @@ export function MatesScreen({
       </div>
 
       <div className="mates-results-heading">
-        <h2>{friendsOnly ? "Your friends" : "Mates around Adelaide"}</h2>
+        <h3>Mates around Adelaide</h3>
         <span>{filteredMembers.length} profiles</span>
       </div>
 
@@ -182,6 +229,7 @@ export function MatesScreen({
           </button>
         </div>
       )}
+      </section>
     </div>
   )
 }

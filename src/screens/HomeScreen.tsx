@@ -526,7 +526,7 @@ export function HomeScreen() {
             <p className="eyebrow">Good people, good plans</p>
             <h2>Find your crew</h2>
           </div>
-          <button type="button" className="text-action" onClick={() => navigate('/mates')}>View all</button>
+          <button type="button" className="text-action" onClick={() => navigate('/friends#crew')}>View all</button>
         </div>
         <div className="mate-grid crew-preview-grid">
           {communityMembers.slice(0, 4).map((member) => (

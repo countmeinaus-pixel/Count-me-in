@@ -54,8 +54,7 @@ const menuGroups: Array<{ title: string; items: MenuItem[] }> = [
   {
     title: "Community",
     items: [
-      { label: "Find your crew", href: "/more/crew", icon: UsersRound },
-      { label: "Friends", href: "/more/friends", icon: UsersRound },
+      { label: "Friends and crew", href: "/more/friends", icon: UsersRound },
     ],
   },
   {

@@ -3509,3 +3509,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   background: var(--accent);
   box-sizing: content-box;
 }
+
+.mates-crew-section { margin-top: 32px; scroll-margin-top: 16px; }
+.mates-crew-section > .mates-results-heading:first-child { margin-top: 0; }
+.mates-results-heading h3 { font-size: 16px; color: var(--text-secondary); }

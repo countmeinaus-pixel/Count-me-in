@@ -4,6 +4,7 @@ import {
   RouterProvider,
   ScrollRestoration,
   useLocation,
+  useNavigate,
 } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { BottomNav, type Tab } from "./components/BottomNav"
@@ -22,6 +23,9 @@ import { NotificationSettingsScreen } from "./screens/NotificationSettingsScreen
 import { OnboardingScreen } from "./screens/OnboardingScreen"
 import { PasswordResetScreen } from "./screens/PasswordResetScreen"
 import { PatchesScreen } from "./screens/PatchesScreen"
+import { WelcomeScreen } from "./screens/WelcomeScreen"
+import { hasSeenWelcome } from "./lib/onboardingFlags"
+import { supabase } from "./lib/supabase"
 import { PersonalRecordsScreen } from "./screens/PersonalRecordsScreen"
 import { ProfileScreen } from "./screens/ProfileScreen"
 import { MoreAboutScreen } from "./screens/MoreAboutScreen"
@@ -35,9 +39,29 @@ import { MatesScreen } from "./screens/MatesScreen"
 import { getUnreadChatThreadCount, hasUnreadChatThreads } from "./lib/chat"
 import { ModerationScreen } from "./screens/ModerationScreen"
 
+const pathsWithoutWelcome = ["/welcome", "/login", "/reset-password", "/onboarding"]
+
 function AppShell() {
   const location = useLocation()
+  const navigate = useNavigate()
   const path = location.pathname
+
+  // First visit without an account: show the welcome slides first.
+  useEffect(() => {
+    if (hasSeenWelcome() || pathsWithoutWelcome.includes(location.pathname)) return
+    let active = true
+    async function checkFirstVisit() {
+      if (!supabase) return
+      const { data } = await supabase.auth.getSession()
+      if (active && !data.session) navigate("/welcome", { replace: true })
+    }
+    void checkFirstVisit()
+    return () => {
+      active = false
+    }
+    // Only on first load of the app.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const isWideChatLayout = useMediaQuery(wideChatLayoutQuery)
   const [hasUnreadChats, setHasUnreadChats] = useState(hasUnreadChatThreads())
   const [chatUnreadError, setChatUnreadError] = useState("")
@@ -83,6 +107,7 @@ function AppShell() {
   const showNav =
     ![
       "/login",
+      "/welcome",
       "/onboarding",
       "/reset-password",
       "/profile/edit",
@@ -115,6 +140,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <HomeScreen /> },
       { path: "/login", element: <AuthScreen /> },
+      { path: "/welcome", element: <WelcomeScreen /> },
       { path: "/reset-password", element: <PasswordResetScreen /> },
       { path: "/onboarding", element: <OnboardingScreen /> },
       { path: "/activity/:id", element: <ActivityDetailScreen /> },

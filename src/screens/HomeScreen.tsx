@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, Bike, CalendarDays, Check, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, ListFilter, MapPin, Mountain, Waves } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ActivityCard, type ActivityCardData } from '../components/ActivityCard'
 import { Button } from '../components/Button'
 import { activities, currentUser } from '../data/mockData'
@@ -17,6 +17,8 @@ import { friendNames, getCrewSuggestions } from '../lib/friends'
 import { getBlockedUsers } from '../lib/localPreferences'
 import { getBlockedProfiles } from '../lib/moderation'
 import { Avatar } from '../components/Avatar'
+import { AppTour, type TourStep } from '../components/AppTour'
+import { hasFinishedTour, markTourFinished } from '../lib/onboardingFlags'
 import { PersonalRecordCard } from '../components/PersonalRecordCard'
 import { getRecordsToConfirm, type PersonalRecord } from '../lib/personalRecords'
 import { getUnreadNotificationCount } from '../lib/notifications'
@@ -45,6 +47,16 @@ const activityIcons = {
   gym: Dumbbell,
 } as const
 
+const tourSteps: TourStep[] = [
+  { target: 'home-filters', title: 'Your sports, front and centre', body: 'Filter the feed by the sports you picked. Swipe sideways to see them all.' },
+  { target: 'home-views', title: 'List, map or calendar', body: 'See what is on near you as a list, on a map, or day by day.' },
+  { target: 'home-notifications', title: 'Stay in the loop', body: 'Join requests, invites, confirmed PRs and changes to your plans show up here.' },
+  { target: 'nav-friends', title: 'Friends and your crew', body: 'Your friends, plus people around Adelaide who share your sports.' },
+  { target: 'nav-activities', title: 'Your plans', body: 'Everything you host, joined or requested. Tap Create activity here to post your own callout.' },
+  { target: 'nav-chats', title: 'Group chats', body: 'Every activity gets a group chat as soon as you are in.' },
+  { target: 'nav-more', title: 'Profile, patches and PRs', body: 'Your profile, patches, challenges and personal records live under More. You can restart this tour from Help.' },
+]
+
 export function HomeScreen() {
   const navigate = useNavigate()
   const filterRowRef = useRef<HTMLDivElement | null>(null)
@@ -69,6 +81,9 @@ export function HomeScreen() {
   const [now, setNow] = useState(() => new Date())
   const [firstName, setFirstName] = useState(currentUser.name)
   const [userSportNames, setUserSportNames] = useState(() => currentUser.sports.map((sport) => sport.name))
+  const location = useLocation()
+  // The tour runs once per device for signed-in members, or when restarted from Help.
+  const [tourOpen, setTourOpen] = useState(() => location.state?.startTour === true)
   const [userSuburb, setUserSuburb] = useState(currentUser.suburb)
   const [blockedNames, setBlockedNames] = useState<string[]>(() => {
     try {
@@ -111,6 +126,7 @@ export function HomeScreen() {
 
         const profile = await getCurrentProfile(userData.user.id)
         if (!profile) return
+        if (active && !hasFinishedTour()) setTourOpen(true)
         if (active) {
           setFirstName(profile.firstName)
           setUserSportNames(profile.sports.map((sport) => sport.name))
@@ -334,7 +350,7 @@ export function HomeScreen() {
     <div className="screen">
       <header className="topbar">
         <div className="location"><MapPin />Adelaide</div>
-        <button className="icon-button notification-bell" aria-label={unreadNotifications ? `Notifications, ${unreadNotifications} new` : 'Notifications'} onClick={() => navigate('/notifications')} type="button"><Bell />{unreadNotifications > 0 && <span className="notification-bell-dot" aria-hidden="true" />}</button>
+        <button data-tour="home-notifications" className="icon-button notification-bell" aria-label={unreadNotifications ? `Notifications, ${unreadNotifications} new` : 'Notifications'} onClick={() => navigate('/notifications')} type="button"><Bell />{unreadNotifications > 0 && <span className="notification-bell-dot" aria-hidden="true" />}</button>
       </header>
 
       <section className="intro">
@@ -351,7 +367,7 @@ export function HomeScreen() {
       </section>
 
       <div className={`filter-scroll-shell ${filterScroll.isScrollable ? 'is-scrollable' : ''} ${filterScroll.canScrollLeft ? 'can-scroll-left' : ''} ${filterScroll.canScrollRight ? 'can-scroll-right' : ''}`}>
-        <div className="filter-row" ref={filterRowRef}>
+        <div className="filter-row" ref={filterRowRef} data-tour="home-filters">
           {filterOptions.map((item) => (
           <button
             key={item}
@@ -374,7 +390,7 @@ export function HomeScreen() {
         </div>
       )}
 
-      <div className="view-toggle" aria-label="Select view mode">
+      <div className="view-toggle" aria-label="Select view mode" data-tour="home-views">
         <button className={view === 'list' ? 'selected' : ''} onClick={() => setView('list')} type="button" aria-pressed={view === 'list'}>
           <ListFilter />
           List
@@ -668,6 +684,15 @@ export function HomeScreen() {
         )}
       </section>
 
+      {tourOpen && (
+        <AppTour
+          steps={tourSteps}
+          onClose={() => {
+            markTourFinished()
+            setTourOpen(false)
+          }}
+        />
+      )}
     </div>
   )
 }

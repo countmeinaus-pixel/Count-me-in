@@ -66,6 +66,7 @@ export function BottomNav({
         <button
           key={id}
           type="button"
+          data-tour={`nav-${id}`}
           className={active === id ? 'active' : ''}
           onClick={() => navigate(href)}
           aria-label={chatUnreadError && id === 'chats' ? `${label}. ${chatUnreadError}` : label}
@@ -78,6 +79,7 @@ export function BottomNav({
       ))}
       <button
         type="button"
+        data-tour="nav-more"
         className={active === 'more' ? 'active' : ''}
         onClick={() => navigate('/more', { state: { from: location.pathname } })}
         aria-label={profileError ? `More. Profile details could not be loaded: ${profileError}` : 'More'}

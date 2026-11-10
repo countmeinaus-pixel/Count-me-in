@@ -33,6 +33,8 @@
 
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; min-height: 100%; background: var(--bg); }
+/* Room to scroll fields above the on-screen keyboard (set in keyboardInset.ts). */
+body { padding-bottom: var(--keyboard-inset, 0px); }
 body { font-family: var(--font-body); background: var(--bg); color: var(--text-primary); }
 button, input { font: inherit; }
 button { color: inherit; }

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { PatchIcon } from './PatchIcon'
 
 export type TourStep = {
   target: string // value of a data-tour attribute on the page
@@ -8,6 +9,7 @@ export type TourStep = {
   body: string
   path?: string // page the tip lives on; the tour opens it first
   example?: { label: string; lines: string[] }
+  patches?: Array<{ icon: string; name: string }> // example collected patches
 }
 
 type Rect = { top: number; left: number; width: number; height: number }
@@ -112,7 +114,7 @@ export function AppTour({ steps, onClose }: { steps: TourStep[]; onClose: (finis
   const placeAbove = rect.top + rect.height / 2 > window.innerHeight / 2
   const cardStyle = placeAbove
     ? { bottom: Math.max(16, window.innerHeight - rect.top + 12) }
-    : { top: Math.min(window.innerHeight - (step.example ? 340 : 220), rect.top + rect.height + 12) }
+    : { top: Math.min(window.innerHeight - (step.example || step.patches ? 360 : 220), rect.top + rect.height + 12) }
   const isLast = index === steps.length - 1
 
   return (
@@ -134,6 +136,16 @@ export function AppTour({ steps, onClose }: { steps: TourStep[]; onClose: (finis
         </button>
         <h2 id="tour-title">{step.title}</h2>
         <p id="tour-body">{step.body}</p>
+        {step.patches && (
+          <div className="tour-patches">
+            {step.patches.map((patch) => (
+              <span key={patch.name} className="earned-patch-card">
+                <PatchIcon name={patch.icon} />
+                <span>{patch.name}</span>
+              </span>
+            ))}
+          </div>
+        )}
         {step.example && (
           <div className="tour-example">
             <span>{step.example.label}</span>

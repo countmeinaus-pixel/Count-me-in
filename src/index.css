@@ -4424,6 +4424,11 @@ span.user-avatar {
 .showcase-row > svg { flex: 0 0 auto; width: 26px; height: 26px; color: var(--seafoam); }
 .tour-blocker { position: fixed; inset: 0; z-index: 139; }
 .tour-card-buttons { display: flex; align-items: center; gap: 16px; }
+/* Example collected patches inside a tour tip, styled like the profile. */
+.tour-patches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
+.tour-patches .earned-patch-card { min-height: 72px; padding: 10px 4px; gap: 6px; }
+.tour-patches .earned-patch-card svg { width: 20px; height: 20px; }
+.tour-card .tour-patches .earned-patch-card span { color: var(--text-primary); font-size: 12px; }
 .tour-card-back {
   min-height: 44px;
   padding: 0 4px;

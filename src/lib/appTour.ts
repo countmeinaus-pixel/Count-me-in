@@ -27,7 +27,20 @@ export const appTourSteps: TourStep[] = [
   { path: '/activity/3', target: 'activity-join', title: 'Join with one tap', body: 'Like what you see? Tap Count me in. Once the host accepts, you are in the group chat.' },
   { path: '/chats', target: 'nav-chats', title: 'Group chats', body: 'Every activity gets a group chat as soon as you are in. Sort out the details here.' },
   { path: '/profile/patches', target: 'patches-challenges', title: 'Challenges', body: 'Join a challenge and reach the goal before time runs out to earn a limited patch.' },
-  { path: '/profile/patches', target: 'patches-mine', title: 'Earn real patches', body: 'Every meetup you confirm with a QR check-in counts. Your patches show here and on your profile.' },
+  {
+    path: '/profile/patches',
+    target: 'patches-mine',
+    title: 'Earn real patches',
+    body: 'Every meetup you confirm with a QR check-in counts. Collected patches show here and on your profile, like these:',
+    patches: [
+      { icon: 'shield', name: 'First meetup' },
+      { icon: 'waves', name: 'Salt water' },
+      { icon: 'sunrise', name: 'Early bird' },
+      { icon: 'mountain', name: 'Trailhead' },
+      { icon: 'users', name: 'Crew' },
+      { icon: 'calendar', name: 'Regular' },
+    ],
+  },
   { path: '/', target: 'nav-more', title: 'Profile, patches and PRs', body: 'Your profile, patches, challenges and personal records live under More. You can restart this tour from Help.' },
 ]
 

@@ -30,6 +30,7 @@ import {
 } from "../lib/activityParticipation"
 import { getActivityChatThreadId } from "../lib/chat"
 import { getDirectionsUrl } from "../lib/location"
+import { getCurrentProfile } from "../lib/profile"
 import {
   getDemoJoinRequestKey,
   hasDemoJoinRequest,
@@ -69,6 +70,20 @@ export function ActivityDetailScreen() {
     Boolean(id && !mockActivity),
   )
   const [checkinUserName, setCheckinUserName] = useState(currentUser.name)
+  // Demo activities use "Jai" for the viewer: show the viewer's own photo there.
+  const [viewerPhotoUrl, setViewerPhotoUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!mockActivity) return
+    let active = true
+    getCurrentProfile()
+      .then((profile) => {
+        if (active) setViewerPhotoUrl(profile?.photoUrl ?? null)
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [mockActivity])
   const [, setCheckinStatsVersion] = useState(0)
   const [loadError, setLoadError] = useState("")
   const [joinState, setJoinState] = useState<ActivityJoinState | null>(null)
@@ -639,8 +654,15 @@ export function ActivityDetailScreen() {
     : (mockActivity?.attendees ?? []).map((name, index) => ({
         key: `${name}-${index}`,
         name,
-        photoUrl: mockActivity?.attendeePhotos?.[index] ?? null,
+        photoUrl: name === currentUser.name
+          ? viewerPhotoUrl
+          : (mockActivity?.attendeePhotos?.[index] ?? null),
       }))
+  const hostPhotoUrl = savedDetails
+    ? savedDetails.hostPhoto
+    : hostName === currentUser.name
+      ? viewerPhotoUrl
+      : (communityMembers.find((member) => member.name === hostName)?.photoUrl ?? null)
   const attendees = attendeeProfiles.map((attendee) => attendee.name)
   const activityStart = savedDetails
     ? new Date(savedDetails.startsAt)
@@ -774,7 +796,7 @@ export function ActivityDetailScreen() {
         <div className="host-card">
           <Avatar
             name={hostName}
-            photoUrl={savedDetails?.hostPhoto}
+            photoUrl={hostPhotoUrl}
             size={48}
             verified={savedDetails?.hostVerified !== false}
           />

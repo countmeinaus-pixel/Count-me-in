@@ -22,6 +22,7 @@ import { NotificationSettingsScreen } from "./screens/NotificationSettingsScreen
 import { OnboardingScreen } from "./screens/OnboardingScreen"
 import { PasswordResetScreen } from "./screens/PasswordResetScreen"
 import { PatchesScreen } from "./screens/PatchesScreen"
+import { PersonalRecordsScreen } from "./screens/PersonalRecordsScreen"
 import { ProfileScreen } from "./screens/ProfileScreen"
 import { MoreAboutScreen } from "./screens/MoreAboutScreen"
 import { MoreHelpScreen } from "./screens/MoreHelpScreen"
@@ -131,6 +132,7 @@ const router = createBrowserRouter([
       { path: "/profile/sports/:sport", element: <SportProfileScreen /> },
       { path: "/profile/:name/sports/:sport", element: <SportProfileScreen /> },
       { path: "/profile/patches", element: <PatchesScreen /> },
+      { path: "/profile/records", element: <PersonalRecordsScreen /> },
       { path: "/more", element: <MoreScreen /> },
       { path: "/more/crew", element: <MatesScreen fromMore /> },
       { path: "/more/friends", element: <MatesScreen fromMore /> },

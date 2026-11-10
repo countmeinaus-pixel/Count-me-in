@@ -10,8 +10,6 @@ import { useEffect, useMemo, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
 import { Avatar } from "../components/Avatar"
-import { Button } from "../components/Button"
-import { ClaimPrDialog } from "../components/ClaimPrDialog"
 import { PersonalRecordCard } from "../components/PersonalRecordCard"
 import {
   getPersonalRecordsForProfile,
@@ -269,7 +267,6 @@ export function ProfileScreen() {
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[] | null>(null)
   const [personalRecordsError, setPersonalRecordsError] = useState("")
   const [recordsVersion, setRecordsVersion] = useState(0)
-  const [claimPrOpen, setClaimPrOpen] = useState(false)
 
   useEffect(() => {
     if (!profileId) {
@@ -573,9 +570,13 @@ export function ProfileScreen() {
           <div className="pr-section-heading">
             <h2 id="pr-heading">Personal records</h2>
             {isCurrentUser && (
-              <Button size="sm" onClick={() => setClaimPrOpen(true)}>
+              <button
+                type="button"
+                className="text-action"
+                onClick={() => navigate("/profile/records")}
+              >
                 Claim a PR
-              </Button>
+              </button>
             )}
           </div>
           {personalRecordsError ? (
@@ -600,16 +601,6 @@ export function ProfileScreen() {
         </section>
       )}
 
-      {claimPrOpen && (
-        <ClaimPrDialog
-          preferredSports={profile.sports.map((sport) => sport.name)}
-          onClose={() => setClaimPrOpen(false)}
-          onClaimed={() => {
-            setClaimPrOpen(false)
-            setRecordsVersion((version) => version + 1)
-          }}
-        />
-      )}
 
       <div className="section-heading compact">
         <h2>{isCurrentUser ? "Your sports" : "Sports"}</h2>

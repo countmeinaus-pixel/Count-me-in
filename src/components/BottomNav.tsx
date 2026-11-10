@@ -1,8 +1,11 @@
-import { CalendarDays, ChevronLeft, ChevronRight, Home, MessageCircle, Plus, ShieldCheck, UsersRound } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Home, MessageCircle, Plus, ShieldCheck, UsersRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
+import { getCurrentModerationRole } from '../lib/moderation'
+import { logOut, moderationGroup, sideNavGroups, type MenuItem } from '../lib/moreMenu'
 import { supabase } from '../lib/supabase'
+import { useMediaQuery } from '../lib/useMediaQuery'
 
 export type Tab = 'home' | 'friends' | 'activities' | 'chats' | 'more'
 
@@ -35,6 +38,47 @@ export function BottomNav({
     url: currentUser.photoUrl,
   })
   const [profileError, setProfileError] = useState('')
+  const isSideNav = useMediaQuery('(min-width: 980px)')
+  const [isStaff, setIsStaff] = useState(false)
+  const groups = isStaff ? [...sideNavGroups, moderationGroup] : sideNavGroups
+  // Side nav groups: the one holding the current page starts open.
+  const [openGroups, setOpenGroups] = useState<string[]>(() =>
+    groups.filter((group) => group.items.some((item) => item.href === location.pathname)).map((group) => group.title),
+  )
+
+  useEffect(() => {
+    let active = true
+    void getCurrentModerationRole()
+      .then((role) => {
+        if (active) setIsStaff(role === 'admin' || role === 'moderator')
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // Open the group of the page you navigate to.
+  const currentGroup = groups.find((group) => group.items.some((item) => item.href === location.pathname))?.title
+  useEffect(() => {
+    if (currentGroup) setOpenGroups((current) => (current.includes(currentGroup) ? current : [...current, currentGroup]))
+  }, [currentGroup])
+
+  function toggleGroup(title: string) {
+    setOpenGroups((current) =>
+      current.includes(title) ? current.filter((item) => item !== title) : [...current, title],
+    )
+  }
+
+  function openMenuItem(item: MenuItem) {
+    if (item.action === 'logout') {
+      void logOut(() => navigate('/login', { replace: true })).then((error) => {
+        if (error) setProfileError(error)
+      })
+      return
+    }
+    if (item.href) navigate(item.href)
+  }
 
   useEffect(() => {
     let active = true
@@ -99,19 +143,65 @@ export function BottomNav({
           {active === id && <ChevronRight className="side-nav-active-chevron" aria-hidden="true" />}
         </button>
       ))}
+      {/* Desktop only: the More menu as groups that fold open. */}
+      <div className="side-nav-groups">
+        {groups.map((group) => {
+          const isOpen = openGroups.includes(group.title)
+          const listId = `side-nav-${group.title.toLowerCase()}`
+          return (
+            <div className="side-nav-group" key={group.title}>
+              <button
+                type="button"
+                className="side-nav-group-toggle"
+                aria-expanded={isOpen}
+                aria-controls={listId}
+                onClick={() => toggleGroup(group.title)}
+              >
+                <span>{group.title}</span>
+                <ChevronDown aria-hidden="true" className={isOpen ? 'open' : ''} />
+              </button>
+              {isOpen && (
+                <div className="side-nav-group-items" id={listId}>
+                  {group.items.map((item) => {
+                    const ItemIcon = item.icon
+                    const isCurrent = item.href === location.pathname
+                    return (
+                      <button
+                        type="button"
+                        key={item.label}
+                        className={`side-nav-item${isCurrent ? ' current' : ''}${item.action === 'logout' ? ' destructive' : ''}`}
+                        aria-current={isCurrent ? 'page' : undefined}
+                        onClick={() => openMenuItem(item)}
+                      >
+                        <ItemIcon aria-hidden="true" />
+                        <span>{item.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
       <span className="side-nav-spacer" aria-hidden="true" />
+      {/* Phones: More opens the menu page. Desktop: your name opens your profile. */}
       <button
         type="button"
         data-tour="nav-more"
         className={active === 'more' ? 'active' : ''}
-        onClick={() => navigate('/more', { state: { from: location.pathname } })}
-        aria-label={profileError ? `More. Profile details could not be loaded: ${profileError}` : 'More'}
+        onClick={() =>
+          isSideNav ? navigate('/profile') : navigate('/more', { state: { from: location.pathname } })
+        }
+        aria-label={profileError
+          ? `${isSideNav ? 'Your profile' : 'More'}. ${profileError}`
+          : isSideNav ? `Your profile, ${profilePhoto.name}` : 'More'}
         aria-current={active === 'more' ? 'page' : undefined}
       >
         {profilePhoto.url
           ? <img className="nav-profile-photo" src={profilePhoto.url} alt="" />
           : <span className="nav-profile-initial">{profilePhoto.name[0]?.toUpperCase() ?? '?'}</span>}
-        <span>More</span>
+        <span>{isSideNav ? profilePhoto.name : 'More'}</span>
       </button>
       <button
         type="button"

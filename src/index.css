@@ -1120,11 +1120,12 @@ h3 { font: 700 21px/24px var(--font-display); }
 .bottom-nav button { min-width: 0; }
 
 /* Side nav parts, only shown on desktop. */
-.side-nav-brand,
-.side-nav-toggle,
-.side-nav-spacer,
-.side-nav-create,
-.side-nav-active-chevron { display: none; }
+.bottom-nav .side-nav-brand,
+.bottom-nav .side-nav-toggle,
+.bottom-nav .side-nav-groups,
+.bottom-nav .side-nav-spacer,
+.bottom-nav .side-nav-create,
+.bottom-nav .side-nav-active-chevron { display: none; }
 
 /* Desktop: a side nav on the left instead of the bottom bar. */
 @media (min-width: 980px) {
@@ -1154,7 +1155,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   }
   .bottom-nav.collapsed { width: 84px; }
 
-  .side-nav-brand {
+  .bottom-nav .side-nav-brand {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1216,11 +1217,53 @@ h3 { font: 700 21px/24px var(--font-display); }
   /* Active page: a filled pill with a chevron. */
   .bottom-nav button.active:not(.side-nav-toggle),
   .bottom-nav button.active:not(.side-nav-toggle):hover { background: var(--seafoam); color: var(--on-seafoam); }
-  .side-nav-active-chevron { display: block; margin-left: auto; }
+  .bottom-nav .side-nav-active-chevron { display: block; margin-left: auto; }
 
-  .side-nav-spacer {
-    display: block;
+  /* More menu groups below the main items; they scroll when there are many. */
+  .bottom-nav .side-nav-groups {
+    display: grid;
     flex: 1;
+    align-content: start;
+    gap: 2px;
+    min-height: 0;
+    margin: 12px -16px 0;
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--border);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  .bottom-nav .side-nav-groups button {
+    width: 100%;
+  }
+  .bottom-nav .side-nav-groups button.side-nav-group-toggle {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font: 700 12px var(--font-display);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .bottom-nav .side-nav-groups button.side-nav-group-toggle:hover { background: transparent; color: var(--text-primary); }
+  .bottom-nav .side-nav-groups .side-nav-group-toggle svg {
+    width: 16px;
+    height: 16px;
+    margin-left: auto;
+    transition: transform 0.2s ease;
+  }
+  .bottom-nav .side-nav-groups .side-nav-group-toggle svg.open { transform: rotate(180deg); }
+  .side-nav-group-items { display: grid; gap: 2px; margin-bottom: 8px; }
+  .bottom-nav .side-nav-groups button.side-nav-item {
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+  .bottom-nav .side-nav-groups button.side-nav-item svg { width: 18px; height: 18px; }
+  .bottom-nav .side-nav-groups button.side-nav-item.current { background: var(--seafoam-subtle); color: var(--seafoam); }
+  .bottom-nav .side-nav-groups button.side-nav-item.destructive { color: var(--danger); }
+  .bottom-nav .side-nav-spacer {
+    display: block;
     margin: 0 -16px 12px;
     border-bottom: 1px solid var(--border);
   }
@@ -1237,6 +1280,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   .bottom-nav .nav-unread-dot { top: 12px; right: auto; left: 30px; }
 
   /* Collapsed: icons only, centred. */
+  .bottom-nav.collapsed .side-nav-groups { display: block; visibility: hidden; }
   .bottom-nav.collapsed .side-nav-wordmark,
   .bottom-nav.collapsed button > span:not(.nav-profile-initial):not(.nav-unread-dot),
   .bottom-nav.collapsed .side-nav-active-chevron { display: none; }

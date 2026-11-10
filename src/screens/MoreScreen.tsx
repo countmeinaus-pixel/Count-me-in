@@ -1,21 +1,4 @@
-import {
-  Award,
-  Bell,
-  ChevronRight,
-  Dumbbell,
-  Flag,
-  Languages,
-  LockKeyhole,
-  LogOut,
-  MessageCircleQuestion,
-  ShieldCheck,
-  Trophy,
-  UserRound,
-  UserRoundPen,
-  UsersRound,
-  X,
-  type LucideIcon,
-} from "lucide-react"
+import { ChevronRight, ShieldCheck, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { currentUser } from "../data/mockData"
@@ -25,6 +8,7 @@ import {
   loadSavedMeetupsForUser,
 } from "../lib/checkins"
 import { getStoredLanguage } from "../lib/i18n"
+import { logOut, menuGroups, moderationGroup, type MenuItem } from "../lib/moreMenu"
 import { getMoreOrigin } from "../lib/moreNavigation"
 import { getCurrentModerationRole } from "../lib/moderation"
 import { supabase } from "../lib/supabase"
@@ -36,54 +20,6 @@ type MenuProfile = {
   photoUrl: string | null
   sports: number
 }
-
-type MenuItem = {
-  label: string
-  href?: string
-  icon: LucideIcon
-  trailing?: string
-  action?: "logout"
-}
-
-const menuGroups: Array<{ title: string; items: MenuItem[] }> = [
-  {
-    title: "You",
-    items: [
-      { label: "Profile", href: "/profile", icon: UserRound },
-      { label: "Edit profile", href: "/profile/edit", icon: UserRoundPen },
-      { label: "My sports", href: "/more/sports", icon: Dumbbell },
-      { label: "Patches", href: "/profile/patches", icon: Award },
-      { label: "Personal records", href: "/profile/records", icon: Trophy },
-    ],
-  },
-  {
-    title: "Community",
-    items: [
-      { label: "Friends and crew", href: "/more/friends", icon: UsersRound },
-    ],
-  },
-  {
-    title: "Settings",
-    items: [
-      {
-        label: "Notification settings",
-        href: "/more/notifications",
-        icon: Bell,
-      },
-      { label: "Privacy and safety", href: "/more/privacy", icon: LockKeyhole },
-      { label: "Language", href: "/more/language", icon: Languages },
-    ],
-  },
-  {
-    title: "Other",
-    items: [
-      // The shield is the Count Me In logo.
-      { label: "About Count Me In", href: "/more/about", icon: ShieldCheck },
-      { label: "Help and feedback", href: "/more/help", icon: MessageCircleQuestion },
-      { label: "Log out", icon: LogOut, action: "logout" },
-    ],
-  },
-]
 
 export function MoreScreen() {
   const navigate = useNavigate()
@@ -224,19 +160,8 @@ export function MoreScreen() {
   }, [closeTo, navigate])
 
   async function handleLogOut() {
-    if (!window.confirm("Log out of Count Me In?")) return
-    if (!supabase) {
-      navigate("/login", { replace: true })
-      return
-    }
-
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      setStatusMessage(error.message)
-      return
-    }
-
-    navigate("/login", { replace: true })
+    const error = await logOut(() => navigate("/login", { replace: true }))
+    if (error) setStatusMessage(error)
   }
 
   function openMenuItem(item: MenuItem) {
@@ -352,22 +277,7 @@ export function MoreScreen() {
         </p>
       )}
 
-      {(isStaff
-        ? [
-            ...menuGroups,
-            {
-              title: "Moderation",
-              items: [
-                {
-                  label: "Reports",
-                  href: "/more/moderation",
-                  icon: Flag,
-                },
-              ],
-            },
-          ]
-        : menuGroups
-      ).map((group) => (
+      {(isStaff ? [...menuGroups, moderationGroup] : menuGroups).map((group) => (
         <section
           className="more-menu-group"
           key={group.title}

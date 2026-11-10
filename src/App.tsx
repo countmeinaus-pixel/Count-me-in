@@ -141,9 +141,13 @@ function AppShell() {
     }
   }, [path])
 
+  const isSideNav = useMediaQuery("(min-width: 980px)")
   const activeTab: Tab | null =
     path === "/notifications"
       ? null
+      : // Desktop: More pages are highlighted in the side nav groups instead.
+        isSideNav && (path.startsWith("/more") || (path.startsWith("/profile/") && path !== "/profile"))
+        ? null
       : path === "/activities" || path === "/create"
         ? "activities"
         : path === "/friends" || path === "/mates"
@@ -154,8 +158,10 @@ function AppShell() {
               ? "more"
               : "home"
 
-  const showNav =
-    ![
+  const showNav = isSideNav
+    ? // Desktop: the side nav stays on every page except sign-in, onboarding and the More overlay.
+      !["/login", "/welcome", "/onboarding", "/reset-password", "/more"].includes(path)
+    : ![
       "/login",
       "/welcome",
       "/onboarding",

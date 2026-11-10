@@ -3891,6 +3891,16 @@ h3 { font: 700 21px/24px var(--font-display); }
 .pr-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .pr-section-heading .button { width: auto; padding-inline: 16px; }
 .pr-list { display: grid; gap: 10px; }
+/* Profile preview: 2 by 2 on phones, 5 in a row on wider screens. */
+.pr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 768px) {
+  .pr-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+.pr-grid .pr-card { padding: 12px; }
+.pr-grid .pr-card-value { font-size: 20px; }
+.pr-grid .pr-card-actions { display: grid; grid-template-columns: 1fr; }
+.pr-grid .pr-vote { justify-content: center; }
+.pr-view-all { justify-self: start; min-height: 44px; }
 .pr-card {
   padding: 14px 16px;
   border: 1px solid var(--border);

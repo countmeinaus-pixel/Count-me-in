@@ -2137,6 +2137,26 @@ h3 { font: 700 21px/24px var(--font-display); }
   font: 700 24px/1.1 var(--font-display);
 }
 .patches-to-collect { display: grid; gap: 24px; margin-top: 16px; }
+.patch-sport-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+}
+.patch-sport-group summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.patch-sport-group summary::-webkit-details-marker { display: none; }
+.patch-sport-name { flex: 1; font: 700 18px/1.2 var(--font-display); }
+.patch-sport-count { color: var(--text-secondary); font-size: 14px; }
+.patch-sport-group summary svg { width: 20px; height: 20px; color: var(--text-secondary); transition: transform 0.2s ease-out; }
+.patch-sport-group[open] summary svg { transform: rotate(180deg); }
+.patch-sport-group .all-patches-grid { padding: 0 12px 12px; }
 .challenges-intro { color: var(--text-secondary); font-size: 14px; }
 .challenge-list { display: grid; gap: 10px; }
 .challenge-card {

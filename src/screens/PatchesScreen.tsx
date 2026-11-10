@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, LockKeyhole, X } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, LockKeyhole, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '../components/Button'
 import { getActiveChallenges } from '../data/challenges'
@@ -23,6 +23,8 @@ function formatEarnedDate(date: string | null) {
   if (!date) return ''
   return new Date(date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
 }
+
+const generalPatchCategories: string[] = ['Getting started', 'Consistency', 'Sports', 'Social']
 
 function formatTimeLeft(endsAt: Date) {
   const days = Math.ceil((endsAt.getTime() - Date.now()) / 86400000)
@@ -257,11 +259,26 @@ export function PatchesScreen() {
             const categoryPatches = lockedPatches.filter((patch) => patch.category === category)
             if (categoryPatches.length === 0) return null
 
+            if (generalPatchCategories.includes(category)) {
+              return (
+                <section key={category} className="patch-category">
+                  <h3>{category}</h3>
+                  <div className="all-patches-grid">{categoryPatches.map(renderPatchCard)}</div>
+                </section>
+              )
+            }
+
+            // Sports have 20 patches each, so they fold open on tap.
+            const sportTotal = patches.filter((patch) => patch.category === category).length
             return (
-              <section key={category} className="patch-category">
-                <h3>{category}</h3>
+              <details key={category} className="patch-sport-group">
+                <summary>
+                  <span className="patch-sport-name">{category}</span>
+                  <span className="patch-sport-count">{sportTotal - categoryPatches.length} of {sportTotal}</span>
+                  <ChevronDown aria-hidden="true" />
+                </summary>
                 <div className="all-patches-grid">{categoryPatches.map(renderPatchCard)}</div>
-              </section>
+              </details>
             )
           })}
         </div>

@@ -102,10 +102,7 @@ export async function getPersonalRecordsForProfile(profileId: string): Promise<P
     .select(recordColumns)
     .eq('user_id', profileId)
     .order('created_at', { ascending: false })
-  if (error) {
-    if (isMissingDatabaseFeature(error)) return null
-    throw error
-  }
+  if (error) rethrow(error)
   return toRecords(data ?? [], viewerId)
 }
 

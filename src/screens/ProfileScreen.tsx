@@ -494,7 +494,7 @@ export function ProfileScreen() {
       <div className="stats-grid">
         <div>
           <strong>{profileMeetups}</strong>
-          <span>Confirmed meetups</span>
+          <span>Meetups</span>
         </div>
         <div>
           <strong>{hostedActivities}</strong>
@@ -503,6 +503,10 @@ export function ProfileScreen() {
         <div>
           <strong>{sportCount}</strong>
           <span>Sports</span>
+        </div>
+        <div>
+          <strong>{personalRecords?.length ?? 0}</strong>
+          <span>PRs</span>
         </div>
       </div>
 

@@ -297,7 +297,7 @@ export function getLollipopChartForUser(user: string, months = 6) {
   return labels.map((month) => ({ ...month, maximum }))
 }
 
-function getPatchMetricProgress(metric: PatchDefinition['metric'], entries: ConfirmedMeetup[]) {
+export function getPatchMetricProgress(metric: PatchDefinition['metric'], entries: ConfirmedMeetup[]) {
   switch (metric) {
     case 'meetups':
       return { progress: entries.length, qualifyingEntries: entries }

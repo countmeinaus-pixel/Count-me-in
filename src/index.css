@@ -2137,6 +2137,46 @@ h3 { font: 700 21px/24px var(--font-display); }
   font: 700 24px/1.1 var(--font-display);
 }
 .patches-to-collect { display: grid; gap: 24px; margin-top: 16px; }
+.challenges-intro { color: var(--text-secondary); font-size: 14px; }
+.challenge-list { display: grid; gap: 10px; }
+.challenge-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+}
+.challenge-card.joined { border-color: var(--seafoam); }
+.challenge-icon { opacity: 0.85; }
+.challenge-body { display: grid; gap: 8px; min-width: 0; }
+.challenge-body .button { justify-self: start; width: auto; padding-inline: 16px; }
+.challenge-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.challenge-title-row strong { font: 700 18px/1.2 var(--font-display); }
+.challenge-body small { color: var(--text-secondary); }
+.challenge-time-left {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+.challenge-leave {
+  justify-self: start;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.challenge-patch-card { cursor: default; }
 .patch-category h3 {
   color: var(--text-secondary);
   font: 500 14px/1.2 var(--font-display);

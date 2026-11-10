@@ -1,5 +1,15 @@
 import { ArrowLeft, Check, LockKeyhole, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Button } from '../components/Button'
+import { getActiveChallenges } from '../data/challenges'
+import {
+  getChallengeProgress,
+  getEarnedChallenges,
+  getJoinedChallengeIds,
+  joinChallenge,
+  leaveChallenge,
+  type ChallengeProgress,
+} from '../lib/challenges'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { PatchIcon } from '../components/PatchIcon'
@@ -14,7 +24,13 @@ function formatEarnedDate(date: string | null) {
   return new Date(date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function PatchProgressBar({ patch }: { patch: PatchProgress }) {
+function formatTimeLeft(endsAt: Date) {
+  const days = Math.ceil((endsAt.getTime() - Date.now()) / 86400000)
+  if (days <= 1) return 'Ends today'
+  return `${days} days left`
+}
+
+function PatchProgressBar({ patch }: { patch: Pick<PatchProgress, 'name' | 'progress' | 'target' | 'progressLabel'> }) {
   const progressPercent = Math.min(100, (patch.progress / patch.target) * 100)
 
   return (
@@ -43,6 +59,41 @@ export function PatchesScreen() {
   const [userName, setUserName] = useState(currentUser.name)
   const [profileError, setProfileError] = useState('')
   const [, setCheckinVersion] = useState(0)
+  const [joinedChallengeIds, setJoinedChallengeIds] = useState<string[]>([])
+  const [challengeError, setChallengeError] = useState('')
+  const [busyChallengeId, setBusyChallengeId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    getJoinedChallengeIds()
+      .then((ids) => {
+        if (active) setJoinedChallengeIds(ids)
+      })
+      .catch((error: unknown) => {
+        if (active) setChallengeError(error instanceof Error ? error.message : 'Unable to load your challenges.')
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  async function toggleChallenge(challenge: ChallengeProgress) {
+    setBusyChallengeId(challenge.id)
+    setChallengeError('')
+    try {
+      if (challenge.joined) {
+        await leaveChallenge(challenge.id)
+        setJoinedChallengeIds((ids) => ids.filter((id) => id !== challenge.id))
+      } else {
+        await joinChallenge(challenge.id)
+        setJoinedChallengeIds((ids) => [...ids, challenge.id])
+      }
+    } catch (error) {
+      setChallengeError(error instanceof Error ? error.message : 'Unable to update this challenge.')
+    } finally {
+      setBusyChallengeId(null)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -74,6 +125,25 @@ export function PatchesScreen() {
   const earnedPatches = patches.filter((patch) => patch.earned)
   const lockedPatches = patches.filter((patch) => !patch.earned)
   const earnedCount = earnedPatches.length
+  const activeChallenges = getActiveChallenges().map((challenge) =>
+    getChallengeProgress(challenge, userName, joinedChallengeIds.includes(challenge.id)),
+  )
+  const earnedChallenges = getEarnedChallenges(joinedChallengeIds, userName)
+    .sort((left, right) => (right.completedAt ?? '').localeCompare(left.completedAt ?? ''))
+
+  function renderEarnedChallenge(challenge: ChallengeProgress) {
+    return (
+      <div key={challenge.id} className="all-patch-card earned challenge-patch-card">
+        <span className="all-patch-icon">
+          <PatchIcon name={challenge.icon} />
+          <span className="patch-earned-mark"><Check aria-hidden="true" /></span>
+        </span>
+        <strong>{challenge.name}</strong>
+        <small>{challenge.rule}</small>
+        <span className="patch-earned-date">Earned {formatEarnedDate(challenge.completedAt)}</span>
+      </div>
+    )
+  }
 
   function renderPatchCard(patch: PatchProgress) {
     return (
@@ -118,14 +188,64 @@ export function PatchesScreen() {
       </header>
       {profileError && <p className="edit-form-error" role="alert">{profileError}</p>}
 
+      <section className="patch-category" aria-labelledby="challenges-heading">
+        <h2 id="challenges-heading">Challenges</h2>
+        <p className="challenges-intro">Join a challenge and reach the goal before time runs out to earn a limited patch.</p>
+        {challengeError && <p className="edit-form-error" role="alert">{challengeError}</p>}
+        <div className="challenge-list">
+          {activeChallenges.map((challenge) => (
+            <article key={challenge.id} className={`challenge-card ${challenge.joined ? 'joined' : ''}`}>
+              <span className={`all-patch-icon ${challenge.completed ? '' : 'challenge-icon'}`}>
+                <PatchIcon name={challenge.icon} />
+                {challenge.completed && <span className="patch-earned-mark"><Check aria-hidden="true" /></span>}
+              </span>
+              <div className="challenge-body">
+                <div className="challenge-title-row">
+                  <strong>{challenge.name}</strong>
+                  <span className="challenge-time-left">{formatTimeLeft(challenge.endsAt)}</span>
+                </div>
+                <small>{challenge.rule}</small>
+                {challenge.completed ? (
+                  <span className="patch-earned-date">Completed. Patch earned!</span>
+                ) : challenge.joined ? (
+                  <>
+                    <PatchProgressBar patch={challenge} />
+                    <button
+                      type="button"
+                      className="challenge-leave"
+                      onClick={() => void toggleChallenge(challenge)}
+                      disabled={busyChallengeId !== null}
+                    >
+                      Leave challenge
+                    </button>
+                  </>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => void toggleChallenge(challenge)}
+                    disabled={busyChallengeId !== null}
+                  >
+                    {busyChallengeId === challenge.id ? 'Joining…' : 'Join challenge'}
+                  </Button>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="patch-category" aria-labelledby="my-patches-heading">
         <h2 id="my-patches-heading">My patches</h2>
-        {earnedPatches.length > 0 ? (
-          <div className="all-patches-grid">{earnedPatches.map(renderPatchCard)}</div>
+        {earnedPatches.length + earnedChallenges.length > 0 ? (
+          <div className="all-patches-grid">
+            {earnedChallenges.map(renderEarnedChallenge)}
+            {earnedPatches.map(renderPatchCard)}
+          </div>
         ) : (
           <div className="empty-state-card compact">
             <h3>No patches yet</h3>
-            <p>Confirm your first meetup with a QR check-in to earn your first patch.</p>
+            <p>Confirm your first meetup with a QR check-in, or join a challenge above, to earn your first patch.</p>
           </div>
         )}
       </section>

@@ -93,6 +93,7 @@ export function MoreScreen() {
     sports: currentUser.stats.sports,
   })
   const [profileError, setProfileError] = useState("")
+  const [prCount, setPrCount] = useState(0)
   const [checkinVersion, setCheckinVersion] = useState(0)
   const [language, setLanguage] = useState(getStoredLanguage())
   const [isStaff, setIsStaff] = useState(false)
@@ -144,6 +145,14 @@ export function MoreScreen() {
           throw new Error(
             "Your profile could not be found. Please complete onboarding first.",
           )
+        // Claimed personal records; 0 until the PR database update has run.
+        void supabase
+          .from("personal_records")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userData.user.id)
+          .then(({ count, error }) => {
+            if (active && !error) setPrCount(count ?? 0)
+          })
         if (active) {
           setProfile({
             name: profileResult.data.first_name,
@@ -298,7 +307,7 @@ export function MoreScreen() {
         <span className="more-profile-stats">
           <span>
             <strong>{meetupStats.length}</strong>
-            <small>Confirmed meetups</small>
+            <small>Meetups</small>
           </span>
           <span>
             <strong>{hostedCount}</strong>
@@ -307,6 +316,10 @@ export function MoreScreen() {
           <span>
             <strong>{profile.sports}</strong>
             <small>Sports</small>
+          </span>
+          <span>
+            <strong>{prCount}</strong>
+            <small>PRs</small>
           </span>
         </span>
       </button>

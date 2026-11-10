@@ -2,6 +2,7 @@ import {
   createBrowserRouter,
   Outlet,
   RouterProvider,
+  ScrollRestoration,
   useLocation,
 } from "react-router-dom"
 import { useEffect, useState } from "react"
@@ -92,6 +93,13 @@ function AppShell() {
 
   return (
     <>
+      {/* New screens open at the top; Back returns to where you were.
+          Switching chats keeps the same scroll position. */}
+      <ScrollRestoration
+        getKey={(location) =>
+          location.pathname.startsWith("/chats") ? "/chats" : location.key
+        }
+      />
       <Outlet />
       {showNav && (
         <BottomNav active={activeTab} hasUnreadChats={hasUnreadChats} chatUnreadError={chatUnreadError} />

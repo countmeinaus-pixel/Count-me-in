@@ -41,6 +41,15 @@ export default function ActivityMap({ activities, onOpenActivity }: ActivityMapP
       pitchWithRotate: false,
     })
     map.touchZoomRotate.disableRotation()
+    // Current location: uses the browser's own location, free and only after the viewer allows it.
+    map.addControl(
+      new maplibregl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: false, timeout: 10_000 },
+        fitBoundsOptions: { maxZoom: 13 },
+        showAccuracyCircle: false,
+      }),
+      'top-right',
+    )
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     map.on('click', () => setSelectedId(null))
     mapRef.current = map

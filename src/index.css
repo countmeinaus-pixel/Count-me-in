@@ -586,6 +586,13 @@ h3 { font: 700 21px/24px var(--font-display); }
   box-shadow: none;
 }
 .activity-map .maplibregl-ctrl-group button + button { border-top: 1px solid var(--border); }
+.activity-map .maplibregl-ctrl-top-right { display: grid; gap: 0; }
+.activity-map .maplibregl-ctrl-geolocate { width: 44px; height: 44px; }
+.activity-map .maplibregl-ctrl-group button.maplibregl-ctrl-geolocate-active .maplibregl-ctrl-icon,
+.activity-map .maplibregl-ctrl-group button.maplibregl-ctrl-geolocate-background .maplibregl-ctrl-icon { filter: none; }
+.activity-map .maplibregl-user-location-dot,
+.activity-map .maplibregl-user-location-dot::before { background-color: var(--seafoam); }
+.activity-map .maplibregl-user-location-dot::after { border-color: var(--bg); }
 .activity-map .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(0.85); }
 .activity-map .maplibregl-ctrl.maplibregl-ctrl-attrib,
 .activity-map .maplibregl-ctrl.maplibregl-ctrl-attrib.maplibregl-compact-show {

@@ -24,6 +24,7 @@ import { KiteSizePicker } from '../components/KiteSizePicker'
 import { LocationFields } from '../components/LocationFields'
 import { activities, getDefaultActivityHero } from '../data/mockData'
 import { compressActivityCover, deleteActivityCover, uploadActivityCover } from '../lib/activityImages'
+import { getMetMates } from '../lib/friends'
 import { isMissingLocationColumns, parseCoordinates } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
@@ -230,12 +231,11 @@ export function CreateActivityScreen() {
       const [profileResult, profileSportsResult, inviteesResult, catalogResult] = await Promise.all([
         client.from('profiles').select('suburb').eq('id', user.id).maybeSingle(),
         client.from('profile_sports').select('sport_id, skill').eq('profile_id', user.id),
-        client
-          .from('profiles')
-          .select('id, first_name, suburb, photo_url')
-          .neq('id', user.id)
-          .order('first_name')
-          .limit(50),
+        // Only friends can be invited: the mates you have met up with.
+        getMetMates(user.id).then(
+          (data) => ({ data, error: null }),
+          (error: Error) => ({ data: null, error }),
+        ),
         client.from('sports').select('id, name, icon').order('name'),
       ])
 
@@ -849,17 +849,19 @@ export function CreateActivityScreen() {
           </div>
           <div className="invite-panel">
             <div className="invite-header">
-              <span>People in Count Me In</span>
+              <span>Your friends</span>
               <small>{selectedInvites.length} selected</small>
             </div>
-            <input
-              className="invite-search"
-              type="search"
-              value={inviteSearch}
-              onChange={(event) => setInviteSearch(event.target.value)}
-              placeholder="Search by name or suburb"
-              aria-label="Search people to invite"
-            />
+            {inviteSuggestions.length > 0 && (
+              <input
+                className="invite-search"
+                type="search"
+                value={inviteSearch}
+                onChange={(event) => setInviteSearch(event.target.value)}
+                placeholder="Search your friends"
+                aria-label="Search your friends to invite"
+              />
+            )}
             {selectedInvitees.length > 0 && (
               <div className="invited-list">
                 {selectedInvitees.map((person) => (
@@ -877,7 +879,13 @@ export function CreateActivityScreen() {
                   <Plus />
                 </button>
               )) : (
-                <p className="invite-empty">No matching people found.</p>
+                <p className="invite-empty">
+                  {inviteSuggestions.length === 0
+                    ? 'Your friends are the mates you’ve met up with. Once you confirm a meetup with a QR check-in, you can invite them here.'
+                    : selectedInvites.length === inviteSuggestions.length && !inviteSearch.trim()
+                      ? 'All your friends are invited.'
+                      : `No friends match “${inviteSearch.trim()}”.`}
+                </p>
               )}
             </div>
           </div>

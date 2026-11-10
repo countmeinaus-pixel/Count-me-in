@@ -1,7 +1,32 @@
 import type { CommunityMember } from '../data/mockData'
+import { supabase } from './supabase'
 
 // Demo friends until friendships are stored in the database.
 export const friendNames = ['Matt', 'Hamish', 'Sam', 'Luca']
+
+export type MetMate = { id: string; first_name: string; suburb: string; photo_url: string | null }
+
+// Friends are the mates you have confirmed a meetup with (QR check-in).
+// Each check-in stores a row for both men, so your own rows list everyone you met.
+export async function getMetMates(userId: string): Promise<MetMate[]> {
+  if (!supabase) return []
+  const { data: meetups, error: meetupsError } = await supabase
+    .from('activity_meetup_confirmations')
+    .select('partner_id')
+    .eq('user_id', userId)
+  if (meetupsError) throw meetupsError
+
+  const mateIds = [...new Set((meetups ?? []).map((meetup) => meetup.partner_id))]
+  if (mateIds.length === 0) return []
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, first_name, suburb, photo_url')
+    .in('id', mateIds)
+    .order('first_name')
+  if (profilesError) throw profilesError
+  return profiles ?? []
+}
 
 export type CrewSuggestion = {
   member: CommunityMember

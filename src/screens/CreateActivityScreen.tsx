@@ -212,7 +212,7 @@ export function CreateActivityScreen() {
       const { data: userData, error: userError } = await client.auth.getUser()
       if (userError) {
         if (userError.name === 'AuthSessionMissingError') {
-          navigate('/login', { replace: true })
+          if (active) navigate('/login', { replace: true })
           return
         }
         if (active) {
@@ -222,7 +222,7 @@ export function CreateActivityScreen() {
         return
       }
       if (!userData.user) {
-        navigate('/login', { replace: true })
+        if (active) navigate('/login', { replace: true })
         return
       }
 
@@ -581,7 +581,7 @@ export function CreateActivityScreen() {
         </div>
       </header>
 
-      <nav className="wizard-progress" aria-label="Activity creation progress">
+      <nav className="wizard-progress" aria-label="Activity creation progress" data-tour="create-steps">
         {steps.map((label, index) => {
           const stepNumber = index + 1
           const isCurrent = stepNumber === step
@@ -615,7 +615,7 @@ export function CreateActivityScreen() {
             <h2 id="sport-step-title">What are you keen to do?</h2>
             <p>Choose from all sports, or create an open activity. Your profile sports are shown first.</p>
           </div>
-          <div className="wizard-sport-grid">
+          <div className="wizard-sport-grid" data-tour="create-sports">
             {sports.map((sport) => {
               const Icon = sportIcons[sport.icon ?? ''] ?? Plus
               const isSelected = selectedSport?.id === sport.id

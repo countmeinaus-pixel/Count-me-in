@@ -876,7 +876,7 @@ export function ActivityDetailScreen() {
 
       {!(isHost && savedDetails && !isActivityDay) && (
       <div className="sticky-action">
-        <div className="sticky-action-group">
+        <div className="sticky-action-group" data-tour="activity-join">
           {isHost ? (
             savedDetails ? (
               isActivityDay && (

@@ -6,7 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { BottomNav, type Tab } from "./components/BottomNav"
 import { ActivityDetailScreen } from "./screens/ActivityDetailScreen"
 import { EditActivityScreen } from "./screens/EditActivityScreen"
@@ -24,7 +24,9 @@ import { OnboardingScreen } from "./screens/OnboardingScreen"
 import { PasswordResetScreen } from "./screens/PasswordResetScreen"
 import { PatchesScreen } from "./screens/PatchesScreen"
 import { WelcomeScreen } from "./screens/WelcomeScreen"
-import { hasSeenWelcome } from "./lib/onboardingFlags"
+import { AppTour } from "./components/AppTour"
+import { appTourSteps, onStartAppTour } from "./lib/appTour"
+import { hasSeenWelcome, markTourFinished } from "./lib/onboardingFlags"
 import { supabase } from "./lib/supabase"
 import { PersonalRecordsScreen } from "./screens/PersonalRecordsScreen"
 import { ProfileScreen } from "./screens/ProfileScreen"
@@ -63,6 +65,14 @@ function AppShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const isWideChatLayout = useMediaQuery(wideChatLayoutQuery)
+  // The app tour lives here so it can move between pages.
+  const [tourOpen, setTourOpen] = useState(false)
+  useEffect(() => onStartAppTour(() => setTourOpen(true)), [])
+  const closeTour = useCallback((finished: boolean) => {
+    markTourFinished()
+    setTourOpen(false)
+    if (finished) navigate("/")
+  }, [navigate])
   const [hasUnreadChats, setHasUnreadChats] = useState(hasUnreadChatThreads())
   const [chatUnreadError, setChatUnreadError] = useState("")
 
@@ -129,6 +139,12 @@ function AppShell() {
       <Outlet />
       {showNav && (
         <BottomNav active={activeTab} hasUnreadChats={hasUnreadChats} chatUnreadError={chatUnreadError} />
+      )}
+      {tourOpen && (
+        <AppTour
+          steps={appTourSteps}
+          onClose={closeTour}
+        />
       )}
     </>
   )

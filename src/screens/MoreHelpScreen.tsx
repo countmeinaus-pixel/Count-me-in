@@ -1,6 +1,7 @@
 import { ClipboardCopy, Compass, Presentation } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { startAppTour } from '../lib/appTour'
 import { resetTour } from '../lib/onboardingFlags'
 import { MorePageHeader } from '../components/MorePageHeader'
 import { useBackToMore } from '../lib/moreNavigation'
@@ -40,7 +41,8 @@ export function MoreHelpScreen() {
           className="button button-secondary button-md"
           onClick={() => {
             resetTour()
-            navigate('/', { state: { startTour: true } })
+            navigate('/')
+            startAppTour()
           }}
         >
           <Compass aria-hidden="true" /> Take the app tour again

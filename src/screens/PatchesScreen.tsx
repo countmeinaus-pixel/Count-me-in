@@ -192,7 +192,7 @@ export function PatchesScreen() {
       </header>
       {profileError && <p className="edit-form-error" role="alert">{profileError}</p>}
 
-      <section className="patch-category" aria-labelledby="challenges-heading">
+      <section className="patch-category" aria-labelledby="challenges-heading" data-tour="patches-challenges">
         <h2 id="challenges-heading">Challenges</h2>
         <p className="challenges-intro">Join a challenge and reach the goal before time runs out to earn a limited patch.</p>
         {challengeError && <p className="edit-form-error" role="alert">{challengeError}</p>}
@@ -239,7 +239,7 @@ export function PatchesScreen() {
         </div>
       </section>
 
-      <section className="patch-category" aria-labelledby="my-patches-heading">
+      <section className="patch-category" aria-labelledby="my-patches-heading" data-tour="patches-mine">
         <h2 id="my-patches-heading">My patches</h2>
         {earnedPatches.length + earnedChallenges.length > 0 ? (
           <div className="all-patches-grid">

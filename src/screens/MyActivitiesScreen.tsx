@@ -142,6 +142,7 @@ export function MyActivitiesScreen() {
 
       <Button
         className="my-activities-create"
+        data-tour="create-activity"
         onClick={() => navigate("/create")}
       >
         <Plus aria-hidden="true" />

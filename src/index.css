@@ -1780,6 +1780,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   font-size: 14px;
 }
 .report-field select,
+.report-field input,
 .report-field textarea {
   width: 100%;
   padding: 12px;
@@ -3731,3 +3732,92 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--text-primary);
   font-size: 14px;
 }
+
+/* Personal records */
+.pr-section { display: grid; gap: 12px; margin-top: 28px; }
+.pr-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pr-section-heading .button { width: auto; padding-inline: 16px; }
+.pr-list { display: grid; gap: 10px; }
+.pr-card {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+}
+.pr-card.verified { border-color: var(--seafoam); }
+.pr-card-photo {
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface-2);
+  cursor: zoom-in;
+  align-self: start;
+}
+.pr-card-photo img { width: 100%; height: 100%; object-fit: cover; }
+.pr-card-body { display: grid; gap: 4px; min-width: 0; align-content: start; }
+.pr-card-owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.pr-card-label { font: 700 17px/1.2 var(--font-display); color: var(--text-primary); }
+.pr-card-value { font: 700 24px/1.1 var(--font-display); color: var(--accent); }
+.pr-card-note { color: var(--text-secondary); font-size: 13px; }
+.pr-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.pr-card-status.verified { color: var(--seafoam); font-weight: 600; }
+.pr-card-status svg { width: 16px; height: 16px; }
+.pr-card-actions { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.pr-vote, .pr-card-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+}
+.pr-vote svg, .pr-card-delete svg { width: 16px; height: 16px; }
+.pr-vote.active { border-color: var(--seafoam); background: var(--seafoam-subtle); color: var(--seafoam); }
+.pr-vote.flag.active { border-color: var(--danger); background: var(--danger-subtle); color: var(--danger); }
+.pr-card-delete { justify-self: start; margin-top: 6px; color: var(--text-secondary); }
+.pr-photo-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--scrim);
+}
+.pr-photo-viewer img { max-width: 100%; max-height: 75dvh; border-radius: var(--radius-lg); }
+.pr-photo-viewer .button { width: auto; padding-inline: 24px; }
+.claim-pr-dialog .button { gap: 8px; }
+.claim-pr-dialog .button svg { width: 18px; height: 18px; }
+.claim-pr-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--radius-md); }
+.pr-empty { color: var(--text-secondary); font-size: 14px; }
+.moderation-pr-photo { width: 100%; max-height: 240px; object-fit: cover; border-radius: var(--radius-md); }

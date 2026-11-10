@@ -18,6 +18,7 @@ import { getPatchProgressForUser, loadSavedMeetupsForUser, type PatchProgress } 
 import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 import { getMoreOrigin } from '../lib/moreNavigation'
+import { loadConfirmedPrDates } from '../lib/personalRecords'
 
 function formatEarnedDate(date: string | null) {
   if (!date) return ''
@@ -110,6 +111,7 @@ export function PatchesScreen() {
         if (active && profile) {
           setUserName(profile.firstName)
           await loadSavedMeetupsForUser(profile.firstName)
+          await loadConfirmedPrDates().catch(() => undefined)
           if (active) setCheckinVersion((version) => version + 1)
         }
       } catch (error) {

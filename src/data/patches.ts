@@ -1,7 +1,7 @@
 import { buildSportPatches } from './sportPatches'
 
 export type PatchCategory = 'Getting started' | 'Consistency' | 'Sports' | 'Social' | SportName
-export type PatchMetric = 'meetups' | 'earlyBird' | 'saltWater' | 'trailhead' | 'hosted' | 'sports' | 'sport'
+export type PatchMetric = 'meetups' | 'earlyBird' | 'saltWater' | 'trailhead' | 'hosted' | 'sports' | 'sport' | 'prConfirms'
 
 export type SportName =
   | 'Running' | 'Hiking' | 'Spearfishing' | 'Kitesurfing' | 'Surfing' | 'Swimming' | 'Gym'
@@ -36,6 +36,39 @@ export type PatchDefinition = {
 }
 
 const basePatches: PatchDefinition[] = [
+  {
+    id: 'witness',
+    name: 'Witness',
+    icon: 'eye',
+    category: 'Social',
+    description: 'You help keep personal records honest.',
+    rule: "Confirm 5 PRs of other members.",
+    metric: 'prConfirms',
+    target: 5,
+    progressLabel: 'PRs confirmed',
+  },
+  {
+    id: 'trusted-witness',
+    name: 'Trusted witness',
+    icon: 'eye',
+    category: 'Social',
+    description: 'When you say it happened, people believe it.',
+    rule: "Confirm 25 PRs of other members.",
+    metric: 'prConfirms',
+    target: 25,
+    progressLabel: 'PRs confirmed',
+  },
+  {
+    id: 'judge',
+    name: 'Judge',
+    icon: 'gavel',
+    category: 'Social',
+    description: 'The crew trusts your call.',
+    rule: "Confirm 100 PRs of other members.",
+    metric: 'prConfirms',
+    target: 100,
+    progressLabel: 'PRs confirmed',
+  },
   {
     id: 'first-meetup',
     name: 'First meetup',

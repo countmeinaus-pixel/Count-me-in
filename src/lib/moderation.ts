@@ -1,6 +1,6 @@
 import { supabase } from "./supabase"
 
-export type ReportTargetType = "profile" | "activity"
+export type ReportTargetType = "profile" | "activity" | "personal_record"
 export type ReportReason = "inappropriate_or_sexual_content" | "harassment_or_bullying" | "spam_or_scam" | "fake_profile" | "safety_concern" | "other"
 
 export type BlockedProfile = {

@@ -1,5 +1,6 @@
 import { activities, demoConfirmedMeetups } from '../data/mockData'
 import { patchDefinitions, type PatchDefinition, type SportPatchRule } from '../data/patches'
+import { getConfirmedPrDates } from './personalRecords'
 import { supabase } from './supabase'
 
 export type ConfirmedMeetup = {
@@ -325,6 +326,9 @@ export function getPatchMetricProgress(
   sportRule?: SportPatchRule,
 ) {
   switch (metric) {
+    case 'prConfirms':
+      // Counted from votes in getPatchProgressForUser, not from meetups.
+      return { progress: 0, qualifyingEntries: [] }
     case 'sport': {
       if (!sportRule) return { progress: 0, qualifyingEntries: [] }
       const matching = entries.filter((entry) => matchesSportRule(entry, sportRule))
@@ -409,6 +413,16 @@ export function getPatchProgressForUser(user: string): PatchProgress[] {
     .sort((left, right) => left.confirmedAt.localeCompare(right.confirmedAt))
 
   return patchDefinitions.map((definition) => {
+    if (definition.metric === 'prConfirms') {
+      const dates = getConfirmedPrDates()
+      const earned = dates.length >= definition.target
+      return {
+        ...definition,
+        progress: Math.min(dates.length, definition.target),
+        earned,
+        earnedAt: earned ? dates[definition.target - 1] ?? null : null,
+      }
+    }
     const result = getPatchMetricProgress(definition.metric, entries, definition.sportRule)
     const { progress, qualifyingEntries } = result
     const earned = progress >= definition.target

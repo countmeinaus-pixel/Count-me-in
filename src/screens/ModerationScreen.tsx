@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { MorePageHeader } from "../components/MorePageHeader"
 import { useBackToMore } from "../lib/moreNavigation"
+import { removePersonalRecordById } from "../lib/personalRecords"
 import {
   getCurrentModerationRole,
   getModerationReports,
@@ -76,6 +77,27 @@ export function ModerationScreen() {
     }
   }, [])
 
+  async function removeFlaggedRecord(report: ModerationReport) {
+    if (!window.confirm("Remove this PR and its proof photo for good?")) return
+    setUpdatingReportId(report.id)
+    setError("")
+    try {
+      await removePersonalRecordById(report.target_id)
+      await updateModerationReportStatus(report.id, "resolved")
+      setReports((current) =>
+        current.map((item) =>
+          item.id === report.id ? { ...item, status: "resolved" } : item,
+        ),
+      )
+    } catch (removeError) {
+      setError(
+        removeError instanceof Error ? removeError.message : "Unable to remove this PR.",
+      )
+    } finally {
+      setUpdatingReportId(null)
+    }
+  }
+
   async function changeStatus(
     reportId: string,
     status: ModerationReportStatus,
@@ -128,6 +150,24 @@ export function ModerationScreen() {
                     </span>
                   </div>
                   {report.note && <p>{report.note}</p>}
+                  {report.target_type === "personal_record" &&
+                    typeof report.evidence.photo_url === "string" && (
+                      <>
+                        <img
+                          className="moderation-pr-photo"
+                          src={report.evidence.photo_url}
+                          alt="Proof photo of the flagged PR"
+                        />
+                        <button
+                          type="button"
+                          className="button button-destructive button-md"
+                          disabled={updatingReportId === report.id}
+                          onClick={() => void removeFlaggedRecord(report)}
+                        >
+                          Remove PR
+                        </button>
+                      </>
+                    )}
                   <time dateTime={report.created_at}>
                     {new Date(report.created_at).toLocaleString("en-AU")}
                   </time>

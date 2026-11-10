@@ -17,6 +17,8 @@ import { friendNames, getCrewSuggestions } from '../lib/friends'
 import { getBlockedUsers } from '../lib/localPreferences'
 import { getBlockedProfiles } from '../lib/moderation'
 import { Avatar } from '../components/Avatar'
+import { PersonalRecordCard } from '../components/PersonalRecordCard'
+import { getRecordsToConfirm, type PersonalRecord } from '../lib/personalRecords'
 import { getUnreadNotificationCount } from '../lib/notifications'
 
 type ViewMode = 'list' | 'map' | 'calendar'
@@ -80,6 +82,19 @@ export function HomeScreen() {
     }
   })
   const [activeSuggestion, setActiveSuggestion] = useState(0)
+  const [recordsToConfirm, setRecordsToConfirm] = useState<PersonalRecord[]>([])
+  const [recordsVersion, setRecordsVersion] = useState(0)
+  useEffect(() => {
+    let active = true
+    getRecordsToConfirm(3)
+      .then((records) => {
+        if (active) setRecordsToConfirm(records)
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [recordsVersion])
   const suggestionRowRef = useRef<HTMLDivElement | null>(null)
   const [sportLoadError, setSportLoadError] = useState('')
   const [savedActivities, setSavedActivities] = useState<FeedActivity[]>([])
@@ -576,6 +591,26 @@ export function HomeScreen() {
             </div>
           )}
         </div>
+      )}
+
+      {recordsToConfirm.length > 0 && (
+        <section className="pr-section" aria-labelledby="home-pr-heading">
+          <div>
+            <p className="eyebrow">Keep each other honest</p>
+            <h2 id="home-pr-heading">New PRs to confirm</h2>
+          </div>
+          <div className="pr-list">
+            {recordsToConfirm.map((record) => (
+              <PersonalRecordCard
+                key={record.id}
+                record={record}
+                showOwner
+                onOpenOwner={() => navigate(`/profile/${encodeURIComponent(record.ownerName)}`)}
+                onChanged={() => window.setTimeout(() => setRecordsVersion((version) => version + 1), 1200)}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       <section className="crew-preview">

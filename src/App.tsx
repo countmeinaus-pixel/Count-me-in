@@ -9,7 +9,7 @@ import { BottomNav, type Tab } from "./components/BottomNav"
 import { ActivityDetailScreen } from "./screens/ActivityDetailScreen"
 import { EditActivityScreen } from "./screens/EditActivityScreen"
 import { AuthScreen } from "./screens/AuthScreen"
-import { ChatThreadScreen } from "./screens/ChatThreadScreen"
+import { useMediaQuery, wideChatLayoutQuery } from "./lib/useMediaQuery"
 import { ChatsScreen } from "./screens/ChatsScreen"
 import { CreateActivityScreen } from "./screens/CreateActivityScreen"
 import { EditProfileScreen } from "./screens/EditProfileScreen"
@@ -36,6 +36,7 @@ import { ModerationScreen } from "./screens/ModerationScreen"
 function AppShell() {
   const location = useLocation()
   const path = location.pathname
+  const isWideChatLayout = useMediaQuery(wideChatLayoutQuery)
   const [hasUnreadChats, setHasUnreadChats] = useState(hasUnreadChatThreads())
   const [chatUnreadError, setChatUnreadError] = useState("")
 
@@ -87,7 +88,7 @@ function AppShell() {
     ].includes(path) &&
     !/^\/activity\/[^/]+\/edit$/.test(path) &&
     !path.startsWith("/more") &&
-    !(path.startsWith("/chats/") && path !== "/chats")
+    !(path.startsWith("/chats/") && path !== "/chats" && !isWideChatLayout)
 
   return (
     <>
@@ -115,7 +116,7 @@ const router = createBrowserRouter([
       { path: "/notifications", element: <NotificationsScreen /> },
       { path: "/create", element: <CreateActivityScreen /> },
       { path: "/chats", element: <ChatsScreen /> },
-      { path: "/chats/:id", element: <ChatThreadScreen /> },
+      { path: "/chats/:id", element: <ChatsScreen /> },
       { path: "/profile/:name?", element: <ProfileScreen /> },
       { path: "/profile/edit", element: <EditProfileScreen /> },
       { path: "/profile/sports/edit", element: <EditSportsScreen /> },

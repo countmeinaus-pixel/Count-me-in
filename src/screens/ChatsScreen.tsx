@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "../components/Button"
 import { SportIcon } from "../components/SportIcon"
 import { getChatThreadsForViewer, type ChatThread } from "../lib/chat"
+import { useMediaQuery, wideChatLayoutQuery } from "../lib/useMediaQuery"
+import { ChatThreadScreen } from "./ChatThreadScreen"
 
 function formatChatTime(timestamp: number) {
   if (!timestamp) return ""
@@ -24,8 +26,11 @@ function formatChatTime(timestamp: number) {
   return date.toLocaleDateString("en-AU", { day: "numeric", month: "short" })
 }
 
+// Phone: the list, or one chat full screen. Wide screens: list on the left, open chat on the right.
 export function ChatsScreen() {
   const navigate = useNavigate()
+  const { id: openChatId } = useParams()
+  const isWide = useMediaQuery(wideChatLayoutQuery)
   const [threads, setThreads] = useState<ChatThread[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -54,12 +59,10 @@ export function ChatsScreen() {
     }
   }, [])
 
-  return (
-    <main className="screen chats-screen">
-      <header className="page-title">
-        <p className="eyebrow">Your crew</p>
-        <h1>Chats</h1>
-      </header>
+  if (openChatId && !isWide) return <ChatThreadScreen />
+
+  const chatList = (
+    <>
 
       {isLoading ? (
         <p className="text-[var(--text-secondary)]">Loading your chats…</p>
@@ -80,7 +83,8 @@ export function ChatsScreen() {
             <button
               key={chat.id}
               type="button"
-              className="chat-row"
+              className={`chat-row ${chat.id === openChatId ? "active" : ""}`}
+              aria-current={chat.id === openChatId ? "true" : undefined}
               onClick={() => navigate(`/chats/${chat.id}`)}
               aria-label={`${chat.title}${chat.unreadCount ? `, ${chat.unreadCount} unread messages` : ""}`}
             >
@@ -106,6 +110,35 @@ export function ChatsScreen() {
             </button>
           ))}
         </div>
+      )}
+    </>
+  )
+
+  return (
+    <main className={`screen chats-screen ${isWide ? "chats-split-screen" : ""}`}>
+      <header className="page-title">
+        <p className="eyebrow">Your crew</p>
+        <h1>Chats</h1>
+      </header>
+
+      {isWide ? (
+        <div className="chats-split">
+          <aside className="chats-split-list" aria-label="Your chats">
+            {chatList}
+          </aside>
+          <section className="chats-split-thread">
+            {openChatId ? (
+              <ChatThreadScreen key={openChatId} embedded />
+            ) : (
+              <div className="chats-split-empty">
+                <h3>Pick a chat</h3>
+                <p>Choose a group chat on the left to read and reply.</p>
+              </div>
+            )}
+          </section>
+        </div>
+      ) : (
+        chatList
       )}
     </main>
   )

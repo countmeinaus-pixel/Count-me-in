@@ -17,7 +17,7 @@ import {
 } from "../lib/chat"
 import { supabase } from "../lib/supabase"
 
-export function ChatThreadScreen() {
+export function ChatThreadScreen({ embedded = false }: { embedded?: boolean }) {
   const { id = "" } = useParams()
   const navigate = useNavigate()
   const [thread, setThread] = useState<ChatThread | null>(null)
@@ -143,7 +143,7 @@ export function ChatThreadScreen() {
 
   if (isLoading) {
     return (
-      <main className="chat-thread-screen chat-thread-missing">
+      <main className={`chat-thread-screen chat-thread-missing ${embedded ? "embedded" : ""}`}>
         <p>Loading group chat…</p>
       </main>
     )
@@ -151,27 +151,31 @@ export function ChatThreadScreen() {
 
   if (!thread) {
     return (
-      <main className="chat-thread-screen chat-thread-missing">
+      <main className={`chat-thread-screen chat-thread-missing ${embedded ? "embedded" : ""}`}>
         <h1>Chat unavailable</h1>
         <p>{error || "This chat may have been removed."}</p>
-        <button type="button" className="text-action" onClick={() => navigate("/chats")}>
-          Back to chats
-        </button>
+        {!embedded && (
+          <button type="button" className="text-action" onClick={() => navigate("/chats")}>
+            Back to chats
+          </button>
+        )}
       </main>
     )
   }
 
   return (
-    <main className="chat-thread-screen">
+    <main className={`chat-thread-screen ${embedded ? "embedded" : ""}`}>
       <header className="chat-thread-header">
-        <button
-          type="button"
-          className="icon-button small"
-          aria-label="Back to chats"
-          onClick={() => navigate("/chats")}
-        >
-          <ArrowLeft aria-hidden="true" />
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            className="icon-button small"
+            aria-label="Back to chats"
+            onClick={() => navigate("/chats")}
+          >
+            <ArrowLeft aria-hidden="true" />
+          </button>
+        )}
         <button
           type="button"
           className="chat-thread-sport-icon"

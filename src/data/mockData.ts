@@ -98,44 +98,57 @@ export type CommunityMember = {
   stats: { meetups: number; hosted: number; sports: number }
 }
 
+// Placeholder portraits from Unsplash (free to use), cropped small around the face.
+function memberPhoto(photoId: string) {
+  return `https://images.unsplash.com/photo-${photoId}?w=192&h=192&fit=crop&crop=faces&q=70`
+}
+
 export const communityMembers: CommunityMember[] = [
   {
     name: 'Matt', age: 34, suburb: 'Brighton', verified: true,
+    photoUrl: memberPhoto('1500648767791-00dcc994a43e'),
     sports: [{ name: 'Spearfishing', level: 'Intermediate', meetups: 4 }, { name: 'Running', level: 'Beginner', meetups: 4 }, { name: 'Gym', level: 'Experienced', meetups: 4 }],
     stats: { meetups: 12, hosted: 3, sports: 3 },
   },
   {
     name: 'Luca', age: 29, suburb: 'Glenelg', verified: true,
+    photoUrl: memberPhoto('1506794778202-cad84cf45f1d'),
     sports: [{ name: 'Kitesurfing', level: 'Intermediate', meetups: 3 }, { name: 'Surfing', level: 'Experienced', meetups: 2 }, { name: 'Swimming', level: 'Beginner', meetups: 2 }],
     stats: { meetups: 7, hosted: 1, sports: 3 },
   },
   {
     name: 'Sam', age: 41, suburb: 'Aldinga', verified: true,
+    photoUrl: memberPhoto('1570295999919-56ceb5ecca61'),
     sports: [{ name: 'Running', level: 'Intermediate', meetups: 5 }, { name: 'Hiking', level: 'Intermediate', meetups: 4 }, { name: 'Road cycling', level: 'Experienced', meetups: 5 }],
     stats: { meetups: 14, hosted: 4, sports: 3 },
   },
   {
     name: 'Hamish', age: 36, suburb: 'Stirling', verified: true,
+    photoUrl: memberPhoto('1507003211169-0a1dd7228f2d'),
     sports: [{ name: 'Hiking', level: 'Experienced', meetups: 3 }, { name: 'Running', level: 'Intermediate', meetups: 3 }, { name: 'Mountain biking', level: 'Beginner', meetups: 3 }],
     stats: { meetups: 9, hosted: 2, sports: 3 },
   },
   {
     name: 'Raj', age: 32, suburb: 'Mawson Lakes', verified: true,
+    photoUrl: memberPhoto('1492562080023-ab3db95bfbce'),
     sports: [{ name: 'Road cycling', level: 'Intermediate', meetups: 2 }, { name: 'Gym', level: 'Experienced', meetups: 2 }, { name: 'Hiking', level: 'Beginner', meetups: 2 }],
     stats: { meetups: 6, hosted: 1, sports: 3 },
   },
   {
     name: 'Ben', age: 45, suburb: 'Seaford', verified: true,
+    photoUrl: memberPhoto('1472099645785-5658abf4ff4e'),
     sports: [{ name: 'Hiking', level: 'Intermediate', meetups: 9 }, { name: 'Spearfishing', level: 'Experienced', meetups: 8 }, { name: 'Swimming', level: 'Beginner', meetups: 8 }],
     stats: { meetups: 25, hosted: 5, sports: 3 },
   },
   {
     name: 'Tom', age: 27, suburb: 'Norwood', verified: true,
+    photoUrl: memberPhoto('1527980965255-d3b416303d12'),
     sports: [{ name: 'Running', level: 'Beginner', meetups: 1 }, { name: 'Gym', level: 'Intermediate', meetups: 0 }, { name: 'Climbing / bouldering', level: 'Beginner', meetups: 0 }],
     stats: { meetups: 1, hosted: 0, sports: 3 },
   },
   {
     name: 'Dave', age: 39, suburb: 'Semaphore', verified: true,
+    photoUrl: memberPhoto('1522075469751-3a6694fb2f61'),
     sports: [{ name: 'Spearfishing', level: 'Intermediate', meetups: 6 }, { name: 'Kitesurfing', level: 'Intermediate', meetups: 6 }, { name: 'SUP / kayak', level: 'Experienced', meetups: 6 }],
     stats: { meetups: 18, hosted: 3, sports: 3 },
   },
@@ -276,6 +289,13 @@ export const activities: Activity[] = [
     attendees: ['Luca'],
   },
 ]
+
+// Demo attendees show the same placeholder portraits as the demo members.
+activities.forEach((activity) => {
+  activity.attendeePhotos = activity.attendees.map(
+    (name) => communityMembers.find((member) => member.name === name)?.photoUrl ?? null,
+  )
+})
 
 export function getDefaultActivityHero(sportName: string) {
   const exactMatch = activities.find((activity) => activity.sport === sportName)

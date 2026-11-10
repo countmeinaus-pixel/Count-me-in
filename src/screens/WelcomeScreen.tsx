@@ -2,8 +2,8 @@ import { BadgeCheck, CalendarDays, Fish, Mountain, QrCode, ShieldCheck, Users, W
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ActivityCard } from '../components/ActivityCard'
-import { Avatar } from '../components/Avatar'
 import { FlowLayout } from '../components/FlowLayout'
+import { MateCard } from '../components/MateCard'
 import { activities, communityMembers } from '../data/mockData'
 import { markWelcomeSeen } from '../lib/onboardingFlags'
 import { supabase } from '../lib/supabase'
@@ -13,16 +13,9 @@ const slides = [
   {
     title: <><em>Find your crew</em> for the things you love doing</>,
     visual: (
-      <div className="flow-showcase" aria-hidden="true">
+      <div className="flow-showcase flow-showcase-cards" aria-hidden="true">
         {communityMembers.slice(0, 3).map((member) => (
-          <div className="showcase-row" key={member.name}>
-            <Avatar name={member.name} photoUrl={member.photoUrl} size={48} verified={member.verified} />
-            <span className="grow">
-              <strong>{member.name}, {member.age}</strong>
-              <small>{member.suburb}</small>
-            </span>
-            <span className="showcase-chip">{member.sports[0]?.name}</span>
-          </div>
+          <MateCard key={member.name} member={member} onClick={() => {}} horizontal />
         ))}
       </div>
     ),

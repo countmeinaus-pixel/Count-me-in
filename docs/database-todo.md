@@ -24,7 +24,7 @@ Doe de bestanden in de volgorde van deze lijst.
 
 ## Pushen naar GitHub (nodig om het online te zien)
 
-De commits staan alleen op je Mac. Claude kan niet pushen, want deze Mac is via SSH ingelogd als **JaiBoekhout** en de repo staat onder **countmeinaus-pixel**.
+Claude kan niet zelf pushen: de terminal op deze Mac is via SSH ingelogd als **JaiBoekhout**, en de repo staat onder **countmeinaus-pixel**. VS Code is wel goed ingelogd, dus pushen gaat daar met één klik. Taak 1 t/m 5 staan al online; taak 6, 7 en 8 moeten nog.
 
 1. Open in VS Code de tab **Source Control** (icoon met vertakkende lijntjes, links).
 2. Klik op **Sync Changes** (of de drie puntjes → **Push**).

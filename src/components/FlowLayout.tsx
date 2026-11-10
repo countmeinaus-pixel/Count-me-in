@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 
 // Shared layout for the welcome slides and onboarding steps: back button,
 // progress bar, optional Skip, a big title and one main button at the bottom.
@@ -16,6 +16,21 @@ type Props = {
   primaryDisabled?: boolean
   footerNote?: ReactNode
   align?: 'center' | 'start'
+  // Fit the screen without scrolling: extra examples marked data-optional are
+  // hidden, last group first, until the content fits above the button.
+  fitViewport?: boolean
+}
+
+function fitOptionalContent(body: HTMLElement) {
+  const optional = [...body.querySelectorAll<HTMLElement>('[data-optional]')]
+  optional.forEach((element) => { element.hidden = false })
+  const groups = [...new Set(optional.map((element) => element.dataset.optional ?? ''))]
+  while (body.scrollHeight > body.clientHeight && groups.length > 0) {
+    const group = groups.pop()
+    optional
+      .filter((element) => element.dataset.optional === group)
+      .forEach((element) => { element.hidden = true })
+  }
 }
 
 export function FlowLayout({
@@ -31,9 +46,23 @@ export function FlowLayout({
   primaryDisabled = false,
   footerNote,
   align = 'center',
+  fitViewport = false,
 }: Props) {
+  const bodyRef = useRef<HTMLDivElement | null>(null)
+
+  useLayoutEffect(() => {
+    const body = bodyRef.current
+    if (!fitViewport || !body) return
+    const fit = () => fitOptionalContent(body)
+    fit()
+    // Web fonts can change the text height after the first render.
+    void document.fonts?.ready.then(fit)
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [fitViewport, children])
+
   return (
-    <main className={`flow-screen flow-align-${align}`}>
+    <main className={`flow-screen flow-align-${align}${fitViewport ? ' flow-fit' : ''}`}>
       <div className="flow-topbar">
         {onBack ? (
           <button type="button" className="flow-back" onClick={onBack} aria-label="Back">
@@ -59,7 +88,7 @@ export function FlowLayout({
         )}
       </div>
 
-      <div className="flow-body">
+      <div className="flow-body" ref={bodyRef}>
         <h1 className="flow-title">{title}</h1>
         {subtitle && <p className="flow-subtitle">{subtitle}</p>}
         <div className="flow-content">{children}</div>

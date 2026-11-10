@@ -1,4 +1,4 @@
-import { BadgeCheck, CalendarDays, Fish, Mountain, QrCode, ShieldCheck, Users, Waves } from 'lucide-react'
+import { BadgeCheck, Bike, CalendarCheck, CalendarDays, Fish, Megaphone, Mountain, QrCode, ShieldCheck, Sunrise, Users, Waves } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ActivityCard } from '../components/ActivityCard'
@@ -14,8 +14,11 @@ const slides = [
     title: <><em>Find your crew</em> for the things you love doing</>,
     visual: (
       <div className="flow-showcase flow-showcase-cards" aria-hidden="true">
-        {communityMembers.slice(0, 6).map((member) => (
-          <MateCard key={member.name} member={member} onClick={() => {}} />
+        {communityMembers.slice(0, 6).map((member, index) => (
+          // Rows after the first drop out on short screens, two cards at a time.
+          <div key={member.name} className="flow-showcase-card" data-optional={index >= 2 ? `crew-row-${Math.floor(index / 2)}` : undefined}>
+            <MateCard member={member} onClick={() => {}} />
+          </div>
         ))}
       </div>
     ),
@@ -47,12 +50,26 @@ const slides = [
           <span className="showcase-patch"><Mountain />Trailhead</span>
           <span className="showcase-patch"><Users />Crew</span>
         </div>
+        <div className="showcase-patches" data-optional="patches-row-2">
+          <span className="showcase-patch"><Sunrise />Early bird</span>
+          <span className="showcase-patch"><CalendarCheck />Regular</span>
+          <span className="showcase-patch"><Megaphone />Host</span>
+          <span className="showcase-patch"><Bike />First ride</span>
+        </div>
         <div className="showcase-row">
           <CalendarDays />
           <span className="grow">
             <strong>Monthly challenge</strong>
             <small>2 of 4 meetups</small>
             <div className="showcase-progress"><span style={{ width: '50%' }} /></div>
+          </span>
+        </div>
+        <div className="showcase-row" data-optional="challenge-2">
+          <Waves />
+          <span className="grow">
+            <strong>Summer salt water</strong>
+            <small>1 of 3 ocean sessions · ends 31 Jan</small>
+            <div className="showcase-progress"><span style={{ width: '33%' }} /></div>
           </span>
         </div>
       </div>
@@ -97,6 +114,7 @@ export function WelcomeScreen() {
 
   return (
     <FlowLayout
+      fitViewport
       progress={(index + 1) / slides.length}
       title={slide.title}
       onBack={index > 0 ? () => setIndex(index - 1) : undefined}

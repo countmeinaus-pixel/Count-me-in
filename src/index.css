@@ -4156,6 +4156,10 @@ span.user-avatar {
   padding: 16px 0 calc(4px + env(safe-area-inset-bottom, 0px));
 }
 .flow-primary { width: 100%; border-radius: 999px; }
+/* Welcome slides: exactly one screen high, the button stays at the bottom. */
+.flow-screen.flow-fit { height: 100dvh; min-height: 0; overflow: hidden; }
+.flow-fit .flow-body { min-height: 0; overflow: hidden; }
+.flow-fit .flow-footer { position: static; }
 .flow-field { display: grid; gap: 8px; color: var(--text-secondary); font-size: 14px; }
 .flow-field input,
 .flow-field textarea {
@@ -4198,10 +4202,6 @@ span.user-avatar {
   border: 0;
   background: transparent;
   box-shadow: none;
-}
-/* Phones: 2 by 2 so the cards fit above the Continue button. */
-@media (max-width: 599px) {
-  .flow-showcase-cards > :nth-child(n + 5) { display: none; }
 }
 .showcase-row {
   display: flex;
@@ -4398,3 +4398,4 @@ span.user-avatar {
 .help-tour-actions { display: grid; gap: 10px; margin-bottom: 20px; }
 .help-tour-actions .button { gap: 8px; }
 .help-tour-actions svg { width: 18px; height: 18px; }
+.flow-showcase-card .mate-card { height: 100%; }

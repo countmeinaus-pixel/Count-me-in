@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
 import { Button } from "../components/Button"
 import { activities } from "../data/mockData"
@@ -12,6 +12,7 @@ import { hasDemoJoinRequest } from "../lib/demoParticipation"
 
 export function MyActivitiesScreen() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [segment, setSegment] = useState<"upcoming" | "past">("upcoming")
   const [savedActivities, setSavedActivities] = useState<MySavedActivity[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -87,6 +88,12 @@ export function MyActivitiesScreen() {
         <p className="eyebrow">Your plans</p>
         <h1>My activities</h1>
       </header>
+
+      {typeof location.state?.statusMessage === "string" && (
+        <p className="activity-share-feedback" role="status">
+          {location.state.statusMessage}
+        </p>
+      )}
 
       <Button
         className="my-activities-create"

@@ -141,7 +141,32 @@ export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
     .order("starts_at", { ascending: true })
   if (activitiesError) throw activitiesError
 
-  const rows = activityRows ?? []
+  return toFeedActivities(client, activityRows ?? [], viewerId)
+}
+
+type ActivityFeedRow = {
+  id: string
+  host_id: string
+  sport_id: number
+  title: string
+  starts_at: string
+  meeting_point: string
+  suburb: string
+  spots_total: number
+  level_wanted: string
+  notes: string
+  sport_details: unknown
+  cover_image_url: string | null
+}
+
+const feedActivityColumns =
+  "id, host_id, sport_id, title, starts_at, meeting_point, suburb, spots_total, level_wanted, notes, sport_details, cover_image_url"
+
+async function toFeedActivities(
+  client: ReturnType<typeof requireSupabase>,
+  rows: ActivityFeedRow[],
+  viewerId: string | null,
+): Promise<FeedActivity[]> {
   if (!rows.length) return []
 
   const activityIds = rows.map((activity) => activity.id)
@@ -536,4 +561,74 @@ export async function respondToActivityInvite(
     throw error
   }
   window.dispatchEvent(new Event("count-me-in-invites-changed"))
+}
+
+// Host takes the activity down. Everyone going or waiting gets a notification
+// with the optional message. Returns how many members were notified.
+export async function cancelActivity(activityId: string, message = "") {
+  const { data, error } = await requireSupabase().rpc("cancel_activity", {
+    target_activity_id: activityId,
+    cancel_message: message.trim(),
+  })
+  if (error) {
+    if (isMissingDatabaseFeature(error))
+      throw new Error(databaseUpdateNeededMessage)
+    throw error
+  }
+  return typeof data === "number" ? data : 0
+}
+
+export type ProfileActivities = {
+  upcoming: FeedActivity[]
+  latest: FeedActivity | null
+}
+
+// Activities a member hosts or is going to: upcoming ones, plus the most
+// recent one that already happened.
+export async function getProfileActivities(
+  profileId: string,
+): Promise<ProfileActivities> {
+  const client = requireSupabase()
+  const { data: sessionData, error: sessionError } =
+    await client.auth.getSession()
+  if (sessionError) throw sessionError
+  const viewerId = sessionData.session?.user.id ?? null
+
+  const { data: joined, error: joinedError } = await client
+    .from("activity_join_requests")
+    .select("activity_id")
+    .eq("user_id", profileId)
+    .eq("status", "accepted")
+  if (joinedError) throw joinedError
+
+  const joinedIds = (joined ?? []).map((row) => row.activity_id)
+  const filter = joinedIds.length
+    ? `host_id.eq.${profileId},id.in.(${joinedIds.join(",")})`
+    : `host_id.eq.${profileId}`
+  const now = new Date().toISOString()
+
+  const [upcomingResult, latestResult] = await Promise.all([
+    client
+      .from("activities")
+      .select(feedActivityColumns)
+      .or(filter)
+      .gte("starts_at", now)
+      .order("starts_at", { ascending: true })
+      .limit(5),
+    client
+      .from("activities")
+      .select(feedActivityColumns)
+      .or(filter)
+      .lt("starts_at", now)
+      .order("starts_at", { ascending: false })
+      .limit(1),
+  ])
+  if (upcomingResult.error) throw upcomingResult.error
+  if (latestResult.error) throw latestResult.error
+
+  const [upcoming, latest] = await Promise.all([
+    toFeedActivities(client, upcomingResult.data ?? [], viewerId),
+    toFeedActivities(client, latestResult.data ?? [], viewerId),
+  ])
+  return { upcoming, latest: latest[0] ?? null }
 }

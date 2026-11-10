@@ -16,9 +16,9 @@ export const appTourSteps: TourStep[] = [
     title: 'For example',
     body: 'Tap a sport to start. A finished callout could look like this:',
     example: {
-      label: 'Spearfishing',
+      label: 'Freediving',
       lines: [
-        'Spearfishing at Port Noarlunga reef',
+        'Freediving at Port Noarlunga reef',
         'Saturday 7:00 am · Port Noarlunga jetty car park',
         '3 spots · Intermediate · 5 to 10 m',
       ],

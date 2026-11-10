@@ -12,7 +12,7 @@ import {
   uploadActivityCover,
 } from '../lib/activityImages'
 import { cancelActivity } from '../lib/activityParticipation'
-import { formatCoordinates, isMissingLocationColumns, parseCoordinates } from '../lib/location'
+import { formatCoordinates, isMissingLocationColumns, locationNotSavedMessage, parseCoordinates } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 const levels = ['Beginner friendly', 'Intermediate', 'Experienced']
@@ -205,7 +205,8 @@ export function EditActivityScreen() {
         .eq('id', activity.id)
 
       // Before the location update is run in Supabase, save without address and map pin.
-      if (updateError && isMissingLocationColumns(updateError)) {
+      const locationSkipped = Boolean(updateError && isMissingLocationColumns(updateError))
+      if (locationSkipped) {
         ({ error: updateError } = await supabase
           .from('activities')
           .update(activityChanges)
@@ -227,7 +228,9 @@ export function EditActivityScreen() {
 
       navigate(`/activity/${activity.id}`, {
         replace: true,
-        state: cleanupWarning ? { statusMessage: cleanupWarning } : undefined,
+        state: locationSkipped && (address.trim() || pin)
+          ? { statusMessage: locationNotSavedMessage }
+          : cleanupWarning ? { statusMessage: cleanupWarning } : undefined,
       })
     } catch (saveError) {
       const message = getErrorMessage(saveError)

@@ -25,7 +25,7 @@ import { LocationFields } from '../components/LocationFields'
 import { activities, getDefaultActivityHero } from '../data/mockData'
 import { compressActivityCover, deleteActivityCover, uploadActivityCover } from '../lib/activityImages'
 import { getMetMates } from '../lib/friends'
-import { isMissingLocationColumns, parseCoordinates } from '../lib/location'
+import { isMissingLocationColumns, locationNotSavedMessage, parseCoordinates } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 type SportOption = {
@@ -480,7 +480,8 @@ export function CreateActivityScreen() {
         .single()
 
       // Before the location update is run in Supabase, save without address and map pin.
-      if (createError && isMissingLocationColumns(createError)) {
+      const locationSkipped = Boolean(createError && isMissingLocationColumns(createError))
+      if (locationSkipped) {
         ({ data: createdActivity, error: createError } = await client
           .from('activities')
           .insert(activityRow)
@@ -517,7 +518,9 @@ export function CreateActivityScreen() {
         }
       }
 
-      navigate(`/activity/${createdActivity.id}`)
+      navigate(`/activity/${createdActivity.id}`, {
+        state: locationSkipped && (address.trim() || pin) ? { statusMessage: locationNotSavedMessage } : undefined,
+      })
     } catch (postError) {
       const message = getErrorMessage(postError, 'Unable to post this activity.')
       if (uploadedCoverPath && !activityCreated) {

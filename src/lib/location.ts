@@ -29,6 +29,9 @@ export function getDirectionsUrl(place: {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
 }
 
+export const locationNotSavedMessage =
+  'Saved, but the address and map pin were not: the database needs an update first. Add them again with Edit activity once that is done.'
+
 // True when the location columns are not in the database yet.
 export function isMissingLocationColumns(error: unknown) {
   const code = typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : ''

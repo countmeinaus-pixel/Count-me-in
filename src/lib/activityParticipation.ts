@@ -537,3 +537,18 @@ export async function respondToActivityInvite(
   }
   window.dispatchEvent(new Event("count-me-in-invites-changed"))
 }
+
+// Host takes the activity down. Everyone going or waiting gets a notification
+// with the optional message. Returns how many members were notified.
+export async function cancelActivity(activityId: string, message = "") {
+  const { data, error } = await requireSupabase().rpc("cancel_activity", {
+    target_activity_id: activityId,
+    cancel_message: message.trim(),
+  })
+  if (error) {
+    if (isMissingDatabaseFeature(error))
+      throw new Error(databaseUpdateNeededMessage)
+    throw error
+  }
+  return typeof data === "number" ? data : 0
+}

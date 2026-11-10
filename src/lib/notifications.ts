@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export type AppNotificationType = 'participant_left' | 'invite' | 'invite_accepted' | 'invite_declined'
+export type AppNotificationType = 'participant_left' | 'invite' | 'invite_accepted' | 'invite_declined' | 'activity_cancelled'
 
 export type AppNotification = {
   id: string

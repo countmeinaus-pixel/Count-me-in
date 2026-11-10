@@ -57,6 +57,7 @@ const titles = {
   invite: 'You’re invited',
   invite_accepted: 'Invitation accepted',
   invite_declined: 'Invitation declined',
+  activity_cancelled: 'Activity cancelled',
 } as const
 
 function formatRelativeTime(value: string) {

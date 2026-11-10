@@ -1,5 +1,5 @@
 import { activities, demoConfirmedMeetups } from '../data/mockData'
-import { patchDefinitions, type PatchDefinition } from '../data/patches'
+import { patchDefinitions, type PatchDefinition, type SportPatchRule } from '../data/patches'
 import { supabase } from './supabase'
 
 export type ConfirmedMeetup = {
@@ -14,6 +14,7 @@ export type ConfirmedMeetup = {
   hosted: boolean
   oceanActivity?: boolean
   terrain?: string
+  details?: Record<string, string>
 }
 
 type StoredConfirmedMeetup = Omit<ConfirmedMeetup, 'sport' | 'startsAt' | 'hosted'>
@@ -164,6 +165,7 @@ export async function loadSavedMeetupsForUser(userName?: string): Promise<string
         hosted: activity.host_id === userData.user.id,
         oceanActivity: typeof location === 'string' && location.toLowerCase() === 'ocean',
         terrain: typeof terrain === 'string' ? terrain : undefined,
+        details: sportDetails,
       }]
     }),
   )
@@ -297,8 +299,40 @@ export function getLollipopChartForUser(user: string, months = 6) {
   return labels.map((month) => ({ ...month, maximum }))
 }
 
-export function getPatchMetricProgress(metric: PatchDefinition['metric'], entries: ConfirmedMeetup[]) {
+function matchesSportRule(entry: ConfirmedMeetup, rule: SportPatchRule) {
+  if (entry.sport !== rule.sport) return false
+  if (rule.early && new Date(entry.startsAt).getHours() >= 7) return false
+  if (rule.detail) {
+    const value = entry.details?.[rule.detail.key]
+      ?? (rule.detail.key === 'location' && entry.oceanActivity ? 'Ocean' : undefined)
+      ?? (rule.detail.key === 'terrain' ? entry.terrain : undefined)
+    if (!value || !rule.detail.values.includes(value)) return false
+  }
+  if (rule.minNumber) {
+    const value = Number.parseFloat(entry.details?.[rule.minNumber.key] ?? '')
+    if (!Number.isFinite(value) || value < rule.minNumber.value) return false
+  }
+  return true
+}
+
+export function getPatchMetricProgress(
+  metric: PatchDefinition['metric'],
+  entries: ConfirmedMeetup[],
+  sportRule?: SportPatchRule,
+) {
   switch (metric) {
+    case 'sport': {
+      if (!sportRule) return { progress: 0, qualifyingEntries: [] }
+      // One session per activity, however many partners confirmed it.
+      const qualifyingEntries = [
+        ...new Map(
+          entries
+            .filter((entry) => matchesSportRule(entry, sportRule))
+            .map((entry) => [entry.activityId, entry]),
+        ).values(),
+      ]
+      return { progress: qualifyingEntries.length, qualifyingEntries }
+    }
     case 'meetups':
       return { progress: entries.length, qualifyingEntries: entries }
     case 'earlyBird': {
@@ -343,7 +377,7 @@ export function getPatchProgressForUser(user: string): PatchProgress[] {
     .sort((left, right) => left.confirmedAt.localeCompare(right.confirmedAt))
 
   return patchDefinitions.map((definition) => {
-    const { progress, qualifyingEntries } = getPatchMetricProgress(definition.metric, entries)
+    const { progress, qualifyingEntries } = getPatchMetricProgress(definition.metric, entries, definition.sportRule)
     const earned = progress >= definition.target
     return {
       ...definition,

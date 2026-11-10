@@ -1437,7 +1437,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   width: auto;
   gap: 8px;
   padding: 0 16px;
-  margin-bottom: 4px;
+  margin-bottom: 20px;
 }
 .my-activities-create svg { width: 18px; height: 18px; }
 

@@ -3442,6 +3442,18 @@ h3 { font: 700 21px/24px var(--font-display); }
 .wizard-actions .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .wizard-actions svg { width: 18px; height: 18px; }
 .wizard-actions .button-primary { min-width: 150px; }
+.profile-activities {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+.profile-activities h3 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
 .edit-activity-cancel {
   margin-top: 40px;
   padding-top: 24px;

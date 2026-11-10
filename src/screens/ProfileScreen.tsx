@@ -8,12 +8,14 @@ import {
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
 import { Avatar } from "../components/Avatar"
 import { MateCard } from "../components/MateCard"
 import { PatchIcon } from "../components/PatchIcon"
 import { ReportDialog } from "../components/ReportDialog"
 import { SportIcon } from "../components/SportIcon"
 import {
+  activities as demoActivities,
   communityMembers,
   currentUser,
   type CommunityMember,
@@ -31,6 +33,10 @@ import {
   type CurrentProfile,
 } from "../lib/profile"
 import { supabase } from "../lib/supabase"
+import {
+  getProfileActivities,
+  type FeedActivity,
+} from "../lib/activityParticipation"
 import { addBlockedUser, getBlockedUsers } from "../lib/localPreferences"
 import {
   blockProfile,
@@ -71,6 +77,11 @@ export function ProfileScreen() {
 
   const isCurrentUser =
     !profileParam || decodeURIComponent(profileParam) === currentUser.name
+  const [profileActivities, setProfileActivities] = useState<{
+    upcoming: ActivityCardData[]
+    latest: ActivityCardData | null
+  } | null>(null)
+  const [profileActivitiesError, setProfileActivitiesError] = useState("")
 
   useEffect(() => {
     const name = decodeURIComponent(profileParam ?? "")
@@ -196,6 +207,58 @@ export function ProfileScreen() {
             ],
             stats: { meetups: 4, hosted: 1, sports: 2 },
           })
+  const profileId = isCurrentUser ? savedProfile?.id : remoteProfile?.id
+  const profileName = profile.name
+
+  useEffect(() => {
+    const toCard = ({ viewerJoinStatus, ...activity }: FeedActivity) => ({
+      ...activity,
+      joinStatus: viewerJoinStatus ?? undefined,
+    })
+
+    if (!profileId) {
+      // Demo profiles: use the demo activities they host or go to.
+      const now = Date.now()
+      const theirs = demoActivities.filter(
+        (activity) =>
+          activity.host === profileName ||
+          activity.attendees.includes(profileName),
+      )
+      setProfileActivities({
+        upcoming: theirs.filter((activity) => activity.startsAt.getTime() >= now),
+        latest:
+          theirs
+            .filter((activity) => activity.startsAt.getTime() < now)
+            .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())[0] ??
+          null,
+      })
+      return
+    }
+
+    let active = true
+    setProfileActivities(null)
+    setProfileActivitiesError("")
+    getProfileActivities(profileId)
+      .then((result) => {
+        if (!active) return
+        setProfileActivities({
+          upcoming: result.upcoming.map(toCard),
+          latest: result.latest ? toCard(result.latest) : null,
+        })
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setProfileActivitiesError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load this member's activities.",
+          )
+      })
+    return () => {
+      active = false
+    }
+  }, [profileId, profileName])
+
   const confirmedMeetups = useMemo(
     () => getConfirmedMeetupsForUser(profile.name),
     [profile.name, checkinVersion],
@@ -441,6 +504,34 @@ export function ProfileScreen() {
             </div>
           ))}
         </div>
+
+        {profileActivitiesError ? (
+          <p className="edit-form-error" role="alert">
+            {profileActivitiesError}
+          </p>
+        ) : profileActivities && profileActivities.upcoming.length > 0 ? (
+          <div className="profile-activities">
+            <h3>Upcoming</h3>
+            {profileActivities.upcoming.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                onClick={() => navigate(`/activity/${activity.id}`)}
+              />
+            ))}
+          </div>
+        ) : profileActivities?.latest ? (
+          <div className="profile-activities">
+            <h3>Latest meetup</h3>
+            <ActivityCard
+              activity={profileActivities.latest}
+              onClick={() =>
+                profileActivities.latest &&
+                navigate(`/activity/${profileActivities.latest.id}`)
+              }
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className="section-heading compact">

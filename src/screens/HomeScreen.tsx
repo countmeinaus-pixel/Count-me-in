@@ -160,6 +160,14 @@ export function HomeScreen() {
     [communityMembers, firstName, userSportNames, userSuburb, blockedNames],
   )
 
+  // Start at the first suggestion when Home opens or the list reloads.
+  const suggestionKey = crewSuggestions.map(({ member }) => member.id ?? member.name).join('|')
+  useEffect(() => {
+    const row = suggestionRowRef.current
+    if (row) row.scrollLeft = 0
+    setActiveSuggestion(0)
+  }, [suggestionKey])
+
   function handleSuggestionScroll() {
     const row = suggestionRowRef.current
     const first = row?.firstElementChild as HTMLElement | null

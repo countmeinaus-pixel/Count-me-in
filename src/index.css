@@ -3565,3 +3565,12 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--text-primary);
   font-size: 14px;
 }
+
+.kite-size-picker { grid-column: 1 / -1; min-width: 0; }
+.kite-size-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.kite-size-chips .chip { min-height: 44px; }

@@ -572,10 +572,12 @@ export function ActivityDetailScreen() {
   const savedDetails = savedActivity
   const sportFacts = savedDetails
     ? [
-        ...Object.entries(savedDetails.sportDetails).map(([key, value]) => ({
-          label: key.replace(/_/g, " "),
-          value,
-        })),
+        ...Object.entries(savedDetails.sportDetails)
+          .filter(([, value]) => value.trim() !== "")
+          .map(([key, value]) => ({
+            label: key === "kite_sizes" ? "Kites" : key.replace(/_/g, " "),
+            value,
+          })),
         {
           label: "Duration",
           value:

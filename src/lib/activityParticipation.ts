@@ -204,7 +204,8 @@ export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
       activity.sport_details !== null &&
       !Array.isArray(activity.sport_details)
         ? Object.values(activity.sport_details).filter(
-            (value): value is string => typeof value === "string",
+            (value): value is string =>
+              typeof value === "string" && value.trim() !== "",
           )
         : []
     const viewerRequest = activityRequests.find(
@@ -350,7 +351,8 @@ export async function getMySavedActivities(): Promise<MySavedActivity[]> {
         activity.sport_details !== null &&
         !Array.isArray(activity.sport_details)
           ? Object.values(activity.sport_details).filter(
-              (value): value is string => typeof value === "string",
+              (value): value is string =>
+              typeof value === "string" && value.trim() !== "",
             )
           : []
       const icon: ActivityIcon = getSportIcon(sport)

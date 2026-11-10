@@ -2,6 +2,7 @@ import { ArrowLeft, ImagePlus } from 'lucide-react'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
+import { KiteSizePicker } from '../components/KiteSizePicker'
 import { getSavedActivity, type SavedActivityDetails } from '../lib/activities'
 import {
   compressActivityCover,
@@ -318,7 +319,19 @@ export function EditActivityScreen() {
               {levels.map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </label>
-          {Object.entries(sportDetails).map(([key, value]) => (
+          {activity.sport === 'Kitesurfing' && !('kite_sizes' in sportDetails) && (
+            <KiteSizePicker
+              value=""
+              onChange={(value) => setSportDetails((current) => ({ ...current, kite_sizes: value }))}
+            />
+          )}
+          {Object.entries(sportDetails).map(([key, value]) => key === 'kite_sizes' ? (
+            <KiteSizePicker
+              key={key}
+              value={value}
+              onChange={(nextValue) => setSportDetails((current) => ({ ...current, kite_sizes: nextValue }))}
+            />
+          ) : (
             <label className="field" key={key}>
               <span>{key.replace(/_/g, ' ')}</span>
               <input

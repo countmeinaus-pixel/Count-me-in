@@ -41,7 +41,7 @@ Every activity has the **common fields** plus the **preset fields** of its sport
 | Running | `footprints` | Distance (km), Pace (Easy 6:30+ /km, Steady 5:30 to 6:30, Fast under 5:30), Terrain (Road, Trail, Track) |
 | Hiking | `mountain` | Trail or destination, Distance (km), Elevation (Flat, Moderate, Steep), Est. duration (hrs) |
 | Spearfishing | `fish` | Spot, Depth (0 to 5 m, 5 to 10 m, 10 to 15 m, 15 m+), Entry (Shore dive, Boat dive), Duration (hrs), Own gear needed (Yes/No) |
-| Kitesurfing | `wind` | Spot, Discipline (Freeride, Freestyle, Foil, Wave), Duration (hrs) |
+| Kitesurfing | `wind` | Spot, Discipline (Freeride, Freestyle, Foil, Wave), Kite sizes (multi-select chips 6 to 14 m², helper "Which kites are you bringing?", shown as "Kites: 9, 12 m²"), Duration (hrs) |
 | Surfing | `waves` | Spot, Board (Shortboard, Longboard, Any), Duration (hrs) |
 | Swimming | `waves` (seafoam tint) | Location (Ocean, Pool), Distance (m), Pace (Relaxed, Steady, Training) |
 | Gym | `dumbbell` | Gym name, Focus (Strength, Hypertrophy, Cardio, Functional), Duration (mins) |

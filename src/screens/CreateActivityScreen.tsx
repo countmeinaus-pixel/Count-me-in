@@ -20,6 +20,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentT
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Avatar } from '../components/Avatar'
+import { KiteSizePicker } from '../components/KiteSizePicker'
 import { activities, getDefaultActivityHero } from '../data/mockData'
 import { compressActivityCover, deleteActivityCover, uploadActivityCover } from '../lib/activityImages'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
@@ -36,7 +37,7 @@ type PresetField = {
   label: string
   placeholder?: string
   options?: string[]
-  type?: 'text' | 'number' | 'textarea'
+  type?: 'text' | 'number' | 'textarea' | 'kite_sizes'
   min?: number
   max?: number
   step?: number
@@ -56,6 +57,7 @@ const presetFields: Record<string, PresetField[]> = {
   Kitesurfing: [
     { key: 'spot', label: 'Spot', placeholder: 'For example, Brighton' },
     { key: 'discipline', label: 'Discipline', options: ['Freeride', 'Freestyle', 'Foil', 'Wave'] },
+    { key: 'kite_sizes', label: 'Kite sizes', type: 'kite_sizes' },
     { key: 'duration_hours', label: 'Duration (hours)', type: 'number', min: 0.25, max: 24, step: 0.25 },
   ],
   Hiking: [
@@ -729,7 +731,13 @@ export function CreateActivityScreen() {
                   <p>Optional, but helpful for the crew.</p>
                 </div>
                 <div className="wizard-field-grid">
-                  {preset.map((field) => (
+                  {preset.map((field) => field.type === 'kite_sizes' ? (
+                    <KiteSizePicker
+                      key={field.key}
+                      value={sportDetails[field.key]}
+                      onChange={(value) => updateSportDetail(field.key, value)}
+                    />
+                  ) : (
                     <label className="field" key={field.key}>
                       <span>{field.label}</span>
                       {field.options ? (
@@ -886,7 +894,7 @@ export function CreateActivityScreen() {
               {Object.entries(sportDetails)
                 .filter(([key, value]) => key !== 'activity_name' && value.trim())
                 .map(([key, value]) => (
-                <p key={key}>{key.replace(/_/g, ' ')}: {value}</p>
+                <p key={key}>{key === 'kite_sizes' ? 'Kites' : key.replace(/_/g, ' ')}: {value}</p>
               ))}
               {notes.trim() && <p>{notes.trim()}</p>}
               <p>Level: {level}</p>

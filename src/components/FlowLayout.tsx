@@ -17,16 +17,24 @@ type Props = {
   footerNote?: ReactNode
   align?: 'center' | 'start'
   // Fit the screen without scrolling: extra examples marked data-optional are
-  // hidden, last group first, until the content fits above the button.
+  // hidden, group by group, until the content fits above the button. Groups go
+  // in data-optional-drop order (1 first), otherwise last group first.
   fitViewport?: boolean
 }
 
 function fitOptionalContent(body: HTMLElement) {
   const optional = [...body.querySelectorAll<HTMLElement>('[data-optional]')]
   optional.forEach((element) => { element.hidden = false })
+  const dropOrder = (group: string, index: number) => {
+    const element = optional.find((item) => item.dataset.optional === group)
+    return Number(element?.dataset.optionalDrop ?? 1000 - index)
+  }
   const groups = [...new Set(optional.map((element) => element.dataset.optional ?? ''))]
+    .map((group, index) => ({ group, order: dropOrder(group, index) }))
+    .sort((a, b) => a.order - b.order)
+    .map(({ group }) => group)
   while (body.scrollHeight > body.clientHeight && groups.length > 0) {
-    const group = groups.pop()
+    const group = groups.shift()
     optional
       .filter((element) => element.dataset.optional === group)
       .forEach((element) => { element.hidden = true })

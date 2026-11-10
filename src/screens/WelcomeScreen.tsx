@@ -1,4 +1,4 @@
-import { BadgeCheck, Bike, CalendarCheck, CalendarDays, Fish, Megaphone, Mountain, QrCode, ShieldCheck, Sunrise, Users, Waves } from 'lucide-react'
+import { ArrowDownToLine, BadgeCheck, Bike, CalendarCheck, CalendarDays, Fish, LockKeyhole, Megaphone, Mountain, QrCode, Sailboat, ShieldCheck, Sunrise, Users, Waves } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ActivityCard } from '../components/ActivityCard'
@@ -50,11 +50,25 @@ const slides = [
           <span className="showcase-patch"><Mountain />Trailhead</span>
           <span className="showcase-patch"><Users />Crew</span>
         </div>
-        <div className="showcase-patches" data-optional="patches-row-2">
+        <div className="showcase-patches" data-optional="patches-row-2" data-optional-drop="2">
           <span className="showcase-patch"><Sunrise />Early bird</span>
           <span className="showcase-patch"><CalendarCheck />Regular</span>
           <span className="showcase-patch"><Megaphone />Host</span>
           <span className="showcase-patch"><Bike />First ride</span>
+        </div>
+        {/* Every sport has its own set of patches to collect. */}
+        <div className="showcase-sport" data-optional="sport-patches" data-optional-drop="3">
+          <div className="showcase-sport-heading">
+            <Fish />
+            <strong>Spearfishing patches</strong>
+            <small>2 of 20</small>
+          </div>
+          <div className="showcase-patches">
+            <span className="showcase-patch"><Fish />First dive</span>
+            <span className="showcase-patch"><Fish />Reef rookie</span>
+            <span className="showcase-patch locked"><ArrowDownToLine />Deep breath<LockKeyhole className="showcase-patch-lock" /></span>
+            <span className="showcase-patch locked"><Sailboat />Boat crew<LockKeyhole className="showcase-patch-lock" /></span>
+          </div>
         </div>
         <div className="showcase-row">
           <CalendarDays />
@@ -64,7 +78,7 @@ const slides = [
             <div className="showcase-progress"><span style={{ width: '50%' }} /></div>
           </span>
         </div>
-        <div className="showcase-row" data-optional="challenge-2">
+        <div className="showcase-row" data-optional="challenge-2" data-optional-drop="1">
           <Waves />
           <span className="grow">
             <strong>Summer salt water</strong>

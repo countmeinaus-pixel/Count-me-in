@@ -4158,7 +4158,9 @@ span.user-avatar {
 .flow-primary { width: 100%; border-radius: 999px; }
 /* Welcome slides: exactly one screen high, the button stays at the bottom. */
 .flow-screen.flow-fit { height: 100dvh; min-height: 0; overflow: hidden; }
-.flow-fit .flow-body { min-height: 0; overflow: hidden; }
+.flow-fit .flow-body { min-height: 0; overflow: hidden; padding-bottom: 28px; }
+/* A tighter shadow so it is not cut off at the bottom of the fitted area. */
+.flow-fit .flow-showcase:not(.flow-showcase-cards) { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3); }
 .flow-fit .flow-footer { position: static; }
 .flow-field { display: grid; gap: 8px; color: var(--text-secondary); font-size: 14px; }
 .flow-field input,
@@ -4243,6 +4245,27 @@ span.user-avatar {
   text-align: center;
 }
 .showcase-patch svg { width: 26px; height: 26px; }
+.showcase-patch { position: relative; }
+.showcase-patch.locked { background: var(--surface-2); color: var(--text-muted); }
+.showcase-patch .showcase-patch-lock {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 12px;
+  height: 12px;
+}
+.showcase-sport {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+.showcase-sport .showcase-patch.locked { background: var(--surface-3); }
+.showcase-sport-heading { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
+.showcase-sport-heading > svg { width: 20px; height: 20px; color: var(--seafoam); }
+.showcase-sport-heading strong { flex: 1; font: 700 15px/1.2 var(--font-display); }
+.showcase-sport-heading small { color: var(--text-secondary); font-size: 12px; }
 .showcase-progress { height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
 .showcase-progress span { display: block; height: 100%; background: var(--seafoam); }
 

@@ -2,7 +2,7 @@
 
 De automatische database-update via GitHub werkt nog niet (de geheime instellingen ontbreken). Plak deze bestanden daarom zelf in Supabase, **in deze volgorde**, één per keer.
 
-Alle vijf zijn veilig om opnieuw te draaien. Weet je niet zeker of je er een al gedaan hebt? Draai hem gewoon nog een keer.
+Alle zes zijn veilig om opnieuw te draaien. Weet je niet zeker of je er een al gedaan hebt? Draai hem gewoon nog een keer.
 
 | # | Bestand | Wat het doet |
 | --- | --- | --- |
@@ -11,6 +11,7 @@ Alle vijf zijn veilig om opnieuw te draaien. Weet je niet zeker of je er een al 
 | 3 | `supabase/migrations/20261110200000_challenge_enrollments.sql` | Aanmelden voor challenges op het Patches-scherm |
 | 4 | `supabase/migrations/20261110220000_personal_records.sql` | Personal records (PR's) claimen, bevestigen en flaggen, plus de fotomap `pr-proofs` |
 | 5 | `supabase/migrations/20261111090000_staff_verify_personal_records.sql` | Admins en moderators kunnen een PR direct verifiëren (Moderation > PRs to check) |
+| 6 | `supabase/migrations/20261111100000_pr_photo_cleanup.sql` | Bewijsfoto van een PR wordt verwijderd zodra de PR verified is |
 
 ## Zo doe je het (per bestand)
 
@@ -26,4 +27,5 @@ Alle vijf zijn veilig om opnieuw te draaien. Weet je niet zeker of je er een al 
 - **Na 2:** open een eigen activiteit, tik op **Edit activity**, scroll naar beneden en tik op **Cancel activity**. Je krijgt geen melding "This needs a database update" meer. Tik op **Keep it** als je niet echt wilt annuleren.
 - **Na 3:** ga naar **More** > **Patches** en tik bij een challenge op **Join challenge**. Er verschijnt een voortgangsbalk.
 - **Na 4:** ga naar **More** > **Personal records**. De rode melding is weg en je kunt op **Claim a PR** tikken.
+- **Na 6:** open **More** > **Personal records**. Bij een verified PR staat geen **View proof** meer.
 - **Na 5:** ga naar **More** > **Moderation** en tik op **PRs to check**. Je ziet PR's die nog niet verified zijn, met de knoppen **Verify** en **Remove**.

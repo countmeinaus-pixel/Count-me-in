@@ -1,4 +1,4 @@
-import { BadgeCheck, Flag, ShieldCheck, ThumbsUp, Trash2 } from 'lucide-react'
+import { BadgeCheck, Flag, ImageIcon, ShieldCheck, ThumbsUp, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { formatPrValue } from '../data/prTypes'
 import {
@@ -43,15 +43,7 @@ export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpe
   }
 
   return (
-    <article className={`pr-card ${verified ? 'verified' : ''}`}>
-      <button
-        type="button"
-        className="pr-card-photo"
-        onClick={() => setPhotoOpen(true)}
-        aria-label={`View proof photo for ${label}`}
-      >
-        <img src={record.photoUrl} alt="" loading="lazy" />
-      </button>
+    <article className={`pr-card ${verified ? 'pr-card-verified' : ''}`}>
       <div className="pr-card-body">
         {showOwner && (
           <button type="button" className="pr-card-owner" onClick={onOpenOwner}>
@@ -59,11 +51,27 @@ export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpe
             <span>{record.ownerName}</span>
           </button>
         )}
+        {record.viewerIsOwner && !staffMode && (
+          <button
+            type="button"
+            className="pr-card-delete"
+            aria-label={`Remove ${label} PR`}
+            title="Remove"
+            disabled={isBusy}
+            onClick={() => {
+              if (window.confirm('Remove this PR? Its confirms will be lost.')) {
+                void run(() => deletePersonalRecord(record))
+              }
+            }}
+          >
+            <Trash2 aria-hidden="true" />
+          </button>
+        )}
         <p className="eyebrow">{record.sport}</p>
         <strong className="pr-card-label">{label}</strong>
         <span className="pr-card-value">{formatPrValue(record.type, record.value)}</span>
         {record.note && <p className="pr-card-note">{record.note}</p>}
-        <span className={`pr-card-status ${verified ? 'verified' : ''}`}>
+        <span className={`pr-card-status ${verified ? 'is-verified' : ''}`}>
           {hidden
             ? 'Hidden: flagged by 3 members, waiting for a moderator'
             : record.staffVerified
@@ -72,6 +80,11 @@ export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpe
                 ? <><BadgeCheck aria-hidden="true" /> Verified by {record.confirmCount} members</>
                 : `${record.confirmCount} of ${prVerifyThreshold} confirms${record.flagCount > 0 ? ` · ${record.flagCount} ${record.flagCount === 1 ? 'flag' : 'flags'}` : ''}`}
         </span>
+        {record.photoUrl && !verified && (
+          <button type="button" className="pr-card-proof" onClick={() => setPhotoOpen(true)}>
+            <ImageIcon aria-hidden="true" /> View proof
+          </button>
+        )}
 
         {staffMode ? (
           <div className="pr-card-actions">
@@ -96,20 +109,7 @@ export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpe
               <Trash2 aria-hidden="true" /> Remove
             </button>
           </div>
-        ) : record.viewerIsOwner ? (
-          <button
-            type="button"
-            className="pr-card-delete"
-            disabled={isBusy}
-            onClick={() => {
-              if (window.confirm('Remove this PR? Its confirms will be lost.')) {
-                void run(() => deletePersonalRecord(record))
-              }
-            }}
-          >
-            <Trash2 aria-hidden="true" /> Remove
-          </button>
-        ) : (
+        ) : record.viewerIsOwner ? null : (
           <div className="pr-card-actions">
             <button
               type="button"
@@ -134,7 +134,7 @@ export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpe
         {error && <p className="activity-join-error" role="alert">{error}</p>}
       </div>
 
-      {photoOpen && (
+      {photoOpen && record.photoUrl && (
         <div className="pr-photo-viewer" role="dialog" aria-modal="true" aria-label={`Proof photo for ${label}`} onClick={() => setPhotoOpen(false)}>
           <img src={record.photoUrl} alt={`Proof for ${record.ownerName}'s ${label}`} />
           <button type="button" className="button button-secondary button-md" onClick={() => setPhotoOpen(false)}>Close</button>

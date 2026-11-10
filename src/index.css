@@ -403,6 +403,18 @@ h3 { font: 700 21px/24px var(--font-display); }
 .mate-card-location svg,
 .mate-card-meta svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }
 .mate-card-sports { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
+.mate-card-top,
+.mate-card-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100%;
+  min-width: 0;
+}
+/* Suggestions on Home: name, age and suburb next to the photo. */
+.mate-card.horizontal .mate-card-top { flex-direction: row; align-items: center; gap: 12px; }
+.mate-card.horizontal .mate-card-identity { gap: 4px; }
 .mate-sport,
 .mate-sport-more {
   max-width: 100%;
@@ -3739,28 +3751,13 @@ h3 { font: 700 21px/24px var(--font-display); }
 .pr-section-heading .button { width: auto; padding-inline: 16px; }
 .pr-list { display: grid; gap: 10px; }
 .pr-card {
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 14px;
-  padding: 12px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   background: var(--surface-1);
 }
-.pr-card.verified { border-color: var(--seafoam); }
-.pr-card-photo {
-  width: 96px;
-  height: 96px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--surface-2);
-  cursor: zoom-in;
-  align-self: start;
-}
-.pr-card-photo img { width: 100%; height: 100%; object-fit: cover; }
-.pr-card-body { display: grid; gap: 4px; min-width: 0; align-content: start; }
+.pr-card.pr-card-verified { border-color: var(--seafoam); }
+.pr-card-body { position: relative; display: grid; gap: 4px; min-width: 0; align-content: start; }
 .pr-card-owner {
   display: flex;
   align-items: center;
@@ -3783,10 +3780,10 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--text-secondary);
   font-size: 13px;
 }
-.pr-card-status.verified { color: var(--seafoam); font-weight: 600; }
+.pr-card-status.is-verified { color: var(--seafoam); font-weight: 600; }
 .pr-card-status svg { width: 16px; height: 16px; }
 .pr-card-actions { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-.pr-vote, .pr-card-delete {
+.pr-vote {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -3799,10 +3796,40 @@ h3 { font: 700 21px/24px var(--font-display); }
   font-size: 14px;
   cursor: pointer;
 }
-.pr-vote svg, .pr-card-delete svg { width: 16px; height: 16px; }
+.pr-vote svg { width: 16px; height: 16px; }
 .pr-vote.active { border-color: var(--seafoam); background: var(--seafoam-subtle); color: var(--seafoam); }
 .pr-vote.flag.active { border-color: var(--danger); background: var(--danger-subtle); color: var(--danger); }
-.pr-card-delete { justify-self: start; margin-top: 6px; color: var(--text-secondary); }
+.pr-card-delete {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.pr-card-delete svg { width: 18px; height: 18px; }
+.pr-card-delete:hover { color: var(--danger); }
+.pr-card-proof {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--seafoam);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pr-card-proof svg { width: 16px; height: 16px; }
 .pr-photo-viewer {
   position: fixed;
   inset: 0;

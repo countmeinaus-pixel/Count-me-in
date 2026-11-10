@@ -14,8 +14,8 @@ const slides = [
     title: <><em>Find your crew</em> for the things you love doing</>,
     visual: (
       <div className="flow-showcase flow-showcase-cards" aria-hidden="true">
-        {communityMembers.slice(0, 3).map((member) => (
-          <MateCard key={member.name} member={member} onClick={() => {}} horizontal />
+        {communityMembers.slice(0, 6).map((member) => (
+          <MateCard key={member.name} member={member} onClick={() => {}} />
         ))}
       </div>
     ),

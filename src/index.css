@@ -4188,8 +4188,18 @@ span.user-avatar {
 }
 .flow-showcase .activity-card,
 .flow-showcase .mate-card { pointer-events: none; }
-/* Crew cards stand on their own, like on Home. */
-.flow-showcase.flow-showcase-cards { padding: 0; border: 0; background: transparent; box-shadow: none; }
+/* Crew cards stand on their own, 2 a row like the Friends page. */
+.flow-showcase.flow-showcase-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* Phones: 2 by 2 so the cards fit above the Continue button. */
+@media (max-width: 599px) {
+  .flow-showcase-cards > :nth-child(n + 5) { display: none; }
+}
 .showcase-row {
   display: flex;
   align-items: center;

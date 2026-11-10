@@ -2,6 +2,7 @@ import { ArrowLeft, Search } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
+import { getProfilePath } from "../lib/profile"
 import { getBlockedUsers } from "../lib/localPreferences"
 import { getBlockedProfiles } from "../lib/moderation"
 import { useBackToMore } from "../lib/moreNavigation"
@@ -121,7 +122,7 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
                 key={member.id ?? member.name}
                 member={member}
                 onClick={() =>
-                  navigate(`/profile/${encodeURIComponent(member.name)}`)
+                  navigate(getProfilePath(member))
                 }
               />
             ))}
@@ -208,7 +209,7 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
               key={member.id ?? member.name}
               member={member}
               onClick={() =>
-                navigate(`/profile/${encodeURIComponent(member.name)}`)
+                navigate(getProfilePath(member))
               }
             />
           ))}

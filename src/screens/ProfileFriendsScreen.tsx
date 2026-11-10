@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
+import { getProfilePath } from "../lib/profile"
 import { friendNames } from "../lib/friends"
 import { getBlockedUsers } from "../lib/localPreferences"
 import { useCommunityMembers } from "../lib/useCommunityMembers"
@@ -58,7 +59,7 @@ export function ProfileFriendsScreen() {
                 key={member.id ?? member.name}
                 member={member}
                 onClick={() =>
-                  navigate(`/profile/${encodeURIComponent(member.name)}`)
+                  navigate(getProfilePath(member))
                 }
               />
             ))}

@@ -33,8 +33,11 @@ import {
   loadSavedMeetupsForUser,
 } from "../lib/checkins"
 import {
+  getCommunityProfileById,
   getCommunityProfileByName,
   getCurrentProfile,
+  getProfileIdFromKey,
+  getProfilePath,
   type CurrentProfile,
 } from "../lib/profile"
 import { supabase } from "../lib/supabase"
@@ -80,8 +83,24 @@ export function ProfileScreen() {
     label: string
   } | null>(null)
 
+  const profileKey = decodeURIComponent(profileParam ?? "")
+  const linkedProfileId = getProfileIdFromKey(profileKey)
+  const openedById = linkedProfileId !== null
+  // Your own account id, to tell your profile apart from someone with the same name.
+  const [viewerId, setViewerId] = useState<string | null>(null)
+  useEffect(() => {
+    if (!supabase) return
+    let active = true
+    void supabase.auth.getUser().then(({ data }) => {
+      if (active) setViewerId(data.user?.id ?? null)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
   const isCurrentUser =
-    !profileParam || decodeURIComponent(profileParam) === currentUser.name
+    !profileParam ||
+    (openedById ? linkedProfileId === viewerId : profileKey === currentUser.name)
   // While your own profile loads, show a loading state instead of the demo user.
   const [isOwnProfileLoading, setIsOwnProfileLoading] = useState(Boolean(supabase))
   const [profileActivities, setProfileActivities] = useState<{
@@ -90,17 +109,19 @@ export function ProfileScreen() {
   } | null>(null)
   const [profileActivitiesError, setProfileActivitiesError] = useState("")
 
+  // For a profile link with an account id: still loading, or no such member.
+  const [remoteLookupDone, setRemoteLookupDone] = useState(false)
   useEffect(() => {
-    const name = decodeURIComponent(profileParam ?? "")
     setRemoteProfile(null)
+    setRemoteLookupDone(false)
     if (
       isCurrentUser ||
-      communityMembers.some((member) => member.name === name)
+      (!openedById && communityMembers.some((member) => member.name === profileKey))
     )
       return
 
     let active = true
-    getCommunityProfileByName(name)
+    ;(linkedProfileId ? getCommunityProfileById(linkedProfileId) : getCommunityProfileByName(profileKey))
       .then((member) => {
         if (active) setRemoteProfile(member)
       })
@@ -112,10 +133,13 @@ export function ProfileScreen() {
               : "Unable to load this profile.",
           )
       })
+      .finally(() => {
+        if (active) setRemoteLookupDone(true)
+      })
     return () => {
       active = false
     }
-  }, [isCurrentUser, profileParam])
+  }, [isCurrentUser, linkedProfileId, openedById, profileKey])
 
   useEffect(() => {
     let active = true
@@ -204,11 +228,12 @@ export function ProfileScreen() {
         }
       : isCurrentUser
         ? currentUser
-        : (communityMembers.find(
-            (member) => member.name === decodeURIComponent(profileParam ?? ""),
-          ) ??
+        : ((openedById
+            ? undefined
+            : communityMembers.find((member) => member.name === profileKey)) ??
           remoteProfile ?? {
-            name: decodeURIComponent(profileParam ?? currentUser.name),
+            // Never show an account id as a name while the profile loads.
+            name: openedById ? "" : profileKey || currentUser.name,
             age: 31,
             suburb: "Adelaide",
             verified: true,
@@ -380,6 +405,21 @@ export function ProfileScreen() {
     setOpenFriendMenu(null)
     setProfileMenuOpen(false)
     return true
+  }
+
+  if (openedById && !isCurrentUser && !remoteProfile) {
+    return (
+      <div className="screen profile-page" aria-busy={!remoteLookupDone}>
+        <header className="topbar">
+          <button type="button" className="icon-button" aria-label="Back" onClick={() => navigate(-1)}>
+            <ArrowLeft />
+          </button>
+        </header>
+        <p className="text-[var(--text-secondary)]" role="status">
+          {remoteLookupDone ? "This profile could not be found." : "Loading profile…"}
+        </p>
+      </div>
+    )
   }
 
   if (isCurrentUser && isOwnProfileLoading) {
@@ -779,7 +819,7 @@ export function ProfileScreen() {
               <MateCard
                 member={member}
                 onClick={() =>
-                  navigate(`/profile/${encodeURIComponent(friend.name)}`)
+                  navigate(getProfilePath(member))
                 }
               />
               <div

@@ -30,7 +30,7 @@ import {
 } from "../lib/activityParticipation"
 import { getActivityChatThreadId } from "../lib/chat"
 import { getDirectionsUrl } from "../lib/location"
-import { getCurrentProfile } from "../lib/profile"
+import { getCurrentProfile, getProfilePath } from "../lib/profile"
 import {
   getDemoJoinRequestKey,
   hasDemoJoinRequest,
@@ -640,13 +640,15 @@ export function ActivityDetailScreen() {
       : communityMembers.find((member) => member.name === hostName)?.age)
   const attendeeProfiles: Array<{
     key: string
+    id?: string
     name: string
     photoUrl: string | null
   }> = savedDetails
     ? [
-        { key: "host", name: savedDetails.host, photoUrl: savedDetails.hostPhoto },
+        { key: "host", id: savedDetails.hostId, name: savedDetails.host, photoUrl: savedDetails.hostPhoto },
         ...(joinState?.acceptedParticipants.map((participant) => ({
           key: participant.id,
+          id: participant.id,
           name: participant.name,
           photoUrl: participant.photoUrl,
         })) ?? []),
@@ -828,7 +830,7 @@ export function ActivityDetailScreen() {
               className="going-avatar-button"
               aria-label={`View ${attendee.name}'s profile`}
               onClick={() =>
-                navigate(`/profile/${encodeURIComponent(attendee.name)}`)
+                navigate(getProfilePath(attendee))
               }
             >
               <Avatar

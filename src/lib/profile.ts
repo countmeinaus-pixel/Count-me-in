@@ -410,6 +410,37 @@ export async function getCommunityProfiles(limit = 50): Promise<CommunityMember[
   return toCommunityMembers(data ?? [])
 }
 
+const profileIdPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Real members open as /profile/name-<account id>, e.g. /profile/jai-8f3c…, so
+// two people with the same first name never mix up. Demo members (no id) open by name.
+export function getProfilePath(member: { id?: string | null; name: string }) {
+  if (!member.id) return `/profile/${encodeURIComponent(member.name)}`
+  const slug = member.name
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return `/profile/${slug ? `${slug}-` : ''}${member.id}`
+}
+
+// The account id at the end of a profile link, or null for a demo member's name.
+export function getProfileIdFromKey(key: string) {
+  return key.match(profileIdPattern)?.[0].toLowerCase() ?? null
+}
+
+export async function getCommunityProfileById(id: string): Promise<CommunityMember | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(communityProfileColumns)
+    .eq('id', id)
+    .limit(1)
+  if (error) throw error
+  const [member] = await toCommunityMembers(data ?? [])
+  return member ?? null
+}
+
 export async function getCommunityProfileByName(name: string): Promise<CommunityMember | null> {
   if (!supabase) return null
   const { data, error } = await supabase

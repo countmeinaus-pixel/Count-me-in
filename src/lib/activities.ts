@@ -22,6 +22,7 @@ export type SavedActivityDetails = {
   coverImageUrl: string | null
   host: string
   hostAge: number | null
+  hostId: string
   hostPhoto: string | null
   hostVerified: boolean
   viewerIsHost: boolean
@@ -100,6 +101,7 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
     coverImageUrl: activity.cover_image_url,
     host: hostResult.data.first_name,
     hostAge: hostResult.data.age,
+    hostId: activity.host_id,
     hostPhoto: hostResult.data.photo_url,
     hostVerified: hostResult.data.selfie_verified,
     viewerIsHost: viewerId === activity.host_id,

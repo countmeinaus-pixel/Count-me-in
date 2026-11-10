@@ -10,7 +10,7 @@ import {
   type FeedActivity,
 } from '../lib/activityParticipation'
 import { hasDemoJoinRequest } from '../lib/demoParticipation'
-import { getCurrentProfile } from '../lib/profile'
+import { getCurrentProfile, getProfilePath } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 import { useCommunityMembers } from '../lib/useCommunityMembers'
 import { friendNames, getCrewSuggestions } from '../lib/friends'
@@ -598,7 +598,7 @@ export function HomeScreen() {
                 key={record.id}
                 record={record}
                 showOwner
-                onOpenOwner={() => navigate(`/profile/${encodeURIComponent(record.ownerName)}`)}
+                onOpenOwner={() => navigate(getProfilePath({ id: record.userId, name: record.ownerName }))}
                 onChanged={() => window.setTimeout(() => setRecordsVersion((version) => version + 1), 1200)}
               />
             ))}
@@ -624,7 +624,7 @@ export function HomeScreen() {
                   type="button"
                   key={member.id ?? member.name}
                   className="crew-friend"
-                  onClick={() => navigate(`/profile/${encodeURIComponent(member.name)}`)}
+                  onClick={() => navigate(getProfilePath(member))}
                 >
                   <Avatar name={member.name} photoUrl={member.photoUrl} size={48} verified={member.verified} />
                   <span>{member.name}</span>
@@ -649,7 +649,7 @@ export function HomeScreen() {
                   <MateCard
                     horizontal
                     member={member}
-                    onClick={() => navigate(`/profile/${encodeURIComponent(member.name)}`)}
+                    onClick={() => navigate(getProfilePath(member))}
                   />
                 </div>
               ))}

@@ -13,6 +13,7 @@ import { hasDemoJoinRequest } from '../lib/demoParticipation'
 import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 import { useCommunityMembers } from '../lib/useCommunityMembers'
+import { getUnreadNotificationCount } from '../lib/notifications'
 
 type ViewMode = 'list' | 'map' | 'calendar'
 type CalendarMode = 'week' | 'month'
@@ -46,6 +47,18 @@ export function HomeScreen() {
   const navigate = useNavigate()
   const filterRowRef = useRef<HTMLDivElement | null>(null)
   const { members: communityMembers } = useCommunityMembers()
+  const [unreadNotifications, setUnreadNotifications] = useState(0)
+  useEffect(() => {
+    let active = true
+    getUnreadNotificationCount()
+      .then((count) => {
+        if (active) setUnreadNotifications(count)
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
   const [filter, setFilter] = useState('My sports')
   const [view, setView] = useState<ViewMode>('list')
   const [calendarMode, setCalendarMode] = useState<CalendarMode>('week')
@@ -244,7 +257,7 @@ export function HomeScreen() {
     <div className="screen">
       <header className="topbar">
         <div className="location"><MapPin />Adelaide</div>
-        <button className="icon-button" aria-label="Notifications" onClick={() => navigate('/notifications')} type="button"><Bell /></button>
+        <button className="icon-button notification-bell" aria-label={unreadNotifications ? `Notifications, ${unreadNotifications} new` : 'Notifications'} onClick={() => navigate('/notifications')} type="button"><Bell />{unreadNotifications > 0 && <span className="notification-bell-dot" aria-hidden="true" />}</button>
       </header>
 
       <section className="intro">

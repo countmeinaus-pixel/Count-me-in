@@ -23,6 +23,7 @@ import {
 import {
   cancelActivityJoinRequest,
   getActivityJoinState,
+  leaveActivity,
   requestToJoinActivity,
   respondToActivityJoinRequest,
   type ActivityJoinState,
@@ -86,6 +87,8 @@ export function ActivityDetailScreen() {
   )
   const [joinFeedback, setJoinFeedback] = useState("")
   const [reportOpen, setReportOpen] = useState(false)
+  const [leaveOpen, setLeaveOpen] = useState(false)
+  const [leaveMessage, setLeaveMessage] = useState("")
   const [shareFeedback, setShareFeedback] = useState("")
   const [confirmed, setConfirmed] = useState(() =>
     mockActivity
@@ -370,6 +373,26 @@ export function ActivityDetailScreen() {
           ? error.message
           : "Unable to cancel your join request.",
       )
+    } finally {
+      setIsUpdatingJoin(false)
+    }
+  }
+
+  async function handleLeaveActivity() {
+    if (!savedActivity) return
+    setIsUpdatingJoin(true)
+    setJoinError("")
+    try {
+      await leaveActivity(savedActivity.id, leaveMessage)
+      await refreshJoinState()
+      setLeaveOpen(false)
+      setLeaveMessage("")
+      setJoinFeedback(`You're out. We've let ${hostName} know.`)
+    } catch (error) {
+      setJoinError(
+        error instanceof Error ? error.message : "Unable to leave this activity.",
+      )
+      setLeaveOpen(false)
     } finally {
       setIsUpdatingJoin(false)
     }
@@ -843,67 +866,59 @@ export function ActivityDetailScreen() {
                 >
                   Edit activity
                 </Button>
-                <Button
-                  size="lg"
-                  onClick={() => setQrOpen(true)}
-                  disabled={!isActivityDay || confirmed || isLoadingConfirmation}
-                  title={!isActivityDay ? "Check-in opens on the activity day." : undefined}
-                >
-                  {confirmed ? "Confirmed" : "Check in"}
-                </Button>
+                {isActivityDay && (
+                  <Button
+                    size="lg"
+                    onClick={() => setQrOpen(true)}
+                    disabled={confirmed || isLoadingConfirmation}
+                  >
+                    {confirmed ? "Confirmed" : "Check in"}
+                  </Button>
+                )}
               </>
-            ) : (
+            ) : isActivityDay ? (
               <Button
                 size="lg"
                 onClick={() => setQrOpen(true)}
-                disabled={!isActivityDay || confirmed}
-                title={!isActivityDay ? "Check-in opens on the activity day." : undefined}
+                disabled={confirmed}
               >
                 {confirmed ? "Confirmed" : "Check in"}
               </Button>
+            ) : (
+              <Button size="lg" disabled>
+                Check-in opens on the day
+              </Button>
             )
           ) : isJoined ? (
-            savedDetails ? (
-              <>
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  onClick={() => void openSavedActivityChat()}
-                >
-                  Open chat
-                </Button>
+            <>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => void openSavedActivityChat()}
+              >
+                Open chat
+              </Button>
+              {isActivityDay ? (
                 <Button
                   size="lg"
                   onClick={() => setQrOpen(true)}
-                  disabled={!isActivityDay || confirmed || isLoadingConfirmation}
-                  title={!isActivityDay ? "Check-in opens on the activity day." : undefined}
+                  disabled={confirmed || isLoadingConfirmation}
                 >
                   {confirmed ? "Confirmed" : "Check in"}
                 </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="secondary"
-                  onClick={() => void openSavedActivityChat()}
-                  size="lg"
-                >
-                  Open chat
-                </Button>
-                <Button
-                  onClick={() => setQrOpen(true)}
-                  size="lg"
-                  disabled={!isActivityDay || confirmed || isLoadingConfirmation}
-                  title={
-                    !isActivityDay
-                      ? "Check-in opens on the activity day."
-                      : undefined
-                  }
-                >
-                  {confirmed ? "Confirmed" : "Check in"}
-                </Button>
-              </>
-            )
+              ) : (
+                savedDetails && (
+                  <Button
+                    variant="destructive"
+                    size="lg"
+                    onClick={() => setLeaveOpen(true)}
+                    disabled={isUpdatingJoin}
+                  >
+                    Can’t make it
+                  </Button>
+                )
+              )}
+            </>
           ) : savedDetails?.id && joinState?.status === "pending" ? (
             <>
               <Button
@@ -959,6 +974,64 @@ export function ActivityDetailScreen() {
         )}
       </div>
 
+      {reportOpen && savedActivity && (
+        <ReportDialog
+          targetType="activity"
+          targetId={savedActivity.id}
+          targetLabel={`activity: ${savedActivity.title}`}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
+
+      {leaveOpen && (
+        <div className="report-dialog-backdrop" role="presentation">
+          <form
+            className="report-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="leave-dialog-title"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void handleLeaveActivity()
+            }}
+          >
+            <h2 id="leave-dialog-title">
+              Let {hostName} know you can’t make it?
+            </h2>
+            <p className="leave-sheet-note">
+              Your spot opens up again and you’ll leave the group chat.
+            </p>
+            <label className="report-field">
+              <span>Message for {hostName} (optional)</span>
+              <textarea
+                value={leaveMessage}
+                maxLength={280}
+                rows={3}
+                placeholder="Sorry mate, something came up."
+                onChange={(event) => setLeaveMessage(event.target.value)}
+              />
+            </label>
+            <div className="report-dialog-actions">
+              <button
+                type="button"
+                className="button button-secondary button-md"
+                onClick={() => setLeaveOpen(false)}
+                disabled={isUpdatingJoin}
+              >
+                Stay in
+              </button>
+              <button
+                type="submit"
+                className="button button-destructive button-md"
+                disabled={isUpdatingJoin}
+              >
+                {isUpdatingJoin ? "Leaving…" : "Yes, I’m out"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {qrOpen && activity && (
         <div
           className="checkin-modal"
@@ -1004,14 +1077,6 @@ export function ActivityDetailScreen() {
                   Scan their code
                 </Button>
               </>
-            )}
-            {reportOpen && savedActivity && (
-              <ReportDialog
-                targetType="activity"
-                targetId={savedActivity.id}
-                targetLabel={`activity: ${savedActivity.title}`}
-                onClose={() => setReportOpen(false)}
-              />
             )}
 
             {scanMode === "camera" && (

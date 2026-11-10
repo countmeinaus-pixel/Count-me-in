@@ -1,3 +1,7 @@
+import {
+  databaseUpdateNeededMessage,
+  isMissingDatabaseFeature,
+} from "./notifications"
 import { supabase } from "./supabase"
 import {
   getDefaultActivityHero,
@@ -454,4 +458,82 @@ export async function cancelActivityJoinRequest(activityId: string) {
     { target_activity_id: activityId },
   )
   if (error) throw error
+}
+
+export async function leaveActivity(activityId: string, message = "") {
+  const { error } = await requireSupabase().rpc("leave_activity", {
+    target_activity_id: activityId,
+    leave_message: message.trim(),
+  })
+  if (error) {
+    if (isMissingDatabaseFeature(error))
+      throw new Error(databaseUpdateNeededMessage)
+    throw error
+  }
+}
+
+export type InvitedActivity = FeedActivity & {
+  invitedBy: string
+  invitedByPhotoUrl: string | null
+  invitedAt: string
+}
+
+export async function getPendingInvites(): Promise<InvitedActivity[]> {
+  const client = requireSupabase()
+  const { data: userData, error: userError } = await client.auth.getUser()
+  if (userError?.name === "AuthSessionMissingError") return []
+  if (userError) throw userError
+  if (!userData.user) return []
+
+  const { data: invites, error: invitesError } = await client
+    .from("activity_invites")
+    .select("activity_id, invited_by, created_at")
+    .eq("invitee_id", userData.user.id)
+    .eq("status", "pending")
+  if (invitesError) throw invitesError
+  if (!invites?.length) return []
+
+  const [feed, invitersResult] = await Promise.all([
+    getSavedActivityFeed(),
+    client
+      .from("profiles")
+      .select("id, first_name, photo_url")
+      .in("id", [...new Set(invites.map((invite) => invite.invited_by))]),
+  ])
+  if (invitersResult.error) throw invitersResult.error
+  const invitersById = new Map(
+    (invitersResult.data ?? []).map((profile) => [profile.id, profile]),
+  )
+
+  return invites
+    .flatMap((invite): InvitedActivity[] => {
+      const activity = feed.find((item) => item.id === invite.activity_id)
+      if (!activity || activity.viewerJoinStatus === "accepted") return []
+      const inviter = invitersById.get(invite.invited_by)
+      return [
+        {
+          ...activity,
+          invitedBy: inviter?.first_name ?? "Someone",
+          invitedByPhotoUrl: inviter?.photo_url ?? null,
+          invitedAt: invite.created_at,
+        },
+      ]
+    })
+    .sort((left, right) => left.startsAt.getTime() - right.startsAt.getTime())
+}
+
+export async function respondToActivityInvite(
+  activityId: string,
+  response: "accepted" | "declined",
+) {
+  const { error } = await requireSupabase().rpc("respond_to_activity_invite", {
+    target_activity_id: activityId,
+    response,
+  })
+  if (error) {
+    if (isMissingDatabaseFeature(error))
+      throw new Error(databaseUpdateNeededMessage)
+    throw error
+  }
+  window.dispatchEvent(new Event("count-me-in-invites-changed"))
 }

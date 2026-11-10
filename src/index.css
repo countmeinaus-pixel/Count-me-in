@@ -1253,6 +1253,8 @@ h3 { font: 700 21px/24px var(--font-display); }
 .button-primary { background: var(--accent); color: var(--on-accent); }
 .button-secondary { background: var(--surface-3); color: var(--text-primary); }
 .button-ghost { background: transparent; color: var(--text-primary); border: 1px solid var(--border); }
+.button-destructive { background: var(--danger-subtle); color: var(--danger); }
+.button:disabled { opacity: 0.4; }
 .button-lg { height: 52px; font: 700 18px var(--font-display); }
 .button-md { height: 44px; font: 700 16px var(--font-display); }
 .button-sm { height: 36px; font: 700 14px var(--font-display); }
@@ -1389,20 +1391,30 @@ h3 { font: 700 21px/24px var(--font-display); }
 .notification-group { margin-top: 24px; }
 .notification-group h2 { margin-bottom: 8px; }
 .notification-row {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.notification-open {
   width: 100%;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 8px;
+  grid-template-columns: 48px minmax(0, 1fr) 8px;
   align-items: start;
   gap: 12px;
-  padding: 16px 0;
+  padding: 0;
   border: 0;
-  border-bottom: 1px solid var(--border);
   background: transparent;
+  color: inherit;
   text-align: left;
 }
+.notification-actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 0 60px;
+}
+.notification-actions .button { flex: 1; }
 .notification-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-md);
@@ -3479,3 +3491,21 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--bg);
 }
 .user-avatar-verified svg { width: 60%; height: 60%; stroke-width: 3; }
+
+.leave-sheet-note {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.notification-bell { position: relative; }
+.notification-bell-dot {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--accent);
+  box-sizing: content-box;
+}

@@ -1,6 +1,10 @@
 import { ArrowLeft, CalendarDays, CheckCircle2, MessageCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Avatar } from '../components/Avatar'
+import { Button } from '../components/Button'
+import { getPendingInvites, respondToActivityInvite } from '../lib/activityParticipation'
+import { getNotifications, markNotificationsRead } from '../lib/notifications'
 
 type Notification = {
   id: string
@@ -10,9 +14,12 @@ type Notification = {
   href: string
   unread: boolean
   icon: typeof CalendarDays
+  actor?: { name: string; photoUrl: string | null }
+  inviteActivityId?: string
+  isDemo?: boolean
 }
 
-const initialNotifications: Notification[] = [
+const demoNotifications: Notification[] = [
   {
     id: 'request-accepted',
     title: 'Your request was accepted',
@@ -21,6 +28,7 @@ const initialNotifications: Notification[] = [
     href: '/activity/1',
     unread: true,
     icon: CheckCircle2,
+    isDemo: true,
   },
   {
     id: 'new-message',
@@ -30,6 +38,7 @@ const initialNotifications: Notification[] = [
     href: '/chats',
     unread: true,
     icon: MessageCircle,
+    isDemo: true,
   },
   {
     id: 'new-activity',
@@ -39,53 +48,150 @@ const initialNotifications: Notification[] = [
     href: '/activity/2',
     unread: false,
     icon: CalendarDays,
-  },
-  {
-    id: 'activity-reminder',
-    title: 'Your activity is coming up',
-    message: 'Spearfishing at Port Noarlunga reef · Sat 22 Feb at 7:00 am.',
-    time: 'Yesterday',
-    href: '/activity/1',
-    unread: false,
-    icon: CalendarDays,
+    isDemo: true,
   },
 ]
 
+const titles = {
+  participant_left: 'Someone can’t make it',
+  invite: 'You’re invited',
+  invite_accepted: 'Invitation accepted',
+  invite_declined: 'Invitation declined',
+} as const
+
+function formatRelativeTime(value: string) {
+  const minutes = Math.round((Date.now() - Date.parse(value)) / 60000)
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes} min ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+  const days = Math.round(hours / 24)
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days} days ago`
+  return new Date(value).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+}
+
 export function NotificationsScreen() {
   const navigate = useNavigate()
-  const [notifications, setNotifications] = useState(initialNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [respondingTo, setRespondingTo] = useState<string | null>(null)
   const unreadNotifications = notifications.filter((notification) => notification.unread)
   const earlierNotifications = notifications.filter((notification) => !notification.unread)
+
+  useEffect(() => {
+    let active = true
+    Promise.all([getNotifications(), getPendingInvites().catch(() => [])])
+      .then(([saved, invites]) => {
+        if (!active) return
+        if (!saved) {
+          setNotifications(demoNotifications)
+          return
+        }
+        const openInviteIds = new Set(invites.map((invite) => invite.id))
+        setNotifications(saved.map((item) => ({
+          id: item.id,
+          title: item.type === 'participant_left' && item.actorName ? `${item.actorName} can’t make it` : titles[item.type],
+          message: item.message ? `${item.body} “${item.message}”` : item.body,
+          time: formatRelativeTime(item.createdAt),
+          href: item.activityId ? `/activity/${item.activityId}` : '/activities',
+          unread: item.unread,
+          icon: item.type === 'invite' ? CalendarDays : CheckCircle2,
+          actor: item.actorName ? { name: item.actorName, photoUrl: item.actorPhotoUrl } : undefined,
+          inviteActivityId: item.type === 'invite' && item.activityId && openInviteIds.has(item.activityId)
+            ? item.activityId
+            : undefined,
+        })))
+      })
+      .catch((loadError: unknown) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Unable to load notifications.')
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   function openNotification(notification: Notification) {
     setNotifications((current) => current.map((item) =>
       item.id === notification.id ? { ...item, unread: false } : item,
     ))
+    if (!notification.isDemo && notification.unread) void markNotificationsRead(notification.id).catch(() => undefined)
     navigate(notification.href)
   }
 
   function markAllAsRead() {
     setNotifications((current) => current.map((item) => ({ ...item, unread: false })))
+    if (!notifications.some((item) => item.isDemo)) {
+      void markNotificationsRead().catch((markError: unknown) => {
+        setError(markError instanceof Error ? markError.message : 'Unable to mark notifications as read.')
+      })
+    }
+  }
+
+  async function answerInvite(notification: Notification, response: 'accepted' | 'declined') {
+    if (!notification.inviteActivityId) return
+    setRespondingTo(notification.id)
+    setError('')
+    try {
+      await respondToActivityInvite(notification.inviteActivityId, response)
+      setNotifications((current) => current.map((item) =>
+        item.id === notification.id
+          ? {
+              ...item,
+              unread: false,
+              inviteActivityId: undefined,
+              message: response === 'accepted' ? `${item.message} You’re going.` : `${item.message} You said not this time.`,
+            }
+          : item,
+      ))
+      if (response === 'accepted') navigate(`/activity/${notification.inviteActivityId}`)
+    } catch (answerError) {
+      setError(answerError instanceof Error ? answerError.message : 'Unable to answer this invitation.')
+    } finally {
+      setRespondingTo(null)
+    }
   }
 
   function renderNotification(notification: Notification) {
     const Icon = notification.icon
 
     return (
-      <button
-        key={notification.id}
-        type="button"
-        className={`notification-row ${notification.unread ? 'unread' : ''}`}
-        onClick={() => openNotification(notification)}
-      >
-        <span className="notification-icon"><Icon /></span>
-        <span className="notification-copy">
-          <strong>{notification.title}</strong>
-          <p>{notification.message}</p>
-          <time>{notification.time}</time>
-        </span>
-        {notification.unread && <span className="notification-unread-dot" aria-label="Unread" />}
-      </button>
+      <article key={notification.id} className={`notification-row ${notification.unread ? 'unread' : ''}`}>
+        <button type="button" className="notification-open" onClick={() => openNotification(notification)}>
+          {notification.actor
+            ? <Avatar name={notification.actor.name} photoUrl={notification.actor.photoUrl} size={48} className="notification-avatar" />
+            : <span className="notification-icon"><Icon /></span>}
+          <span className="notification-copy">
+            <strong>{notification.title}</strong>
+            <p>{notification.message}</p>
+            <time>{notification.time}</time>
+          </span>
+          {notification.unread ? <span className="notification-unread-dot" aria-label="Unread" /> : <span />}
+        </button>
+        {notification.inviteActivityId && (
+          <div className="notification-actions">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={respondingTo !== null}
+              onClick={() => void answerInvite(notification, 'declined')}
+            >
+              Not this time
+            </Button>
+            <Button
+              size="sm"
+              disabled={respondingTo !== null}
+              onClick={() => void answerInvite(notification, 'accepted')}
+            >
+              Count me in
+            </Button>
+          </div>
+        )}
+      </article>
     )
   }
 
@@ -106,21 +212,29 @@ export function NotificationsScreen() {
         </button>
       </header>
 
-      {unreadNotifications.length > 0 && (
-        <section className="notification-group" aria-labelledby="new-notifications-heading">
-          <h2 id="new-notifications-heading">New</h2>
-          <div>{unreadNotifications.map(renderNotification)}</div>
-        </section>
-      )}
+      {error && <p className="wizard-error" role="alert">{error}</p>}
 
-      <section className="notification-group" aria-labelledby="earlier-notifications-heading">
-        <h2 id="earlier-notifications-heading">Earlier</h2>
-        {earlierNotifications.length > 0 ? (
-          <div>{earlierNotifications.map(renderNotification)}</div>
-        ) : (
-          <p className="notification-empty">You’re all caught up.</p>
-        )}
-      </section>
+      {isLoading ? (
+        <p className="notification-empty" role="status">Loading notifications…</p>
+      ) : (
+        <>
+          {unreadNotifications.length > 0 && (
+            <section className="notification-group" aria-labelledby="new-notifications-heading">
+              <h2 id="new-notifications-heading">New</h2>
+              <div>{unreadNotifications.map(renderNotification)}</div>
+            </section>
+          )}
+
+          <section className="notification-group" aria-labelledby="earlier-notifications-heading">
+            <h2 id="earlier-notifications-heading">Earlier</h2>
+            {earlierNotifications.length > 0 ? (
+              <div>{earlierNotifications.map(renderNotification)}</div>
+            ) : (
+              <p className="notification-empty">You’re all caught up.</p>
+            )}
+          </section>
+        </>
+      )}
     </div>
   )
 }

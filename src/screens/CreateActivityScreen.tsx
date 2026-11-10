@@ -190,6 +190,7 @@ export function CreateActivityScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [isPosting, setIsPosting] = useState(false)
   const [error, setError] = useState('')
+  const [sportChangeNotice, setSportChangeNotice] = useState('')
 
   useEffect(() => {
     let active = true
@@ -338,6 +339,15 @@ export function CreateActivityScreen() {
   }
 
   function chooseSport(sport: SportOption) {
+    if (selectedSport && selectedSport.id !== sport.id) {
+      const hadSportDetails = Object.values(sportDetails).some((value) => value.trim() !== '')
+      setSportChangeNotice(
+        hadSportDetails
+          ? `You switched to ${sport.name}. Fill in the ${sport.name} details again in the next step.`
+          : '',
+      )
+      setFurthestStep((current) => Math.min(current, 2))
+    }
     setSelectedSport(sport)
     setSportDetails({})
     setTitleEdited(false)
@@ -371,10 +381,20 @@ export function CreateActivityScreen() {
     return true
   }
 
+  // A visited step is reachable when every step before it is filled in.
+  function canOpenStep(targetStep: number) {
+    if (targetStep < 1 || targetStep > furthestStep) return false
+    if (targetStep > 1 && !selectedSport) return false
+    if (targetStep > 2 && !validDetails) return false
+    return true
+  }
+
   function goToStep(nextStep: number) {
-    if (nextStep < 1 || nextStep > furthestStep) return
+    if (!canOpenStep(nextStep)) return
     setStep(nextStep)
     setError('')
+    if (nextStep !== 2) setSportChangeNotice('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function continueToNextStep() {
@@ -534,18 +554,18 @@ export function CreateActivityScreen() {
       <nav className="wizard-progress" aria-label="Activity creation progress">
         {steps.map((label, index) => {
           const stepNumber = index + 1
-          const isCompleted = stepNumber < step
           const isCurrent = stepNumber === step
+          const isCompleted = !isCurrent && stepNumber <= furthestStep && canOpenStep(stepNumber)
           return (
             <button
               key={label}
               type="button"
               className={`wizard-progress-step ${isCompleted ? 'done' : ''} ${isCurrent ? 'current' : ''}`}
               onClick={() => goToStep(stepNumber)}
-              disabled={stepNumber > furthestStep || stepNumber >= step}
+              disabled={!isCompleted}
               aria-current={isCurrent ? 'step' : undefined}
-              aria-label={isCompleted ? `Review ${label} step` : `${label}${isCurrent ? ', current step' : ''}`}
-              title={isCompleted ? `Review ${label}` : undefined}
+              aria-label={isCompleted ? `Go to ${label} step` : `${label}${isCurrent ? ', current step' : ''}`}
+              title={isCompleted ? `Go to ${label}` : undefined}
             >
               <span>{isCompleted ? <Check /> : stepNumber}</span>
               <small>{label}</small>
@@ -554,9 +574,10 @@ export function CreateActivityScreen() {
         })}
       </nav>
       <p className="wizard-step-count">Step {step} of {steps.length}</p>
-      {step > 1 && <p className="wizard-progress-hint">Tap a completed step above to review it.</p>}
+      {furthestStep > 1 && <p className="wizard-progress-hint">Tap a step above to jump back to it. Everything you filled in stays.</p>}
 
       {error && <p className="wizard-error" role="alert">{error}</p>}
+      {sportChangeNotice && step <= 2 && <p className="wizard-notice" role="status">{sportChangeNotice}</p>}
 
       {step === 1 && (
         <section className="wizard-section" aria-labelledby="sport-step-title">

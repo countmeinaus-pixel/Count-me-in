@@ -3555,3 +3555,13 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--text-secondary);
 }
 .chats-split-empty h3 { color: var(--text-primary); }
+
+.wizard-notice {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--seafoam);
+  border-radius: var(--radius-md);
+  background: var(--seafoam-subtle);
+  color: var(--text-primary);
+  font-size: 14px;
+}

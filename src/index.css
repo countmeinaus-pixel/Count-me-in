@@ -3715,6 +3715,11 @@ h3 { font: 700 21px/24px var(--font-display); }
   text-transform: uppercase;
   color: var(--text-secondary);
 }
+/* Upcoming activities: stacked on phones, 3 in a row on larger screens. */
+@media (min-width: 900px) {
+  .profile-activities { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+  .profile-activities h3 { grid-column: 1 / -1; }
+}
 .edit-activity-cancel {
   margin-top: 40px;
   padding-top: 24px;

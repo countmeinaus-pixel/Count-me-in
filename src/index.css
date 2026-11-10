@@ -554,16 +554,61 @@ h3 { font: 700 21px/24px var(--font-display); }
   left: 12px;
   z-index: 2;
   display: grid;
-  gap: 2px;
-  padding: 12px 14px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-xl);
   background: var(--surface-1);
+  overflow: hidden;
+}
+.activity-map-card-open {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  background: transparent;
   text-align: left;
   cursor: pointer;
 }
 .activity-map-card .map-callout-header { margin-bottom: 4px; }
 .activity-map-card strong { font-size: 17px; font-weight: 700; }
+.activity-map-card-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.activity-map-card-pager button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.activity-map-card-pager button:disabled { color: var(--text-muted); cursor: default; }
+.activity-map-card-pager svg { width: 18px; height: 18px; }
+/* Several activities close together: one bubble with the count. */
+.activity-cluster {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  border: 2px solid var(--bg);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+  font: 700 17px/1 var(--font-display);
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.activity-cluster.selected,
+.activity-cluster:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--text-primary); }
 .activity-map-card-place { color: var(--text-secondary); font-size: 14px; }
 .activity-map-note {
   position: absolute;

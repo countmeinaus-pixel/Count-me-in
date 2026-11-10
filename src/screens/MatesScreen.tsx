@@ -2,21 +2,11 @@ import { ArrowLeft, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
-import { communityMembers } from "../data/mockData"
 import { getBlockedUsers } from "../lib/localPreferences"
 import { getBlockedProfiles } from "../lib/moderation"
 import { useBackToMore } from "../lib/moreNavigation"
+import { useCommunityMembers } from "../lib/useCommunityMembers"
 
-const sports = [
-  ...new Set(
-    communityMembers.flatMap((member) =>
-      member.sports.map((sport) => sport.name),
-    ),
-  ),
-].sort()
-const suburbs = [
-  ...new Set(communityMembers.map((member) => member.suburb)),
-].sort()
 const friendNames = ["Matt", "Hamish", "Sam", "Luca"]
 
 export function MatesScreen({
@@ -35,6 +25,18 @@ export function MatesScreen({
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [blockedUsersError, setBlockedUsersError] = useState("")
   const title = friendsOnly ? "Friends" : "Find your crew"
+  const { members: communityMembers, error: membersError } =
+    useCommunityMembers()
+  const sports = [
+    ...new Set(
+      communityMembers.flatMap((member) =>
+        member.sports.map((sport) => sport.name),
+      ),
+    ),
+  ].sort()
+  const suburbs = [
+    ...new Set(communityMembers.map((member) => member.suburb)),
+  ].sort()
 
   useEffect(() => {
     let active = true
@@ -98,9 +100,9 @@ export function MatesScreen({
         </div>
       </header>
 
-      {blockedUsersError && (
+      {(blockedUsersError || membersError) && (
         <p className="edit-form-error" role="alert">
-          {blockedUsersError}
+          {blockedUsersError || membersError}
         </p>
       )}
       <label className="mate-search">
@@ -156,7 +158,7 @@ export function MatesScreen({
         <div className="mate-grid">
           {filteredMembers.map((member) => (
             <MateCard
-              key={member.name}
+              key={member.id ?? member.name}
               member={member}
               onClick={() =>
                 navigate(`/profile/${encodeURIComponent(member.name)}`)

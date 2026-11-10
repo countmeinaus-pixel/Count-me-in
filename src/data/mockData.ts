@@ -18,6 +18,7 @@ export type Activity = {
   hostMeta: string
   notes: string
   attendees: string[]
+  attendeePhotos?: Array<string | null>
 }
 
 function getDemoStart(daysFromToday: number, hour: number, minute = 0) {
@@ -85,6 +86,7 @@ export const demoConfirmedMeetups = [
 export const filters = ['My sports', ...new Set(currentUser.sports.map((sport) => sport.name))]
 
 export type CommunityMember = {
+  id?: string
   name: string
   age: number
   suburb: string

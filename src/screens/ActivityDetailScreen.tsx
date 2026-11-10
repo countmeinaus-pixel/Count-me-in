@@ -1,6 +1,5 @@
 import {
   ArrowLeft,
-  Check,
   ChevronRight,
   Flag,
   MapPin,
@@ -9,6 +8,7 @@ import {
 import QRCode from "qrcode"
 import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { Avatar } from "../components/Avatar"
 import { Button } from "../components/Button"
 import { ReportDialog } from "../components/ReportDialog"
 import {
@@ -596,14 +596,25 @@ export function ActivityDetailScreen() {
     (hostName === currentUser.name
       ? currentUser.age
       : communityMembers.find((member) => member.name === hostName)?.age)
-  const attendees = savedDetails
+  const attendeeProfiles: Array<{
+    key: string
+    name: string
+    photoUrl: string | null
+  }> = savedDetails
     ? [
-        savedDetails.host,
-        ...(joinState?.acceptedParticipants.map(
-          (participant) => participant.name,
-        ) ?? []),
+        { key: "host", name: savedDetails.host, photoUrl: savedDetails.hostPhoto },
+        ...(joinState?.acceptedParticipants.map((participant) => ({
+          key: participant.id,
+          name: participant.name,
+          photoUrl: participant.photoUrl,
+        })) ?? []),
       ]
-    : (mockActivity?.attendees ?? [])
+    : (mockActivity?.attendees ?? []).map((name, index) => ({
+        key: `${name}-${index}`,
+        name,
+        photoUrl: mockActivity?.attendeePhotos?.[index] ?? null,
+      }))
+  const attendees = attendeeProfiles.map((attendee) => attendee.name)
   const activityStart = savedDetails
     ? new Date(savedDetails.startsAt)
     : mockActivity?.startsAt
@@ -711,18 +722,12 @@ export function ActivityDetailScreen() {
         </div>
 
         <div className="host-card">
-          <div className="avatar-large">
-            {savedDetails?.hostPhoto ? (
-              <img src={savedDetails.hostPhoto} alt="" />
-            ) : (
-              hostName[0]
-            )}
-            {savedDetails?.hostVerified !== false && (
-              <span>
-                <Check />
-              </span>
-            )}
-          </div>
+          <Avatar
+            name={hostName}
+            photoUrl={savedDetails?.hostPhoto}
+            size={48}
+            verified={savedDetails?.hostVerified !== false}
+          />
           <div className="grow">
             <p className="eyebrow">Hosted by</p>
             <strong>
@@ -744,15 +749,21 @@ export function ActivityDetailScreen() {
         </div>
 
         <div className="going-row">
-          {attendees.map((name) => (
+          {attendeeProfiles.map((attendee) => (
             <button
-              key={name}
+              key={attendee.key}
               type="button"
-              className="avatar small"
-              aria-label={`View ${name}'s profile`}
-              onClick={() => navigate(`/profile/${encodeURIComponent(name)}`)}
+              className="going-avatar-button"
+              aria-label={`View ${attendee.name}'s profile`}
+              onClick={() =>
+                navigate(`/profile/${encodeURIComponent(attendee.name)}`)
+              }
             >
-              {name[0]}
+              <Avatar
+                name={attendee.name}
+                photoUrl={attendee.photoUrl}
+                size={36}
+              />
             </button>
           ))}
           <button
@@ -770,6 +781,7 @@ export function ActivityDetailScreen() {
             <h2>Join requests</h2>
             {joinState?.pendingRequests.map((request) => (
               <article className="activity-join-request" key={request.id}>
+                <Avatar name={request.name} photoUrl={request.photoUrl} size={36} />
                 <div>
                   <strong>{request.name}</strong>
                   {request.message && <p>{request.message}</p>}

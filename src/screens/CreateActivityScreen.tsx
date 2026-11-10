@@ -19,6 +19,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/Button'
+import { Avatar } from '../components/Avatar'
 import { activities, getDefaultActivityHero } from '../data/mockData'
 import { compressActivityCover, deleteActivityCover, uploadActivityCover } from '../lib/activityImages'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
@@ -29,7 +30,7 @@ type SportOption = {
   icon: string | null
   profileSkill: string | null
 }
-type InviteSuggestion = { id: string; first_name: string; suburb: string }
+type InviteSuggestion = { id: string; first_name: string; suburb: string; photo_url: string | null }
 type PresetField = {
   key: string
   label: string
@@ -224,7 +225,7 @@ export function CreateActivityScreen() {
         client.from('profile_sports').select('sport_id, skill').eq('profile_id', user.id),
         client
           .from('profiles')
-          .select('id, first_name, suburb')
+          .select('id, first_name, suburb, photo_url')
           .neq('id', user.id)
           .order('first_name')
           .limit(50),
@@ -815,7 +816,7 @@ export function CreateActivityScreen() {
             <div className="invite-user-grid">
               {filteredInviteSuggestions.length > 0 ? filteredInviteSuggestions.map((person) => (
                 <button key={person.id} type="button" className="invite-user" onClick={() => toggleInvite(person.id)}>
-                  <span className="invite-avatar">{person.first_name.charAt(0).toUpperCase()}</span>
+                  <Avatar name={person.first_name} photoUrl={person.photo_url} size={28} />
                   <span><strong>{person.first_name}</strong><small>{person.suburb}</small></span>
                   <Plus />
                 </button>

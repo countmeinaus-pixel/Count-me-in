@@ -10,6 +10,7 @@ export type JoinRequestStatus = "pending" | "accepted" | "declined" | "cancelled
 export type ActivityJoinParticipant = {
   id: string
   name: string
+  photoUrl: string | null
 }
 
 export type PendingActivityJoinRequest = ActivityJoinParticipant & {
@@ -66,19 +67,27 @@ export async function getActivityJoinState(
   const { data: profiles, error: profilesError } = profileIds.length
     ? await client
         .from("profiles")
-        .select("id, first_name")
+        .select("id, first_name, photo_url")
         .in("id", profileIds)
     : { data: [], error: null }
   if (profilesError) throw profilesError
 
-  const namesById = new Map(
-    (profiles ?? []).map((profile) => [profile.id, profile.first_name]),
+  const profilesById = new Map(
+    (profiles ?? []).map((profile) => [profile.id, profile]),
   )
   const acceptedParticipants = rows
     .filter((request) => request.status === "accepted")
     .flatMap((request) => {
-      const name = namesById.get(request.user_id)
-      return name ? [{ id: request.user_id, name }] : []
+      const profile = profilesById.get(request.user_id)
+      return profile
+        ? [
+            {
+              id: request.user_id,
+              name: profile.first_name,
+              photoUrl: profile.photo_url,
+            },
+          ]
+        : []
     })
   const pendingRequests = rows
     .filter(
@@ -86,12 +95,13 @@ export async function getActivityJoinState(
         request.status === "pending" && request.user_id !== userData.user.id,
     )
     .flatMap((request) => {
-      const name = namesById.get(request.user_id)
-      return name
+      const profile = profilesById.get(request.user_id)
+      return profile
         ? [
             {
               id: request.user_id,
-              name,
+              name: profile.first_name,
+              photoUrl: profile.photo_url,
               message: request.request_message,
             },
           ]
@@ -141,7 +151,7 @@ export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
           .in("activity_id", activityIds)
           .in("status", ["pending", "accepted"])
       : Promise.resolve({ data: [], error: null }),
-    client.from("profiles").select("id, first_name").in("id", profileIds),
+    client.from("profiles").select("id, first_name, photo_url").in("id", profileIds),
     client.from("sports").select("id, name").in("id", sportIds),
   ])
   if (requestsResult.error) throw requestsResult.error
@@ -155,14 +165,14 @@ export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
   const acceptedProfilesResult = acceptedProfileIds.length
     ? await client
         .from("profiles")
-        .select("id, first_name")
+        .select("id, first_name, photo_url")
         .in("id", acceptedProfileIds)
     : { data: [], error: null }
   if (acceptedProfilesResult.error) throw acceptedProfilesResult.error
 
-  const profileNames = new Map(
+  const profilesById = new Map(
     [...(profilesResult.data ?? []), ...(acceptedProfilesResult.data ?? [])].map(
-      (profile) => [profile.id, profile.first_name],
+      (profile) => [profile.id, profile],
     ),
   )
   const sportNames = new Map(
@@ -171,7 +181,8 @@ export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
 
   return rows.flatMap((activity): FeedActivity[] => {
     const sport = sportNames.get(activity.sport_id)
-    const host = profileNames.get(activity.host_id)
+    const hostProfile = profilesById.get(activity.host_id)
+    const host = hostProfile?.first_name
     if (!sport || !host) return []
 
     const activityRequests = requests.filter(
@@ -180,9 +191,9 @@ export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
     const acceptedRequests = activityRequests.filter(
       (request) => request.status === "accepted",
     )
-    const acceptedNames = acceptedRequests.flatMap((request) => {
-      const name = profileNames.get(request.user_id)
-      return name ? [name] : []
+    const acceptedProfiles = acceptedRequests.flatMap((request) => {
+      const profile = profilesById.get(request.user_id)
+      return profile ? [profile] : []
     })
     const sportDetails =
       typeof activity.sport_details === "object" &&
@@ -214,7 +225,14 @@ export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
         hero: activity.cover_image_url ?? getDefaultActivityHero(sport),
         hostMeta: "",
         notes: activity.notes,
-        attendees: [host, ...acceptedNames],
+        attendees: [
+          host,
+          ...acceptedProfiles.map((profile) => profile.first_name),
+        ],
+        attendeePhotos: [
+          hostProfile?.photo_url ?? null,
+          ...acceptedProfiles.map((profile) => profile.photo_url),
+        ],
         viewerJoinStatus:
           viewerRequest?.status === "pending" ||
           viewerRequest?.status === "accepted"
@@ -287,17 +305,14 @@ export async function getMySavedActivities(): Promise<MySavedActivity[]> {
   ]
   const sportIds = [...new Set(activities.map((activity) => activity.sport_id))]
   const [profilesResult, sportsResult] = await Promise.all([
-    client.from("profiles").select("id, first_name").in("id", profileIds),
+    client.from("profiles").select("id, first_name, photo_url").in("id", profileIds),
     client.from("sports").select("id, name").in("id", sportIds),
   ])
   if (profilesResult.error) throw profilesResult.error
   if (sportsResult.error) throw sportsResult.error
 
-  const profileNames = new Map(
-    (profilesResult.data ?? []).map((profile) => [
-      profile.id,
-      profile.first_name,
-    ]),
+  const profilesById = new Map(
+    (profilesResult.data ?? []).map((profile) => [profile.id, profile]),
   )
   const sportNames = new Map(
     (sportsResult.data ?? []).map((sport) => [sport.id, sport.name]),
@@ -306,7 +321,8 @@ export async function getMySavedActivities(): Promise<MySavedActivity[]> {
   return activities
     .flatMap((activity): MySavedActivity[] => {
       const sport = sportNames.get(activity.sport_id)
-      const host = profileNames.get(activity.host_id)
+      const hostProfile = profilesById.get(activity.host_id)
+      const host = hostProfile?.first_name
       if (!sport || !host) return []
 
       const ownRequest = ownRequests.find(
@@ -321,9 +337,9 @@ export async function getMySavedActivities(): Promise<MySavedActivity[]> {
       const acceptedRequests = activityRequests.filter(
         (request) => request.status === "accepted",
       )
-      const acceptedNames = acceptedRequests.flatMap((request) => {
-        const name = profileNames.get(request.user_id)
-        return name ? [name] : []
+      const acceptedProfiles = acceptedRequests.flatMap((request) => {
+        const profile = profilesById.get(request.user_id)
+        return profile ? [profile] : []
       })
       const sportDetails =
         typeof activity.sport_details === "object" &&
@@ -355,7 +371,14 @@ export async function getMySavedActivities(): Promise<MySavedActivity[]> {
           hero: activity.cover_image_url ?? getDefaultActivityHero(sport),
           hostMeta: "",
           notes: activity.notes,
-          attendees: [host, ...acceptedNames],
+          attendees: [
+          host,
+          ...acceptedProfiles.map((profile) => profile.first_name),
+        ],
+        attendeePhotos: [
+          hostProfile?.photo_url ?? null,
+          ...acceptedProfiles.map((profile) => profile.photo_url),
+        ],
           joinStatus: isHost
             ? "hosting"
             : ownRequest?.status === "accepted"

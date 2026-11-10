@@ -1,6 +1,7 @@
 import { ArrowLeft, Send } from "lucide-react"
 import { type FormEvent, useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { Avatar } from "../components/Avatar"
 import { SportIcon } from "../components/SportIcon"
 import {
   getChatMessages,
@@ -190,10 +191,14 @@ export function ChatThreadScreen() {
           <span>{thread.participants.length} members</span>
         </button>
         <div className="chat-member-stack" aria-label={`Members: ${thread.participants.join(", ")}`}>
-          {thread.participants.slice(0, 3).map((name) => (
-            <span className="chat-member-avatar" key={name} title={name} aria-hidden="true">
-              {name.slice(0, 1).toUpperCase()}
-            </span>
+          {thread.participants.slice(0, 3).map((name, index) => (
+            <Avatar
+              key={`${name}-${index}`}
+              name={name}
+              photoUrl={thread.participantPhotos?.[index]}
+              size={28}
+              className="chat-member-avatar"
+            />
           ))}
         </div>
       </header>
@@ -202,16 +207,25 @@ export function ChatThreadScreen() {
       {error && <p className="chat-error" role="alert">{error}</p>}
 
       <div className="chat-messages" ref={messageListRef} aria-live="polite">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`chat-bubble ${message.mine ? "mine" : message.type === "system" ? "system" : ""}`}
-          >
-            {!message.mine && message.type !== "system" && <small>{message.sender}</small>}
-            <p>{message.text}</p>
-            <time>{message.time}</time>
-          </div>
-        ))}
+        {messages.map((message) => {
+          const bubble = (
+            <div
+              key={message.id}
+              className={`chat-bubble ${message.mine ? "mine" : message.type === "system" ? "system" : ""}`}
+            >
+              {!message.mine && message.type !== "system" && <small>{message.sender}</small>}
+              <p>{message.text}</p>
+              <time>{message.time}</time>
+            </div>
+          )
+          if (message.mine || message.type === "system") return bubble
+          return (
+            <div key={message.id} className="chat-message-theirs">
+              <Avatar name={message.sender} photoUrl={message.senderPhotoUrl} size={32} />
+              {bubble}
+            </div>
+          )
+        })}
       </div>
 
       <form className="message-input" onSubmit={(event) => void handleSend(event)}>

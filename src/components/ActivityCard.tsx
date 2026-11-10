@@ -1,4 +1,5 @@
-import { Check, Fish, Footprints, MapPin, Mountain, Waves, Bike, Dumbbell } from 'lucide-react'
+import { Fish, Footprints, MapPin, Mountain, Waves, Bike, Dumbbell } from 'lucide-react'
+import { Avatar } from './Avatar'
 import { formatActivityDate, getActivitySpotsLabel, type Activity } from '../data/mockData'
 
 export type ActivityCardData = Omit<Activity, 'id'> & {
@@ -40,20 +41,28 @@ export function ActivityCard({ activity, onClick }: { activity: ActivityCardData
           {activity.attendees.length >= 3 ? (
             <>
               {activity.attendees.slice(0, 3).map((name, index) => (
-                <span key={`${name}-${index}`} className={`avatar attendee-avatar ${index === 0 ? 'host-avatar' : ''}`} aria-label={name}>
-                  {name[0]}
-                  {index === 0 && <i><Check /></i>}
-                </span>
+                <Avatar
+                  key={`${name}-${index}`}
+                  name={name}
+                  photoUrl={activity.attendeePhotos?.[index]}
+                  verified={index === 0}
+                  className="attendee-avatar"
+                  label={name}
+                />
               ))}
               {activity.attendees.length > 3 && <span className="attendee-overflow">+{activity.attendees.length - 3}</span>}
             </>
           ) : (
             <>
               {activity.attendees.map((name, index) => (
-                <span key={`${name}-${index}`} className={`avatar attendee-avatar ${index === 0 ? 'host-avatar' : ''}`} aria-label={name}>
-                  {name[0]}
-                  {index === 0 && <i><Check /></i>}
-                </span>
+                <Avatar
+                  key={`${name}-${index}`}
+                  name={name}
+                  photoUrl={activity.attendeePhotos?.[index]}
+                  verified={index === 0}
+                  className="attendee-avatar"
+                  label={name}
+                />
               ))}
               <span className="attendee-names">{activity.attendees.join(', ')}</span>
             </>

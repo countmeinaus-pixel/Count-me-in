@@ -8,11 +8,16 @@ import {
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { Avatar } from "../components/Avatar"
 import { MateCard } from "../components/MateCard"
 import { PatchIcon } from "../components/PatchIcon"
 import { ReportDialog } from "../components/ReportDialog"
 import { SportIcon } from "../components/SportIcon"
-import { communityMembers, currentUser } from "../data/mockData"
+import {
+  communityMembers,
+  currentUser,
+  type CommunityMember,
+} from "../data/mockData"
 import {
   getConfirmedMeetupsForUser,
   getConfirmedMeetupsForUserAndSport,
@@ -20,7 +25,11 @@ import {
   getLollipopChartForUser,
   loadSavedMeetupsForUser,
 } from "../lib/checkins"
-import { getCurrentProfile, type CurrentProfile } from "../lib/profile"
+import {
+  getCommunityProfileByName,
+  getCurrentProfile,
+  type CurrentProfile,
+} from "../lib/profile"
 import { supabase } from "../lib/supabase"
 import { addBlockedUser, getBlockedUsers } from "../lib/localPreferences"
 import {
@@ -39,6 +48,9 @@ export function ProfileScreen() {
   const location = useLocation()
   const { name: profileParam } = useParams()
   const [savedProfile, setSavedProfile] = useState<CurrentProfile | null>(null)
+  const [remoteProfile, setRemoteProfile] = useState<CommunityMember | null>(
+    null,
+  )
   const [profileLoadError, setProfileLoadError] = useState("")
   const [checkinVersion, setCheckinVersion] = useState(0)
   const [statusMessage, setStatusMessage] = useState(
@@ -59,6 +71,33 @@ export function ProfileScreen() {
 
   const isCurrentUser =
     !profileParam || decodeURIComponent(profileParam) === currentUser.name
+
+  useEffect(() => {
+    const name = decodeURIComponent(profileParam ?? "")
+    setRemoteProfile(null)
+    if (
+      isCurrentUser ||
+      communityMembers.some((member) => member.name === name)
+    )
+      return
+
+    let active = true
+    getCommunityProfileByName(name)
+      .then((member) => {
+        if (active) setRemoteProfile(member)
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setProfileLoadError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load this profile.",
+          )
+      })
+    return () => {
+      active = false
+    }
+  }, [isCurrentUser, profileParam])
 
   useEffect(() => {
     let active = true
@@ -144,7 +183,8 @@ export function ProfileScreen() {
         ? currentUser
         : (communityMembers.find(
             (member) => member.name === decodeURIComponent(profileParam ?? ""),
-          ) ?? {
+          ) ??
+          remoteProfile ?? {
             name: decodeURIComponent(profileParam ?? currentUser.name),
             age: 31,
             suburb: "Adelaide",
@@ -294,31 +334,24 @@ export function ProfileScreen() {
             <button
               type="button"
               onClick={() => navigate("/profile/edit")}
-              className="avatar hero-avatar flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-[#7fb7a8] bg-[#163430] text-4xl font-bold text-[#e6e2d8]"
+              className="hero-avatar-button"
               aria-label="Edit profile photo"
             >
-              {profile.photoUrl ? (
-                <img
-                  src={profile.photoUrl}
-                  alt="Profile photo"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                profile.name[0]
-              )}
+              <Avatar
+                name={profile.name}
+                photoUrl={profile.photoUrl}
+                size={96}
+                className="hero-avatar"
+              />
             </button>
           ) : (
-            <div className="avatar hero-avatar flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-[#7fb7a8] bg-[#163430] text-4xl font-bold text-[#e6e2d8]">
-              {profile.photoUrl ? (
-                <img
-                  src={profile.photoUrl}
-                  alt={`${profile.name}'s profile`}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                profile.name[0]
-              )}
-            </div>
+            <Avatar
+              name={profile.name}
+              photoUrl={profile.photoUrl}
+              size={96}
+              className="hero-avatar"
+              label={`${profile.name}'s profile photo`}
+            />
           )}
 
           {isCurrentUser && (

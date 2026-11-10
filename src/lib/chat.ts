@@ -8,12 +8,14 @@ export type ChatThread = {
   lastMessageAt: number
   unreadCount: number
   participants: string[]
+  participantPhotos?: Array<string | null>
   activityId?: string
 }
 
 export type ChatMessage = {
   id: string
   sender: string
+  senderPhotoUrl?: string | null
   text: string
   time: string
   mine: boolean
@@ -230,13 +232,14 @@ export async function getChatThreadsForViewer(): Promise<ChatThread[]> {
     ...(membersResult.data ?? []).map((member) => member.user_id),
   ])]
   const { data: profiles, error: profilesError } = memberIds.length
-    ? await supabase.from('profiles').select('id, first_name').in('id', memberIds)
+    ? await supabase.from('profiles').select('id, first_name, photo_url').in('id', memberIds)
     : { data: [], error: null }
   if (profilesError) throw profilesError
 
   const activityById = new Map(activities.map((activity) => [activity.id, activity]))
   const sportById = new Map((sports ?? []).map((sport) => [sport.id, sport.name]))
   const nameById = new Map((profiles ?? []).map((profile) => [profile.id, profile.first_name]))
+  const photoById = new Map((profiles ?? []).map((profile) => [profile.id, profile.photo_url]))
   const readByThread = new Map((readsResult.data ?? []).map((read) => [read.thread_id, read.last_read_at]))
   const latestByThread = new Map<string, NonNullable<typeof messagesResult.data>[number]>()
   for (const message of messagesResult.data ?? []) {
@@ -278,6 +281,7 @@ export async function getChatThreadsForViewer(): Promise<ChatThread[]> {
       lastMessageAt: latestMessage ? Date.parse(latestMessage.created_at) : 0,
       unreadCount: unreadByThread.get(thread.id) ?? 0,
       participants: [...new Set(participants)].map((participantId) => nameById.get(participantId) ?? 'Member'),
+      participantPhotos: [...new Set(participants)].map((participantId) => photoById.get(participantId) ?? null),
       activityId: thread.activity_id,
     }
   }).sort((left, right) => right.lastMessageAt - left.lastMessageAt)
@@ -318,14 +322,15 @@ export async function getSavedChatMessages(threadId: string): Promise<ChatMessag
 
   const senderIds = [...new Set((rows ?? []).map((row) => row.sender_id))]
   const { data: profiles, error: profilesError } = senderIds.length
-    ? await supabase.from('profiles').select('id, first_name').in('id', senderIds)
+    ? await supabase.from('profiles').select('id, first_name, photo_url').in('id', senderIds)
     : { data: [], error: null }
   if (profilesError) throw profilesError
-  const namesById = new Map((profiles ?? []).map((profile) => [profile.id, profile.first_name]))
+  const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]))
 
   return (rows ?? []).map((row) => ({
     id: row.id,
-    sender: namesById.get(row.sender_id) ?? 'Member',
+    sender: profilesById.get(row.sender_id)?.first_name ?? 'Member',
+    senderPhotoUrl: profilesById.get(row.sender_id)?.photo_url ?? null,
     text: row.body,
     time: new Date(row.created_at).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }),
     mine: row.sender_id === userData.user.id && row.message_type !== 'system',

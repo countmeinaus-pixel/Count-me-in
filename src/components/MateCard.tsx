@@ -1,12 +1,11 @@
 import { MapPin, ShieldCheck, Users } from 'lucide-react'
 import type { CommunityMember } from '../data/mockData'
+import { Avatar } from './Avatar'
 
 export function MateCard({ member, onClick }: { member: CommunityMember; onClick: () => void }) {
   return (
     <button type="button" className="mate-card" onClick={onClick} aria-label={`View ${member.name}'s profile`}>
-      <span className="mate-card-avatar" aria-hidden="true">
-        {member.photoUrl ? <img src={member.photoUrl} alt="" /> : member.name[0]}
-      </span>
+      <Avatar name={member.name} photoUrl={member.photoUrl} size={48} className="mate-card-avatar" />
       <span className="mate-card-name">
         {member.name}, {member.age}
         {member.verified && <ShieldCheck aria-label="Verified" />}

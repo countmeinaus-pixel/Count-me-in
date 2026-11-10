@@ -3,7 +3,7 @@ import { Bell, Bike, CalendarDays, Check, ChevronLeft, ChevronRight, Dumbbell, F
 import { useNavigate } from 'react-router-dom'
 import { ActivityCard, type ActivityCardData } from '../components/ActivityCard'
 import { Button } from '../components/Button'
-import { activities, communityMembers, currentUser } from '../data/mockData'
+import { activities, currentUser } from '../data/mockData'
 import { MateCard } from '../components/MateCard'
 import {
   getSavedActivityFeed,
@@ -12,6 +12,7 @@ import {
 import { hasDemoJoinRequest } from '../lib/demoParticipation'
 import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
+import { useCommunityMembers } from '../lib/useCommunityMembers'
 
 type ViewMode = 'list' | 'map' | 'calendar'
 type CalendarMode = 'week' | 'month'
@@ -44,6 +45,7 @@ const activityIcons = {
 export function HomeScreen() {
   const navigate = useNavigate()
   const filterRowRef = useRef<HTMLDivElement | null>(null)
+  const { members: communityMembers } = useCommunityMembers()
   const [filter, setFilter] = useState('My sports')
   const [view, setView] = useState<ViewMode>('list')
   const [calendarMode, setCalendarMode] = useState<CalendarMode>('week')
@@ -516,7 +518,7 @@ export function HomeScreen() {
         <div className="mate-grid crew-preview-grid">
           {communityMembers.slice(0, 4).map((member) => (
             <MateCard
-              key={member.name}
+              key={member.id ?? member.name}
               member={member}
               onClick={() => navigate(`/profile/${encodeURIComponent(member.name)}`)}
             />

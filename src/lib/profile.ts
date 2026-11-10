@@ -1,3 +1,4 @@
+import type { CommunityMember } from '../data/mockData'
 import { supabase } from './supabase'
 
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Experienced'
@@ -335,4 +336,86 @@ export async function updateProfilePhoto(userId: string, file: File) {
   if (error) throw error
 
   return photoUrl
+}
+
+type CommunityProfileRow = {
+  id: string
+  first_name: string
+  age: number
+  suburb: string
+  photo_url: string | null
+  selfie_verified: boolean
+}
+
+async function toCommunityMembers(rows: CommunityProfileRow[]): Promise<CommunityMember[]> {
+  if (!supabase || rows.length === 0) return []
+
+  const profileIds = rows.map((row) => row.id)
+  const [profileSportsResult, hostedResult] = await Promise.all([
+    supabase.from('profile_sports').select('profile_id, sport_id, skill').in('profile_id', profileIds),
+    supabase.from('activities').select('host_id').in('host_id', profileIds),
+  ])
+  if (profileSportsResult.error) throw profileSportsResult.error
+  if (hostedResult.error) throw hostedResult.error
+
+  const profileSports = profileSportsResult.data ?? []
+  const sportIds = [...new Set(profileSports.map((item) => item.sport_id))]
+  const sportsResult = sportIds.length > 0
+    ? await supabase.from('sports').select('id, name').in('id', sportIds)
+    : { data: [], error: null }
+  if (sportsResult.error) throw sportsResult.error
+  const sportNameById = new Map((sportsResult.data ?? []).map((sport) => [sport.id, sport.name]))
+
+  return rows.map((row) => {
+    const sports = profileSports
+      .filter((item) => item.profile_id === row.id)
+      .flatMap((item) => {
+        const name = sportNameById.get(item.sport_id)
+        return name ? [{ name, level: item.skill, meetups: 0 }] : []
+      })
+      .sort((left, right) => left.name.localeCompare(right.name))
+    return {
+      id: row.id,
+      name: row.first_name,
+      age: row.age,
+      suburb: row.suburb,
+      verified: row.selfie_verified,
+      photoUrl: row.photo_url ?? undefined,
+      sports,
+      stats: {
+        meetups: 0,
+        hosted: (hostedResult.data ?? []).filter((activity) => activity.host_id === row.id).length,
+        sports: sports.length,
+      },
+    }
+  })
+}
+
+const communityProfileColumns = 'id, first_name, age, suburb, photo_url, selfie_verified'
+
+export async function getCommunityProfiles(limit = 50): Promise<CommunityMember[]> {
+  if (!supabase) return []
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData.user) return []
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(communityProfileColumns)
+    .neq('id', userData.user.id)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return toCommunityMembers(data ?? [])
+}
+
+export async function getCommunityProfileByName(name: string): Promise<CommunityMember | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(communityProfileColumns)
+    .eq('first_name', name)
+    .limit(1)
+  if (error) throw error
+  const [member] = await toCommunityMembers(data ?? [])
+  return member ?? null
 }

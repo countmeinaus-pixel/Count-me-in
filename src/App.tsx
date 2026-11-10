@@ -29,6 +29,7 @@ import { appTourSteps, onStartAppTour } from "./lib/appTour"
 import { hasSeenWelcome, markTourFinished } from "./lib/onboardingFlags"
 import { supabase } from "./lib/supabase"
 import { PersonalRecordsScreen } from "./screens/PersonalRecordsScreen"
+import { ProfileFriendsScreen } from "./screens/ProfileFriendsScreen"
 import { ProfileScreen } from "./screens/ProfileScreen"
 import { MoreAboutScreen } from "./screens/MoreAboutScreen"
 import { MoreHelpScreen } from "./screens/MoreHelpScreen"
@@ -173,6 +174,7 @@ const router = createBrowserRouter([
       { path: "/profile/sports/edit", element: <EditSportsScreen /> },
       { path: "/profile/sports/:sport", element: <SportProfileScreen /> },
       { path: "/profile/:name/sports/:sport", element: <SportProfileScreen /> },
+      { path: "/profile/:name/friends", element: <ProfileFriendsScreen /> },
       { path: "/profile/patches", element: <PatchesScreen /> },
       { path: "/profile/records", element: <PersonalRecordsScreen /> },
       { path: "/more", element: <MoreScreen /> },

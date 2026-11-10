@@ -49,11 +49,10 @@ import {
   resolveProfileIdByName,
 } from "../lib/moderation"
 import { getMoreOrigin } from "../lib/moreNavigation"
+import { friendNames } from "../lib/friends"
 import { useMediaQuery } from "../lib/useMediaQuery"
 
-const initialFriends = ["Matt", "Hamish", "Sam", "Luca"].map((name) => ({
-  name,
-}))
+const initialFriends = friendNames.map((name) => ({ name }))
 
 export function ProfileScreen() {
   const navigate = useNavigate()
@@ -325,8 +324,10 @@ export function ProfileScreen() {
       : profile.stats.hosted
   const sportCount = profile.stats.sports
   const visibleFriends = friends.filter(
-    (friend) => !blockedUsers.includes(friend.name),
+    (friend) => !blockedUsers.includes(friend.name) && friend.name !== profile.name,
   )
+  // Up to 3 rows: 4 friends a row on desktop, 2 on phones.
+  const friendsPreviewCount = useMediaQuery("(min-width: 980px)") ? 12 : 6
   const patchList = useMemo(
     () => getPatchProgressForUser(profile.name),
     [profile.name, checkinVersion],
@@ -729,11 +730,27 @@ export function ProfileScreen() {
 
       <div className="section-heading compact">
         <h2>Friends</h2>
-        <span>{visibleFriends.length}</span>
+        {visibleFriends.length > friendsPreviewCount ? (
+          <button
+            type="button"
+            className="text-action"
+            onClick={() =>
+              navigate(
+                isCurrentUser
+                  ? "/friends"
+                  : `/profile/${encodeURIComponent(profile.name)}/friends`,
+              )
+            }
+          >
+            View all {visibleFriends.length}
+          </button>
+        ) : (
+          <span>{visibleFriends.length}</span>
+        )}
       </div>
 
       <div className="profile-friends-grid">
-        {visibleFriends.map((friend) => {
+        {visibleFriends.slice(0, friendsPreviewCount).map((friend) => {
           const member = communityMembers.find(
             (person) => person.name === friend.name,
           )

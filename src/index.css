@@ -1050,7 +1050,8 @@ h3 { font: 700 21px/24px var(--font-display); }
 .avatar.small.empty { border: 1px dashed var(--border-strong); background: transparent; font-size: 22px; }
 
 .notes-box { border-top: 1px solid var(--border); padding-top: 22px; }
-.notes-box p { color: var(--text-secondary); line-height: 1.5; margin-top: 10px; }
+.notes-box p { color: var(--text-secondary); line-height: 1.5; margin-top: 10px; white-space: pre-line; }
+.notes-box-after-facts { margin-bottom: 24px; }
 
 .sticky-action {
   position: fixed;

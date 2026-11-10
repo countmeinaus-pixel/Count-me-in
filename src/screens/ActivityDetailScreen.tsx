@@ -710,6 +710,13 @@ export function ActivityDetailScreen() {
           ))}
         </div>
 
+        {activity.notes.trim() && (
+          <div className="notes-box notes-box-after-facts">
+            <h2>From {hostName}</h2>
+            <p>{activity.notes}</p>
+          </div>
+        )}
+
         <div className="meta-row">
           <MapPin />
           <div>
@@ -822,11 +829,6 @@ export function ActivityDetailScreen() {
             {joinFeedback}
           </p>
         )}
-
-        <div className="notes-box">
-          <h2>From {hostName}</h2>
-          <p>{activity.notes}</p>
-        </div>
       </section>
 
       <div className="sticky-action">

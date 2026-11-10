@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { SportIcon } from '../components/SportIcon'
 import { getCurrentProfile, saveProfileSports, type ProfileSport, type SkillLevel } from '../lib/profile'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
+import { refreshViewerProfile } from '../lib/viewerProfile'
 import { useUnsavedChangesWarning } from '../lib/useUnsavedChangesWarning'
 import { getMoreOrigin } from '../lib/moreNavigation'
 
@@ -115,6 +116,7 @@ export function EditSportsScreen() {
     setError('')
     try {
       await saveProfileSports(userId, selectedSports.map(({ name, skill }) => ({ name, skill })))
+      void refreshViewerProfile()
       navigate(returnTo, {
         replace: true,
         state: returnTo.startsWith('/more')

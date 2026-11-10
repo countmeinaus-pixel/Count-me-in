@@ -14,6 +14,7 @@ import {
   type SkillLevel,
 } from '../lib/profile'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
+import { refreshViewerProfile } from '../lib/viewerProfile'
 
 const sportOptions = [
   'Running',
@@ -201,6 +202,7 @@ export function OnboardingScreen() {
   }
 
   function finish() {
+    void refreshViewerProfile()
     navigate('/', { replace: true })
   }
 

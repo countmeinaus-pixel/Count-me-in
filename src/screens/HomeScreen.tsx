@@ -10,13 +10,14 @@ import {
   type FeedActivity,
 } from '../lib/activityParticipation'
 import { hasDemoJoinRequest } from '../lib/demoParticipation'
-import { getCurrentProfile, getProfilePath } from '../lib/profile'
-import { supabase } from '../lib/supabase'
+import { getProfilePath } from '../lib/profile'
+import { useViewerProfile } from '../lib/viewerProfile'
 import { useCommunityMembers } from '../lib/useCommunityMembers'
 import { friendNames, getCrewSuggestions } from '../lib/friends'
 import { getBlockedUsers } from '../lib/localPreferences'
 import { getBlockedProfiles } from '../lib/moderation'
 import { Avatar } from '../components/Avatar'
+import { ActivityCardSkeleton, Skeleton } from '../components/Skeleton'
 import { startAppTour } from '../lib/appTour'
 import { hasFinishedTour } from '../lib/onboardingFlags'
 import { PersonalRecordCard } from '../components/PersonalRecordCard'
@@ -47,6 +48,8 @@ const activityIcons = {
   gym: Dumbbell,
 } as const
 
+let cachedFeed: FeedActivity[] | null = null
+
 export function HomeScreen() {
   const navigate = useNavigate()
   const filterRowRef = useRef<HTMLDivElement | null>(null)
@@ -69,9 +72,16 @@ export function HomeScreen() {
   const [calendarOffset, setCalendarOffset] = useState(0)
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null)
   const [now, setNow] = useState(() => new Date())
-  const [firstName, setFirstName] = useState(currentUser.name)
-  const [userSportNames, setUserSportNames] = useState(() => currentUser.sports.map((sport) => sport.name))
-  const [userSuburb, setUserSuburb] = useState(currentUser.suburb)
+  // Your own profile, shared between screens; the demo user only when signed out.
+  const viewer = useViewerProfile()
+  const viewerProfile = viewer.status === 'ready' ? viewer.profile : null
+  const isViewerLoading = viewer.status === 'loading'
+  const firstName = viewerProfile?.firstName ?? currentUser.name
+  const userSportNames = useMemo(
+    () => (viewerProfile ?? currentUser).sports.map((sport) => sport.name),
+    [viewerProfile],
+  )
+  const userSuburb = viewerProfile?.suburb ?? currentUser.suburb
   const [blockedNames, setBlockedNames] = useState<string[]>(() => {
     try {
       return getBlockedUsers()
@@ -94,42 +104,18 @@ export function HomeScreen() {
     }
   }, [recordsVersion])
   const suggestionRowRef = useRef<HTMLDivElement | null>(null)
-  const [sportLoadError, setSportLoadError] = useState('')
-  const [savedActivities, setSavedActivities] = useState<FeedActivity[]>([])
+  const sportLoadError = viewer.status === 'ready' ? viewer.error : ''
+  // The last feed is kept while you move around the app, and refreshed in the background.
+  const [savedActivities, setSavedActivities] = useState<FeedActivity[]>(() => cachedFeed ?? [])
+  const [isFeedLoading, setIsFeedLoading] = useState(cachedFeed === null)
   const [activityLoadError, setActivityLoadError] = useState('')
   const [filterScroll, setFilterScroll] = useState({ isScrollable: false, canScrollLeft: false, canScrollRight: false, activeDot: 0, dotCount: 0 })
   const filterOptions = useMemo(() => ['My sports', ...new Set(userSportNames)], [userSportNames])
 
+  // The tour runs once per device for signed-in members.
   useEffect(() => {
-    let active = true
-    async function loadUserSports() {
-      if (!supabase) return
-
-      try {
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-        if (userError?.name === 'AuthSessionMissingError') return
-        if (userError) throw userError
-        if (!userData.user) return
-
-        const profile = await getCurrentProfile(userData.user.id)
-        if (!profile) return
-        // The tour runs once per device for signed-in members.
-        if (active && !hasFinishedTour()) startAppTour()
-        if (active) {
-          setFirstName(profile.firstName)
-          setUserSportNames(profile.sports.map((sport) => sport.name))
-          setUserSuburb(profile.suburb)
-        }
-      } catch (error) {
-        if (active) setSportLoadError(error instanceof Error ? error.message : 'Unable to load your sports filters.')
-      }
-    }
-
-    void loadUserSports()
-    return () => {
-      active = false
-    }
-  }, [])
+    if (viewerProfile && !hasFinishedTour()) startAppTour()
+  }, [viewerProfile])
 
   useEffect(() => {
     let active = true
@@ -186,6 +172,7 @@ export function HomeScreen() {
     let active = true
     void getSavedActivityFeed()
       .then((result) => {
+        cachedFeed = result
         if (active) setSavedActivities(result)
       })
       .catch((error: unknown) => {
@@ -195,6 +182,9 @@ export function HomeScreen() {
               ? error.message
               : 'Unable to load saved activities.',
           )
+      })
+      .finally(() => {
+        if (active) setIsFeedLoading(false)
       })
 
     return () => {
@@ -351,12 +341,16 @@ export function HomeScreen() {
                 ? 'Good afternoon'
                 : 'Good evening'}
         </p>
-        <h1>Ready to get out there, {firstName}?</h1>
+        {isViewerLoading
+          ? <h1><Skeleton width="min(420px, 80%)" height={32} radius={8} /></h1>
+          : <h1>Ready to get out there, {firstName}?</h1>}
       </section>
 
       <div className={`filter-scroll-shell ${filterScroll.isScrollable ? 'is-scrollable' : ''} ${filterScroll.canScrollLeft ? 'can-scroll-left' : ''} ${filterScroll.canScrollRight ? 'can-scroll-right' : ''}`}>
         <div className="filter-row" ref={filterRowRef} data-tour="home-filters">
-          {filterOptions.map((item) => (
+          {isViewerLoading
+            ? [96, 88, 72, 84].map((width) => <Skeleton key={width} width={width} height={36} radius={8} />)
+            : filterOptions.map((item) => (
           <button
             key={item}
             className={`chip ${filter === item ? 'selected' : ''}`}
@@ -397,10 +391,14 @@ export function HomeScreen() {
         <>
           <div className="section-heading">
             <h2>This week</h2>
-            <span>{visible.length} callouts</span>
+            {isFeedLoading ? <Skeleton width={70} height={12} /> : <span>{visible.length} callouts</span>}
           </div>
 
-          {visible.length === 0 ? (
+          {isFeedLoading ? (
+            <div className="card-list" role="status" aria-label="Loading activities">
+              {[0, 1, 2].map((item) => <ActivityCardSkeleton key={item} />)}
+            </div>
+          ) : visible.length === 0 ? (
             <div className="empty-state-card">
               <div className="empty-state-icon">⌁</div>
               <h3>Nothing on for this sport yet</h3>

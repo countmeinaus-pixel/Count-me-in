@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { getCurrentModerationRole } from '../lib/moderation'
 import { logOut, moderationGroup, sideNavGroups, type MenuItem } from '../lib/moreMenu'
-import { supabase } from '../lib/supabase'
 import { useMediaQuery } from '../lib/useMediaQuery'
+import { useViewerProfile } from '../lib/viewerProfile'
 
 export type Tab = 'home' | 'friends' | 'activities' | 'chats' | 'more'
 
@@ -33,11 +33,16 @@ export function BottomNav({
 }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const [profilePhoto, setProfilePhoto] = useState<{ name: string; url: string | null }>({
-    name: currentUser.name,
-    url: currentUser.photoUrl,
-  })
-  const [profileError, setProfileError] = useState('')
+  // Your own profile, shared with the other screens so the photo never flashes.
+  const viewer = useViewerProfile()
+  const viewerProfile = viewer.status === 'ready' ? viewer.profile : null
+  const isViewerLoading = viewer.status === 'loading'
+  const profilePhoto = {
+    name: viewerProfile?.firstName ?? currentUser.name,
+    url: viewerProfile ? viewerProfile.photoUrl : currentUser.photoUrl,
+  }
+  const [logOutError, setLogOutError] = useState('')
+  const profileError = logOutError || (viewer.status === 'ready' ? viewer.error : '')
   const isSideNav = useMediaQuery('(min-width: 980px)')
   const [isStaff, setIsStaff] = useState(false)
   const groups = isStaff ? [...sideNavGroups, moderationGroup] : sideNavGroups
@@ -73,42 +78,13 @@ export function BottomNav({
   function openMenuItem(item: MenuItem) {
     if (item.action === 'logout') {
       void logOut(() => navigate('/login', { replace: true })).then((error) => {
-        if (error) setProfileError(error)
+        if (error) setLogOutError(error)
       })
       return
     }
     if (item.href) navigate(item.href)
   }
 
-  useEffect(() => {
-    let active = true
-    async function loadProfilePhoto() {
-      if (!supabase) return
-
-      try {
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-        if (userError?.message === 'Auth session missing!') return
-        if (userError) throw userError
-        if (!userData.user) return
-
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('first_name, photo_url')
-          .eq('id', userData.user.id)
-          .maybeSingle()
-        if (error) throw error
-        if (!data) throw new Error('Your profile could not be found. Please complete onboarding first.')
-        if (active) setProfilePhoto({ name: data.first_name, url: data.photo_url })
-      } catch (error) {
-        if (active) setProfileError(error instanceof Error ? error.message : 'Unable to load your profile photo.')
-      }
-    }
-
-    void loadProfilePhoto()
-    return () => {
-      active = false
-    }
-  }, [])
 
   return (
     <nav className={`bottom-nav${collapsed ? ' collapsed' : ''}`} aria-label="Main navigation">
@@ -198,10 +174,12 @@ export function BottomNav({
           : isSideNav ? `Your profile, ${profilePhoto.name}` : 'More'}
         aria-current={active === 'more' ? 'page' : undefined}
       >
-        {profilePhoto.url
-          ? <img className="nav-profile-photo" src={profilePhoto.url} alt="" />
-          : <span className="nav-profile-initial">{profilePhoto.name[0]?.toUpperCase() ?? '?'}</span>}
-        <span>{isSideNav ? profilePhoto.name : 'More'}</span>
+        {isViewerLoading
+          ? <span className="nav-profile-initial skeleton" />
+          : profilePhoto.url
+            ? <img className="nav-profile-photo" src={profilePhoto.url} alt="" />
+            : <span className="nav-profile-initial">{profilePhoto.name[0]?.toUpperCase() ?? '?'}</span>}
+        <span>{isSideNav ? (isViewerLoading ? '' : profilePhoto.name) : 'More'}</span>
       </button>
       <button
         type="button"

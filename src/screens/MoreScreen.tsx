@@ -8,6 +8,8 @@ import {
   loadSavedMeetupsForUser,
 } from "../lib/checkins"
 import { getStoredLanguage } from "../lib/i18n"
+import { Skeleton } from "../components/Skeleton"
+import { getViewerProfileState } from "../lib/viewerProfile"
 import { logOut, menuGroups, moderationGroup, type MenuItem } from "../lib/moreMenu"
 import { getMoreOrigin } from "../lib/moreNavigation"
 import { getCurrentModerationRole } from "../lib/moderation"
@@ -25,17 +27,30 @@ export function MoreScreen() {
   const navigate = useNavigate()
   const location = useLocation()
   const touchStart = useRef<{ x: number; y: number } | null>(null)
-  const [profile, setProfile] = useState<MenuProfile>({
-    name: currentUser.name,
-    suburb: currentUser.suburb,
-    verified: currentUser.verified,
-    photoUrl: currentUser.photoUrl,
-    sports: currentUser.stats.sports,
-  })
+  // Start from your profile if another screen already loaded it.
+  const cachedViewer = getViewerProfileState()
+  const cachedProfile = cachedViewer.status === "ready" ? cachedViewer.profile : null
+  const [profile, setProfile] = useState<MenuProfile>(() =>
+    cachedProfile
+      ? {
+          name: cachedProfile.firstName,
+          suburb: cachedProfile.suburb,
+          verified: cachedProfile.selfieVerified,
+          photoUrl: cachedProfile.photoUrl,
+          sports: cachedProfile.sports.length,
+        }
+      : {
+          name: currentUser.name,
+          suburb: currentUser.suburb,
+          verified: currentUser.verified,
+          photoUrl: currentUser.photoUrl,
+          sports: currentUser.stats.sports,
+        },
+  )
   const [profileError, setProfileError] = useState("")
   const [prCount, setPrCount] = useState(0)
   // While the real profile loads, show placeholders instead of the demo user.
-  const [isProfileLoading, setIsProfileLoading] = useState(Boolean(supabase))
+  const [isProfileLoading, setIsProfileLoading] = useState(Boolean(supabase) && !cachedProfile)
   const [checkinVersion, setCheckinVersion] = useState(0)
   const [language, setLanguage] = useState(getStoredLanguage())
   const [isStaff, setIsStaff] = useState(false)
@@ -242,25 +257,25 @@ export function MoreScreen() {
           )}
         </span>
         <span className="more-profile-main">
-          <strong>{isProfileLoading ? "Loading…" : profile.name}</strong>
-          <small>{isProfileLoading ? "\u00a0" : profile.suburb}</small>
+          <strong>{isProfileLoading ? <Skeleton width={120} height={20} /> : profile.name}</strong>
+          <small>{isProfileLoading ? <Skeleton width={160} height={12} /> : profile.suburb}</small>
         </span>
         <ChevronRight aria-hidden="true" className="more-profile-chevron" />
         <span className="more-profile-stats">
           <span>
-            <strong>{isProfileLoading ? "–" : meetupStats.length}</strong>
+            <strong>{isProfileLoading ? <Skeleton width={28} height={22} /> : meetupStats.length}</strong>
             <small>Meetups</small>
           </span>
           <span>
-            <strong>{isProfileLoading ? "–" : hostedCount}</strong>
+            <strong>{isProfileLoading ? <Skeleton width={28} height={22} /> : hostedCount}</strong>
             <small>Hosted</small>
           </span>
           <span>
-            <strong>{isProfileLoading ? "–" : profile.sports}</strong>
+            <strong>{isProfileLoading ? <Skeleton width={28} height={22} /> : profile.sports}</strong>
             <small>Sports</small>
           </span>
           <span>
-            <strong>{isProfileLoading ? "–" : prCount}</strong>
+            <strong>{isProfileLoading ? <Skeleton width={28} height={22} /> : prCount}</strong>
             <small>PRs</small>
           </span>
         </span>

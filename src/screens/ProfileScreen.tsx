@@ -11,6 +11,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
 import { Avatar } from "../components/Avatar"
 import { PersonalRecordCard } from "../components/PersonalRecordCard"
+import { ProfileSkeleton } from "../components/Skeleton"
+import { getViewerProfileState } from "../lib/viewerProfile"
 import {
   getPersonalRecordsForProfile,
   type PersonalRecord,
@@ -61,7 +63,11 @@ export function ProfileScreen() {
   const navigate = useNavigate()
   const location = useLocation()
   const { name: profileParam } = useParams()
-  const [savedProfile, setSavedProfile] = useState<CurrentProfile | null>(null)
+  // Your own profile starts from the shared copy, so it doesn't flash the demo user.
+  const [savedProfile, setSavedProfile] = useState<CurrentProfile | null>(() => {
+    const viewer = getViewerProfileState()
+    return viewer.status === "ready" ? viewer.profile : null
+  })
   const [remoteProfile, setRemoteProfile] = useState<CommunityMember | null>(
     null,
   )
@@ -102,7 +108,7 @@ export function ProfileScreen() {
     !profileParam ||
     (openedById ? linkedProfileId === viewerId : profileKey === currentUser.name)
   // While your own profile loads, show a loading state instead of the demo user.
-  const [isOwnProfileLoading, setIsOwnProfileLoading] = useState(Boolean(supabase))
+  const [isOwnProfileLoading, setIsOwnProfileLoading] = useState(Boolean(supabase) && !savedProfile)
   const [profileActivities, setProfileActivities] = useState<{
     upcoming: ActivityCardData[]
     latest: ActivityCardData | null
@@ -415,9 +421,14 @@ export function ProfileScreen() {
             <ArrowLeft />
           </button>
         </header>
-        <p className="text-[var(--text-secondary)]" role="status">
-          {remoteLookupDone ? "This profile could not be found." : "Loading profile…"}
-        </p>
+        {remoteLookupDone ? (
+          <p className="text-[var(--text-secondary)]" role="status">This profile could not be found.</p>
+        ) : (
+          <>
+            <span className="sr-only" role="status">Loading profile…</span>
+            <ProfileSkeleton />
+          </>
+        )}
       </div>
     )
   }
@@ -425,7 +436,8 @@ export function ProfileScreen() {
   if (isCurrentUser && isOwnProfileLoading) {
     return (
       <div className="screen profile-page" aria-busy="true">
-        <p className="text-[var(--text-secondary)]" role="status">Loading your profile…</p>
+        <span className="sr-only" role="status">Loading your profile…</span>
+        <ProfileSkeleton />
       </div>
     )
   }

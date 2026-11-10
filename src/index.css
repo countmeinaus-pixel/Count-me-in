@@ -4622,3 +4622,35 @@ span.user-avatar {
 @container app (max-width: 599px) {
   .card-list { grid-template-columns: 1fr; }
 }
+
+/* Loading skeletons: grey shapes with a soft shimmer (see Skeleton.tsx). */
+.skeleton {
+  display: block;
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+.skeleton-card { pointer-events: none; align-content: start; }
+.skeleton-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.skeleton-row.tight { justify-content: flex-start; gap: 4px; }
+h1 .skeleton { margin: 4px 0; }
+.filter-row .skeleton { flex: 0 0 auto; }
+.profile-skeleton { display: grid; justify-items: center; gap: 14px; padding-top: 72px; }
+.profile-skeleton-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  margin: 12px 0;
+  padding: 18px 0;
+  border-block: 1px solid var(--border);
+}
+.profile-skeleton-stat { display: grid; justify-items: center; gap: 8px; }

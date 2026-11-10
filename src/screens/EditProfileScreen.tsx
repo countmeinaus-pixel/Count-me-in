@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { adelaideSuburbs } from '../data/adelaideSuburbs'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
+import { refreshViewerProfile } from '../lib/viewerProfile'
 import { useUnsavedChangesWarning } from '../lib/useUnsavedChangesWarning'
 import { getMoreOrigin } from '../lib/moreNavigation'
 import {
@@ -197,6 +198,7 @@ export function EditProfileScreen() {
       setOriginal(savedForm)
       setForm(savedForm)
       setSelectedPhoto(null)
+      void refreshViewerProfile()
       navigate(returnTo, {
         replace: true,
         state: returnTo === '/more' ? { statusMessage, from: moreOrigin } : { statusMessage },

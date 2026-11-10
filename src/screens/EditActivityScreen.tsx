@@ -13,6 +13,7 @@ import { cancelActivity } from '../lib/activityParticipation'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 const levels = ['Beginner friendly', 'Intermediate', 'Experienced']
+const defaultCancelMessage = 'Sorry lads, something came up and I can’t make it anymore. Hope to catch you next time.'
 
 function getLocalDateTime(isoString: string) {
   const date = new Date(isoString)
@@ -40,7 +41,7 @@ export function EditActivityScreen() {
   const coverInputRef = useRef<HTMLInputElement | null>(null)
   const [activity, setActivity] = useState<SavedActivityDetails | null>(null)
   const [cancelOpen, setCancelOpen] = useState(false)
-  const [cancelMessage, setCancelMessage] = useState('')
+  const [cancelMessage, setCancelMessage] = useState(defaultCancelMessage)
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
   const [userId, setUserId] = useState('')
@@ -387,6 +388,7 @@ export function EditActivityScreen() {
             size="lg"
             onClick={() => {
               setCancelError('')
+              setCancelMessage(defaultCancelMessage)
               setCancelOpen(true)
             }}
             disabled={isSaving}
@@ -411,14 +413,17 @@ export function EditActivityScreen() {
             <h2 id="cancel-activity-dialog-title">Cancel this activity?</h2>
             <p className="leave-sheet-note">This can’t be undone. We’ll let everyone who’s going or asked to join know.</p>
             <label className="report-field">
-              <span>Message for the group (optional)</span>
+              <span>Message for the group</span>
               <textarea
                 value={cancelMessage}
                 maxLength={280}
                 rows={3}
-                placeholder="Sorry lads, I can’t make it anymore."
+                placeholder="Write a message, or leave it empty."
                 onChange={(event) => setCancelMessage(event.target.value)}
               />
+              <small className="field-helper">
+                We send this with the notification. Change it or write your own.
+              </small>
             </label>
             {cancelError && <p className="activity-join-error" role="alert">{cancelError}</p>}
             <div className="report-dialog-actions">

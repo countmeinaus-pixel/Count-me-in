@@ -1068,6 +1068,9 @@ h3 { font: 700 21px/24px var(--font-display); }
   grid-template-columns: 1fr 1.2fr;
   gap: 10px;
 }
+.sticky-action-group > :only-child {
+  grid-column: 1 / -1;
+}
 
 .checkin-modal {
   position: fixed;
@@ -3439,6 +3442,15 @@ h3 { font: 700 21px/24px var(--font-display); }
 .wizard-actions .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .wizard-actions svg { width: 18px; height: 18px; }
 .wizard-actions .button-primary { min-width: 150px; }
+.edit-activity-cancel {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 12px;
+}
+.edit-activity-cancel h2 { font-size: 18px; }
+.edit-activity-cancel p { color: var(--text-secondary); font-size: 14px; }
 .wizard-error {
   margin: 12px 0;
   padding: 12px;

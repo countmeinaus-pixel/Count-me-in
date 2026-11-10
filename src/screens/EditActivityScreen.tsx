@@ -9,6 +9,7 @@ import {
   getActivityCoverPath,
   uploadActivityCover,
 } from '../lib/activityImages'
+import { cancelActivity } from '../lib/activityParticipation'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 const levels = ['Beginner friendly', 'Intermediate', 'Experienced']
@@ -38,6 +39,10 @@ export function EditActivityScreen() {
   const navigate = useNavigate()
   const coverInputRef = useRef<HTMLInputElement | null>(null)
   const [activity, setActivity] = useState<SavedActivityDetails | null>(null)
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelMessage, setCancelMessage] = useState('')
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
   const [userId, setUserId] = useState('')
   const [title, setTitle] = useState('')
   const [startsAt, setStartsAt] = useState('')
@@ -217,6 +222,32 @@ export function EditActivityScreen() {
     }
   }
 
+  async function handleCancelActivity() {
+    if (!activity) return
+    setIsCancelling(true)
+    setCancelError('')
+    try {
+      const notifiedCount = await cancelActivity(activity.id, cancelMessage)
+      let statusMessage = notifiedCount === 0
+        ? 'Activity cancelled and taken down.'
+        : `Activity cancelled. We've let ${notifiedCount === 1 ? '1 member' : `${notifiedCount} members`} know.`
+      const coverPath = getActivityCoverPath(activity.coverImageUrl)
+      if (coverPath && supabase) {
+        try {
+          const { data } = await supabase.auth.getUser()
+          if (data.user) await deleteActivityCover(coverPath, data.user.id)
+        } catch {
+          statusMessage += ' The banner photo could not be removed from storage.'
+        }
+      }
+      window.dispatchEvent(new Event('count-me-in-chat-unread-changed'))
+      navigate('/activities', { replace: true, state: { statusMessage } })
+    } catch (cancelFailure) {
+      setCancelError(cancelFailure instanceof Error ? cancelFailure.message : 'Unable to cancel this activity.')
+      setIsCancelling(false)
+    }
+  }
+
   if (isLoading) {
     return <main className="screen create-wizard"><p className="text-[var(--text-secondary)]">Loading activity…</p></main>
   }
@@ -345,6 +376,67 @@ export function EditActivityScreen() {
           {isSaving ? 'Saving…' : 'Save changes'}
         </Button>
       </footer>
+
+      {new Date(activity.startsAt) > new Date() && (
+        <section className="edit-activity-cancel">
+          <h2>Cancel activity</h2>
+          <p>Can’t make it anymore? Everyone who’s going or asked to join gets a notification, and the activity and its group chat are taken down for good.</p>
+          <Button
+            type="button"
+            variant="destructive"
+            size="lg"
+            onClick={() => {
+              setCancelError('')
+              setCancelOpen(true)
+            }}
+            disabled={isSaving}
+          >
+            Cancel activity
+          </Button>
+        </section>
+      )}
+
+      {cancelOpen && (
+        <div className="report-dialog-backdrop" role="presentation">
+          <form
+            className="report-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancel-activity-dialog-title"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void handleCancelActivity()
+            }}
+          >
+            <h2 id="cancel-activity-dialog-title">Cancel this activity?</h2>
+            <p className="leave-sheet-note">This can’t be undone. We’ll let everyone who’s going or asked to join know.</p>
+            <label className="report-field">
+              <span>Message for the group (optional)</span>
+              <textarea
+                value={cancelMessage}
+                maxLength={280}
+                rows={3}
+                placeholder="Sorry lads, I can’t make it anymore."
+                onChange={(event) => setCancelMessage(event.target.value)}
+              />
+            </label>
+            {cancelError && <p className="activity-join-error" role="alert">{cancelError}</p>}
+            <div className="report-dialog-actions">
+              <button
+                type="button"
+                className="button button-secondary button-md"
+                onClick={() => setCancelOpen(false)}
+                disabled={isCancelling}
+              >
+                Keep it
+              </button>
+              <button type="submit" className="button button-destructive button-md" disabled={isCancelling}>
+                {isCancelling ? 'Cancelling…' : 'Cancel activity'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </main>
   )
 }

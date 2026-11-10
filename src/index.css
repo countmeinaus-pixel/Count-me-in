@@ -2339,6 +2339,9 @@ h3 { font: 700 21px/24px var(--font-display); }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
+@media (min-width: 980px) {
+  .all-patches-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .all-patch-card {
   display: flex;
   min-width: 0;

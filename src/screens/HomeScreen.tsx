@@ -13,6 +13,12 @@ import { hasDemoJoinRequest } from '../lib/demoParticipation'
 import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 import { useCommunityMembers } from '../lib/useCommunityMembers'
+import { friendNames, getCrewSuggestions } from '../lib/friends'
+import { getBlockedUsers } from '../lib/localPreferences'
+import { getBlockedProfiles } from '../lib/moderation'
+import { Avatar } from '../components/Avatar'
+import { PersonalRecordCard } from '../components/PersonalRecordCard'
+import { getRecordsToConfirm, type PersonalRecord } from '../lib/personalRecords'
 import { getUnreadNotificationCount } from '../lib/notifications'
 
 type ViewMode = 'list' | 'map' | 'calendar'
@@ -67,6 +73,29 @@ export function HomeScreen() {
   const [now, setNow] = useState(() => new Date())
   const [firstName, setFirstName] = useState(currentUser.name)
   const [userSportNames, setUserSportNames] = useState(() => currentUser.sports.map((sport) => sport.name))
+  const [userSuburb, setUserSuburb] = useState(currentUser.suburb)
+  const [blockedNames, setBlockedNames] = useState<string[]>(() => {
+    try {
+      return getBlockedUsers()
+    } catch {
+      return []
+    }
+  })
+  const [activeSuggestion, setActiveSuggestion] = useState(0)
+  const [recordsToConfirm, setRecordsToConfirm] = useState<PersonalRecord[]>([])
+  const [recordsVersion, setRecordsVersion] = useState(0)
+  useEffect(() => {
+    let active = true
+    getRecordsToConfirm(3)
+      .then((records) => {
+        if (active) setRecordsToConfirm(records)
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [recordsVersion])
+  const suggestionRowRef = useRef<HTMLDivElement | null>(null)
   const [sportLoadError, setSportLoadError] = useState('')
   const [savedActivities, setSavedActivities] = useState<FeedActivity[]>([])
   const [activityLoadError, setActivityLoadError] = useState('')
@@ -89,6 +118,7 @@ export function HomeScreen() {
         if (active) {
           setFirstName(profile.firstName)
           setUserSportNames(profile.sports.map((sport) => sport.name))
+          setUserSuburb(profile.suburb)
         }
       } catch (error) {
         if (active) setSportLoadError(error instanceof Error ? error.message : 'Unable to load your sports filters.')
@@ -100,6 +130,49 @@ export function HomeScreen() {
       active = false
     }
   }, [])
+
+  useEffect(() => {
+    let active = true
+    getBlockedProfiles()
+      .then((profiles) => {
+        if (active) setBlockedNames((current) => [...new Set([...current, ...profiles.map((profile) => profile.name)])])
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const crewFriends = useMemo(() => {
+    const seen = new Set<string>()
+    return communityMembers.filter((member) => {
+      if (!friendNames.includes(member.name) || blockedNames.includes(member.name) || seen.has(member.name)) return false
+      seen.add(member.name)
+      return true
+    })
+  }, [communityMembers, blockedNames])
+  const crewSuggestions = useMemo(
+    () => getCrewSuggestions(
+      communityMembers,
+      { name: firstName, sports: userSportNames, suburb: userSuburb },
+      [...friendNames, ...blockedNames],
+    ),
+    [communityMembers, firstName, userSportNames, userSuburb, blockedNames],
+  )
+
+  function handleSuggestionScroll() {
+    const row = suggestionRowRef.current
+    const first = row?.firstElementChild as HTMLElement | null
+    if (!row || !first) return
+    const step = first.offsetWidth + 12
+    setActiveSuggestion(Math.min(crewSuggestions.length - 1, Math.round(row.scrollLeft / step)))
+  }
+
+  function scrollToSuggestion(index: number) {
+    const row = suggestionRowRef.current
+    const card = row?.children[index] as HTMLElement | undefined
+    if (row && card) row.scrollTo({ left: card.offsetLeft - row.offsetLeft, behavior: 'smooth' })
+  }
 
   useEffect(() => {
     let active = true
@@ -520,6 +593,26 @@ export function HomeScreen() {
         </div>
       )}
 
+      {recordsToConfirm.length > 0 && (
+        <section className="pr-section" aria-labelledby="home-pr-heading">
+          <div>
+            <p className="eyebrow">Keep each other honest</p>
+            <h2 id="home-pr-heading">New PRs to confirm</h2>
+          </div>
+          <div className="pr-list">
+            {recordsToConfirm.map((record) => (
+              <PersonalRecordCard
+                key={record.id}
+                record={record}
+                showOwner
+                onOpenOwner={() => navigate(`/profile/${encodeURIComponent(record.ownerName)}`)}
+                onChanged={() => window.setTimeout(() => setRecordsVersion((version) => version + 1), 1200)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="crew-preview">
         <div className="crew-preview-heading">
           <div>
@@ -528,15 +621,61 @@ export function HomeScreen() {
           </div>
           <button type="button" className="text-action" onClick={() => navigate('/friends#crew')}>View all</button>
         </div>
-        <div className="mate-grid crew-preview-grid">
-          {communityMembers.slice(0, 4).map((member) => (
-            <MateCard
-              key={member.id ?? member.name}
-              member={member}
-              onClick={() => navigate(`/profile/${encodeURIComponent(member.name)}`)}
-            />
-          ))}
-        </div>
+
+        {crewFriends.length > 0 && (
+          <div className="crew-friends">
+            <h3>Your friends</h3>
+            <div className="crew-friends-row">
+              {crewFriends.map((member) => (
+                <button
+                  type="button"
+                  key={member.id ?? member.name}
+                  className="crew-friend"
+                  onClick={() => navigate(`/profile/${encodeURIComponent(member.name)}`)}
+                >
+                  <Avatar name={member.name} photoUrl={member.photoUrl} size={48} verified={member.verified} />
+                  <span>{member.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {crewSuggestions.length > 0 && (
+          <div className="crew-suggestions">
+            <h3>Suggested for you</h3>
+            <div
+              className="crew-suggestion-row"
+              ref={suggestionRowRef}
+              onScroll={handleSuggestionScroll}
+              aria-label="Suggested members. Swipe to see more."
+            >
+              {crewSuggestions.map(({ member, reason }) => (
+                <div className="crew-suggestion" key={member.id ?? member.name}>
+                  <span className="crew-suggestion-reason">{reason}</span>
+                  <MateCard
+                    member={member}
+                    onClick={() => navigate(`/profile/${encodeURIComponent(member.name)}`)}
+                  />
+                </div>
+              ))}
+            </div>
+            {crewSuggestions.length > 1 && (
+              <div className="crew-suggestion-dots">
+                {crewSuggestions.map(({ member }, index) => (
+                  <button
+                    type="button"
+                    key={member.id ?? member.name}
+                    className={index === activeSuggestion ? 'active' : ''}
+                    aria-label={`Show suggestion ${index + 1} of ${crewSuggestions.length}`}
+                    aria-current={index === activeSuggestion}
+                    onClick={() => scrollToSuggestion(index)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
     </div>

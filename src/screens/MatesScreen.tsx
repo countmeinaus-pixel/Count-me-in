@@ -6,8 +6,8 @@ import { getBlockedUsers } from "../lib/localPreferences"
 import { getBlockedProfiles } from "../lib/moderation"
 import { useBackToMore } from "../lib/moreNavigation"
 import { useCommunityMembers } from "../lib/useCommunityMembers"
+import { friendNames } from "../lib/friends"
 
-const friendNames = ["Matt", "Hamish", "Sam", "Luca"]
 
 // Friends and Find your crew live on one page: your friends first, everyone else below.
 export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {

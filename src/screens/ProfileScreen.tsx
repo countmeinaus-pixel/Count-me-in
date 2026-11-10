@@ -8,12 +8,19 @@ import {
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
 import { Avatar } from "../components/Avatar"
+import { PersonalRecordCard } from "../components/PersonalRecordCard"
+import {
+  getPersonalRecordsForProfile,
+  type PersonalRecord,
+} from "../lib/personalRecords"
 import { MateCard } from "../components/MateCard"
 import { PatchIcon } from "../components/PatchIcon"
 import { ReportDialog } from "../components/ReportDialog"
 import { SportIcon } from "../components/SportIcon"
 import {
+  activities as demoActivities,
   communityMembers,
   currentUser,
   type CommunityMember,
@@ -31,6 +38,10 @@ import {
   type CurrentProfile,
 } from "../lib/profile"
 import { supabase } from "../lib/supabase"
+import {
+  getProfileActivities,
+  type FeedActivity,
+} from "../lib/activityParticipation"
 import { addBlockedUser, getBlockedUsers } from "../lib/localPreferences"
 import {
   blockProfile,
@@ -71,6 +82,11 @@ export function ProfileScreen() {
 
   const isCurrentUser =
     !profileParam || decodeURIComponent(profileParam) === currentUser.name
+  const [profileActivities, setProfileActivities] = useState<{
+    upcoming: ActivityCardData[]
+    latest: ActivityCardData | null
+  } | null>(null)
+  const [profileActivitiesError, setProfileActivitiesError] = useState("")
 
   useEffect(() => {
     const name = decodeURIComponent(profileParam ?? "")
@@ -196,6 +212,84 @@ export function ProfileScreen() {
             ],
             stats: { meetups: 4, hosted: 1, sports: 2 },
           })
+  const profileId = isCurrentUser ? savedProfile?.id : remoteProfile?.id
+  const profileName = profile.name
+
+  useEffect(() => {
+    const toCard = ({ viewerJoinStatus, ...activity }: FeedActivity) => ({
+      ...activity,
+      joinStatus: viewerJoinStatus ?? undefined,
+    })
+
+    if (!profileId) {
+      // Demo profiles: use the demo activities they host or go to.
+      const now = Date.now()
+      const theirs = demoActivities.filter(
+        (activity) =>
+          activity.host === profileName ||
+          activity.attendees.includes(profileName),
+      )
+      setProfileActivities({
+        upcoming: theirs.filter((activity) => activity.startsAt.getTime() >= now),
+        latest:
+          theirs
+            .filter((activity) => activity.startsAt.getTime() < now)
+            .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime())[0] ??
+          null,
+      })
+      return
+    }
+
+    let active = true
+    setProfileActivities(null)
+    setProfileActivitiesError("")
+    getProfileActivities(profileId)
+      .then((result) => {
+        if (!active) return
+        setProfileActivities({
+          upcoming: result.upcoming.map(toCard),
+          latest: result.latest ? toCard(result.latest) : null,
+        })
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setProfileActivitiesError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load this member's activities.",
+          )
+      })
+    return () => {
+      active = false
+    }
+  }, [profileId, profileName])
+
+  const [personalRecords, setPersonalRecords] = useState<PersonalRecord[] | null>(null)
+  const [personalRecordsError, setPersonalRecordsError] = useState("")
+  const [recordsVersion, setRecordsVersion] = useState(0)
+
+  useEffect(() => {
+    if (!profileId) {
+      setPersonalRecords(null)
+      return
+    }
+    let active = true
+    setPersonalRecordsError("")
+    getPersonalRecordsForProfile(profileId)
+      .then((records) => {
+        if (active) setPersonalRecords(records)
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setPersonalRecordsError(
+            error instanceof Error ? error.message : "Unable to load personal records.",
+          )
+      })
+    return () => {
+      active = false
+    }
+  }, [profileId, recordsVersion])
+
   const confirmedMeetups = useMemo(
     () => getConfirmedMeetupsForUser(profile.name),
     [profile.name, checkinVersion],
@@ -441,7 +535,72 @@ export function ProfileScreen() {
             </div>
           ))}
         </div>
+
+        {profileActivitiesError ? (
+          <p className="edit-form-error" role="alert">
+            {profileActivitiesError}
+          </p>
+        ) : profileActivities && profileActivities.upcoming.length > 0 ? (
+          <div className="profile-activities">
+            <h3>Upcoming</h3>
+            {profileActivities.upcoming.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                onClick={() => navigate(`/activity/${activity.id}`)}
+              />
+            ))}
+          </div>
+        ) : profileActivities?.latest ? (
+          <div className="profile-activities">
+            <h3>Latest meetup</h3>
+            <ActivityCard
+              activity={profileActivities.latest}
+              onClick={() =>
+                profileActivities.latest &&
+                navigate(`/activity/${profileActivities.latest.id}`)
+              }
+            />
+          </div>
+        ) : null}
       </div>
+
+      {(personalRecords !== null || personalRecordsError) && (
+        <section className="pr-section" aria-labelledby="pr-heading">
+          <div className="pr-section-heading">
+            <h2 id="pr-heading">Personal records</h2>
+            {isCurrentUser && (
+              <button
+                type="button"
+                className="text-action"
+                onClick={() => navigate("/profile/records")}
+              >
+                Claim a PR
+              </button>
+            )}
+          </div>
+          {personalRecordsError ? (
+            <p className="edit-form-error" role="alert">{personalRecordsError}</p>
+          ) : personalRecords && personalRecords.length > 0 ? (
+            <div className="pr-list">
+              {personalRecords.map((record) => (
+                <PersonalRecordCard
+                  key={record.id}
+                  record={record}
+                  onChanged={() => setRecordsVersion((version) => version + 1)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="pr-empty">
+              {isCurrentUser
+                ? "Got a best? Claim your first PR with a photo as proof."
+                : `${profile.name} hasn't claimed any PRs yet.`}
+            </p>
+          )}
+        </section>
+      )}
+
 
       <div className="section-heading compact">
         <h2>{isCurrentUser ? "Your sports" : "Sports"}</h2>

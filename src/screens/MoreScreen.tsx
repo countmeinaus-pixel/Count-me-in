@@ -7,6 +7,7 @@ import {
   LogOut,
   ShieldCheck,
   ShieldUser,
+  Trophy,
   UserRound,
   UsersRound,
   X,
@@ -49,6 +50,7 @@ const menuGroups: Array<{ title: string; items: MenuItem[] }> = [
       { label: "Edit profile", href: "/profile/edit", icon: UserRound },
       { label: "My sports", href: "/more/sports", icon: Dumbbell },
       { label: "Patches", href: "/profile/patches", icon: ShieldCheck },
+      { label: "Personal records", href: "/profile/records", icon: Trophy },
     ],
   },
   {
@@ -227,7 +229,8 @@ export function MoreScreen() {
     if (
       item.href === "/profile/edit" ||
       item.href === "/profile/sports/edit" ||
-      item.href === "/profile/patches"
+      item.href === "/profile/patches" ||
+      item.href === "/profile/records"
     ) {
       navigate(item.href, { state: { returnTo: "/more", from: closeTo } })
       return

@@ -573,7 +573,8 @@ export function ActivityDetailScreen() {
   const sportFacts = savedDetails
     ? [
         ...Object.entries(savedDetails.sportDetails)
-          .filter(([, value]) => value.trim() !== "")
+          // Duration is shown once below, from the activity itself.
+          .filter(([key, value]) => value.trim() !== "" && !/^duration/i.test(key))
           .map(([key, value]) => ({
             label: key === "kite_sizes" ? "Kites" : key.replace(/_/g, " "),
             value,
@@ -856,28 +857,20 @@ export function ActivityDetailScreen() {
         )}
       </section>
 
+      {!(isHost && savedDetails && !isActivityDay) && (
       <div className="sticky-action">
         <div className="sticky-action-group">
           {isHost ? (
             savedDetails ? (
-              <>
+              isActivityDay && (
                 <Button
-                  variant="secondary"
                   size="lg"
-                  onClick={() => navigate(`/activity/${savedDetails.id}/edit`)}
+                  onClick={() => setQrOpen(true)}
+                  disabled={confirmed || isLoadingConfirmation}
                 >
-                  Edit activity
+                  {confirmed ? "Confirmed" : "Check in"}
                 </Button>
-                {isActivityDay && (
-                  <Button
-                    size="lg"
-                    onClick={() => setQrOpen(true)}
-                    disabled={confirmed || isLoadingConfirmation}
-                  >
-                    {confirmed ? "Confirmed" : "Check in"}
-                  </Button>
-                )}
-              </>
+              )
             ) : isActivityDay ? (
               <Button
                 size="lg"
@@ -975,6 +968,7 @@ export function ActivityDetailScreen() {
           </p>
         )}
       </div>
+      )}
 
       {reportOpen && savedActivity && (
         <ReportDialog

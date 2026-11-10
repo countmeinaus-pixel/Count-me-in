@@ -333,6 +333,14 @@ export function ProfileScreen() {
     [profile.name, checkinVersion],
   )
   const earnedPatches = patchList.filter((patch) => patch.earned)
+  // At most 6 rows of patches (6, 4 or 3 a row); the last tile becomes "+N".
+  const isDesktop = useMediaQuery("(min-width: 980px)")
+  const isTablet = useMediaQuery("(min-width: 600px)")
+  const patchesPreviewCount = (isDesktop ? 6 : isTablet ? 4 : 3) * 6
+  const patchesOverflow = earnedPatches.length > patchesPreviewCount
+  const shownPatches = patchesOverflow
+    ? earnedPatches.slice(0, patchesPreviewCount - 1)
+    : earnedPatches
   const chartData = useMemo(
     () =>
       getLollipopChartForUser(profile.name, 6),
@@ -710,7 +718,7 @@ export function ProfileScreen() {
 
       {earnedPatches.length > 0 ? (
         <div className="earned-patch-grid">
-          {earnedPatches.map((patch) => (
+          {shownPatches.map((patch) => (
             <button
               type="button"
               key={patch.id}
@@ -721,6 +729,16 @@ export function ProfileScreen() {
               <span>{patch.name}</span>
             </button>
           ))}
+          {patchesOverflow && (
+            <button
+              type="button"
+              className="earned-patch-card earned-patch-more"
+              aria-label={`View all ${earnedPatches.length} patches`}
+              onClick={() => navigate("/profile/patches")}
+            >
+              +{earnedPatches.length - shownPatches.length}
+            </button>
+          )}
         </div>
       ) : (
         <p className="profile-patches-empty">

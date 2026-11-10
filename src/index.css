@@ -2217,6 +2217,12 @@ h3 { font: 700 21px/24px var(--font-display); }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
+@media (min-width: 600px) {
+  .earned-patch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 980px) {
+  .earned-patch-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
 .earned-patch-card {
   display: grid;
   justify-items: center;
@@ -2230,6 +2236,12 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .earned-patch-card svg { width: 24px; height: 24px; color: var(--seafoam); }
 .earned-patch-card span { font: 500 13px/1.2 var(--font-display); text-align: center; }
+.earned-patch-more {
+  align-content: center;
+  color: var(--seafoam);
+  font: 700 24px/1 var(--font-display);
+  cursor: pointer;
+}
 
 .patches-page {
   display: grid;

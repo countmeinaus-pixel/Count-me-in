@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { KiteSizePicker } from '../components/KiteSizePicker'
+import { LocationFields } from '../components/LocationFields'
 import { getSavedActivity, type SavedActivityDetails } from '../lib/activities'
 import {
   compressActivityCover,
@@ -11,6 +12,7 @@ import {
   uploadActivityCover,
 } from '../lib/activityImages'
 import { cancelActivity } from '../lib/activityParticipation'
+import { formatCoordinates, isMissingLocationColumns, parseCoordinates } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 const levels = ['Beginner friendly', 'Intermediate', 'Experienced']
@@ -51,6 +53,8 @@ export function EditActivityScreen() {
   const [durationHours, setDurationHours] = useState('')
   const [meetingPoint, setMeetingPoint] = useState('')
   const [suburb, setSuburb] = useState('')
+  const [address, setAddress] = useState('')
+  const [coordinates, setCoordinates] = useState('')
   const [spotsTotal, setSpotsTotal] = useState(1)
   const [level, setLevel] = useState(levels[0])
   const [notes, setNotes] = useState('')
@@ -96,6 +100,8 @@ export function EditActivityScreen() {
         setDurationHours(String(saved.durationMinutes / 60))
         setMeetingPoint(saved.meetingPoint)
         setSuburb(saved.suburb)
+        setAddress(saved.address)
+        setCoordinates(formatCoordinates(saved.latitude, saved.longitude))
         setSpotsTotal(saved.spotsTotal)
         setLevel(saved.level)
         setNotes(saved.notes)
@@ -150,9 +156,10 @@ export function EditActivityScreen() {
       durationMinutes > 1440 ||
       !meetingPoint.trim() ||
       !suburb.trim() ||
+      (coordinates.trim() !== '' && !parseCoordinates(coordinates)) ||
       notes.length > 300
     ) {
-      setError('Check the title, future date and time, duration, meeting point, suburb and notes.')
+      setError('Check the title, future date and time, duration, location, map pin and notes.')
       return
     }
 
@@ -172,23 +179,38 @@ export function EditActivityScreen() {
         coverImageUrl = null
       }
 
-      const { error: updateError } = await supabase
+      const activityChanges = {
+        title: title.trim(),
+        starts_at: start.toISOString(),
+        duration_minutes: durationMinutes,
+        meeting_point: meetingPoint.trim(),
+        suburb: suburb.trim(),
+        spots_total: spotsTotal,
+        level_wanted: level,
+        notes: notes.trim(),
+        auto_accept: autoAccept,
+        sport_details: sportDetails,
+        cover_image_url: coverImageUrl,
+        updated_at: new Date().toISOString(),
+      }
+      const pin = parseCoordinates(coordinates)
+      let { error: updateError } = await supabase
         .from('activities')
         .update({
-          title: title.trim(),
-          starts_at: start.toISOString(),
-          duration_minutes: durationMinutes,
-          meeting_point: meetingPoint.trim(),
-          suburb: suburb.trim(),
-          spots_total: spotsTotal,
-          level_wanted: level,
-          notes: notes.trim(),
-          auto_accept: autoAccept,
-          sport_details: sportDetails,
-          cover_image_url: coverImageUrl,
-          updated_at: new Date().toISOString(),
+          ...activityChanges,
+          address: address.trim(),
+          latitude: pin?.latitude ?? null,
+          longitude: pin?.longitude ?? null,
         })
         .eq('id', activity.id)
+
+      // Before the location update is run in Supabase, save without address and map pin.
+      if (updateError && isMissingLocationColumns(updateError)) {
+        ({ error: updateError } = await supabase
+          .from('activities')
+          .update(activityChanges)
+          .eq('id', activity.id))
+      }
 
       if (updateError) throw updateError
       savedChanges = true
@@ -321,16 +343,16 @@ export function EditActivityScreen() {
               <input type="number" min="0.25" max="24" step="0.25" value={durationHours} onChange={(event) => setDurationHours(event.target.value)} />
             </label>
           </div>
-          <div className="wizard-field-grid">
-            <label className="field">
-              <span>Meeting point</span>
-              <input maxLength={200} value={meetingPoint} onChange={(event) => setMeetingPoint(event.target.value)} />
-            </label>
-            <label className="field">
-              <span>Suburb</span>
-              <input maxLength={100} value={suburb} onChange={(event) => setSuburb(event.target.value)} />
-            </label>
-          </div>
+          <LocationFields
+            meetingPoint={meetingPoint}
+            suburb={suburb}
+            address={address}
+            coordinates={coordinates}
+            onMeetingPointChange={setMeetingPoint}
+            onSuburbChange={setSuburb}
+            onAddressChange={setAddress}
+            onCoordinatesChange={setCoordinates}
+          />
           <div className="field">
             <span>Group size</span>
             <div className="wizard-group-size">

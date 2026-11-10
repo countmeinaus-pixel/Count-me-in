@@ -1,4 +1,5 @@
 import { getDefaultActivityHero } from '../data/mockData'
+import { isMissingLocationColumns } from './location'
 import { supabase } from './supabase'
 
 export type SavedActivityDetails = {
@@ -9,6 +10,9 @@ export type SavedActivityDetails = {
   durationMinutes: number
   meetingPoint: string
   suburb: string
+  address: string
+  latitude: number | null
+  longitude: number | null
   spotsTotal: number
   level: string
   notes: string
@@ -38,13 +42,17 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
   if (activityError) throw activityError
   if (!activity) return null
 
-  const [sportResult, hostResult] = await Promise.all([
+  const [sportResult, hostResult, locationResult] = await Promise.all([
     supabase.from('sports').select('name').eq('id', activity.sport_id).single(),
     supabase.from('profiles').select('first_name, age, photo_url, selfie_verified').eq('id', activity.host_id).single(),
+    // Separate query so the screen still works before the location columns exist.
+    supabase.from('activities').select('address, latitude, longitude').eq('id', id).maybeSingle(),
   ])
 
   if (sportResult.error) throw sportResult.error
   if (hostResult.error) throw hostResult.error
+  if (locationResult.error && !isMissingLocationColumns(locationResult.error)) throw locationResult.error
+  const location = locationResult.error ? null : locationResult.data
 
   const details = activity.sport_details
   const sportDetails = typeof details === 'object' && details !== null && !Array.isArray(details)
@@ -80,6 +88,9 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
     durationMinutes: activity.duration_minutes,
     meetingPoint: activity.meeting_point,
     suburb: activity.suburb,
+    address: location?.address ?? '',
+    latitude: location?.latitude ?? null,
+    longitude: location?.longitude ?? null,
     spotsTotal: activity.spots_total,
     level: activity.level_wanted,
     notes: activity.notes,

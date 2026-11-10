@@ -29,6 +29,7 @@ import {
   type ActivityJoinState,
 } from "../lib/activityParticipation"
 import { getActivityChatThreadId } from "../lib/chat"
+import { getDirectionsUrl } from "../lib/location"
 import {
   getDemoJoinRequestKey,
   hasDemoJoinRequest,
@@ -743,16 +744,32 @@ export function ActivityDetailScreen() {
           </div>
         )}
 
-        <div className="meta-row">
+        <a
+          className="meta-row meta-row-link"
+          href={getDirectionsUrl({
+            meetingPoint: savedDetails?.meetingPoint ?? mockActivity?.place ?? "",
+            address: savedDetails?.address,
+            suburb: savedDetails?.suburb ?? mockActivity?.suburb ?? "",
+            latitude: savedDetails?.latitude,
+            longitude: savedDetails?.longitude,
+          })}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Open the meeting spot in Google Maps"
+        >
           <MapPin />
           <div>
             <strong>
               {savedDetails?.meetingPoint ?? mockActivity?.place ?? ""}
             </strong>
-            <span>{savedDetails?.suburb ?? mockActivity?.suburb ?? ""}</span>
+            <span>
+              {[savedDetails?.address, savedDetails?.suburb ?? mockActivity?.suburb]
+                .filter(Boolean)
+                .join(", ")}
+            </span>
           </div>
           <ChevronRight />
-        </div>
+        </a>
 
         <div className="host-card">
           <Avatar

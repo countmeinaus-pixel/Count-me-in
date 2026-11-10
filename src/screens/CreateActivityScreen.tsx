@@ -21,8 +21,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Avatar } from '../components/Avatar'
 import { KiteSizePicker } from '../components/KiteSizePicker'
+import { LocationFields } from '../components/LocationFields'
 import { activities, getDefaultActivityHero } from '../data/mockData'
 import { compressActivityCover, deleteActivityCover, uploadActivityCover } from '../lib/activityImages'
+import { isMissingLocationColumns, parseCoordinates } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 type SportOption = {
@@ -180,6 +182,8 @@ export function CreateActivityScreen() {
   const [time, setTime] = useState('')
   const [durationHours, setDurationHours] = useState('2')
   const [meetingPoint, setMeetingPoint] = useState('')
+  const [address, setAddress] = useState('')
+  const [coordinates, setCoordinates] = useState('')
   const [spotsTotal, setSpotsTotal] = useState(1)
   const [level, setLevel] = useState('Beginner friendly')
   const [notes, setNotes] = useState('')
@@ -312,6 +316,7 @@ export function CreateActivityScreen() {
     Number(durationHours) <= 24 &&
     meetingPoint.trim().length > 0 &&
     suburb.trim().length > 0 &&
+    (coordinates.trim() === '' || parseCoordinates(coordinates) !== null) &&
     notes.length <= 300
 
   useEffect(() => {
@@ -445,29 +450,45 @@ export function CreateActivityScreen() {
         coverImageUrl = uploadedCover.url
       }
 
-      const { data: createdActivity, error: createError } = await client
+      const activityRow = {
+        host_id: userId,
+        sport_id: selectedSport.id,
+        title: title.trim(),
+        starts_at: start.toISOString(),
+        duration_minutes: durationMinutes,
+        meeting_point: meetingPoint.trim(),
+        suburb: suburb.trim(),
+        spots_total: spotsTotal,
+        level_wanted: level,
+        notes: notes.trim(),
+        auto_accept: autoAccept,
+        sport_details: selectedSport.name === 'Open activity'
+          ? Object.fromEntries(Object.entries(sportDetails).filter(([key]) => key !== 'activity_name'))
+          : sportDetails,
+        cover_image_url: coverImageUrl,
+      }
+      const pin = parseCoordinates(coordinates)
+      let { data: createdActivity, error: createError } = await client
         .from('activities')
         .insert({
-          host_id: userId,
-          sport_id: selectedSport.id,
-          title: title.trim(),
-          starts_at: start.toISOString(),
-          duration_minutes: durationMinutes,
-          meeting_point: meetingPoint.trim(),
-          suburb: suburb.trim(),
-          spots_total: spotsTotal,
-          level_wanted: level,
-          notes: notes.trim(),
-          auto_accept: autoAccept,
-          sport_details: selectedSport.name === 'Open activity'
-            ? Object.fromEntries(Object.entries(sportDetails).filter(([key]) => key !== 'activity_name'))
-            : sportDetails,
-          cover_image_url: coverImageUrl,
+          ...activityRow,
+          address: address.trim(),
+          latitude: pin?.latitude ?? null,
+          longitude: pin?.longitude ?? null,
         })
         .select('id')
         .single()
 
-      if (createError) throw createError
+      // Before the location update is run in Supabase, save without address and map pin.
+      if (createError && isMissingLocationColumns(createError)) {
+        ({ data: createdActivity, error: createError } = await client
+          .from('activities')
+          .insert(activityRow)
+          .select('id')
+          .single())
+      }
+
+      if (createError || !createdActivity) throw createError ?? new Error('Unable to post this activity.')
       activityCreated = true
 
       if (selectedInvites.length > 0) {
@@ -696,17 +717,16 @@ export function CreateActivityScreen() {
               </label>
             </div>
 
-            <div className="wizard-field-grid">
-              <label className="field">
-                <span>Suburb</span>
-                <input value={suburb} onChange={(event) => updateSuburb(event.target.value)} placeholder="For example, Glenelg" />
-              </label>
-            </div>
-
-            <label className="field">
-              <span>Meeting point</span>
-              <input value={meetingPoint} onChange={(event) => setMeetingPoint(event.target.value)} maxLength={200} placeholder="For example, the car park by the jetty" />
-            </label>
+            <LocationFields
+              meetingPoint={meetingPoint}
+              suburb={suburb}
+              address={address}
+              coordinates={coordinates}
+              onMeetingPointChange={setMeetingPoint}
+              onSuburbChange={updateSuburb}
+              onAddressChange={setAddress}
+              onCoordinatesChange={setCoordinates}
+            />
 
             <div className="field">
               <span>Group size</span>
@@ -890,7 +910,8 @@ export function CreateActivityScreen() {
               <strong className="wizard-review-title">{title}</strong>
               <p>{date && time ? new Date(`${date}T${time}`).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'Date and time not set'}</p>
               <p>{formatDuration(Math.round(Number(durationHours || 0) * 60))} · {spotsTotal === 1 ? '1 buddy wanted' : `${spotsTotal} spots`}</p>
-              <p><MapPin />{meetingPoint}{suburb ? `, ${suburb}` : ''}</p>
+              <p><MapPin />{[meetingPoint, address.trim(), suburb].filter(Boolean).join(', ')}</p>
+              {parseCoordinates(coordinates) && <p>Map pin added</p>}
               {Object.entries(sportDetails)
                 .filter(([key, value]) => key !== 'activity_name' && value.trim())
                 .map(([key, value]) => (

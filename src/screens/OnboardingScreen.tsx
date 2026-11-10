@@ -1,8 +1,11 @@
-import { Camera, Check, ChevronRight, Pencil, ShieldCheck } from 'lucide-react'
+import { CalendarDays, Camera, Check, QrCode, ShieldCheck, Trophy } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ClaimPrDialog } from '../components/ClaimPrDialog'
+import { FlowLayout } from '../components/FlowLayout'
+import { PatchIcon } from '../components/PatchIcon'
+import { SportIcon } from '../components/SportIcon'
 import { adelaideSuburbs } from '../data/adelaideSuburbs'
-import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
 import {
   calculateAgeFromDateOfBirth,
   compressProfilePhoto,
@@ -25,92 +28,91 @@ const sportOptions = [
   'SUP / kayak',
   'Scuba diving',
   'Climbing / bouldering',
-  'Open activity',
 ]
-
 const availabilityOptions = ['Weekday mornings', 'Weekday evenings', 'Saturdays', 'Sundays', 'Flexible']
 const skillOptions: SkillLevel[] = ['Beginner', 'Intermediate', 'Experienced']
+
+// One question per screen. Name, date of birth and suburb are required; the
+// rest can be skipped and filled in later from the profile.
+type Step = 'name' | 'birthday' | 'suburb' | 'sports' | 'levels' | 'availability' | 'patches' | 'record'
+const steps: Step[] = ['name', 'birthday', 'suburb', 'sports', 'levels', 'availability', 'patches', 'record']
+
 export function OnboardingScreen() {
   const navigate = useNavigate()
-  const inputRef = useRef<HTMLInputElement | null>(null)
-  const [language, setLanguage] = useState<Language>(getStoredLanguage())
-  const copy = getTranslations(language)
-
+  const photoInputRef = useRef<HTMLInputElement | null>(null)
+  const [stepIndex, setStepIndex] = useState(0)
   const [firstName, setFirstName] = useState('')
+  const [bio, setBio] = useState('')
   const [dateOfBirth, setDateOfBirth] = useState('')
   const [suburb, setSuburb] = useState('')
-  const [bio, setBio] = useState('')
   const [selectedSports, setSelectedSports] = useState<string[]>([])
   const [sportSkills, setSportSkills] = useState<Record<string, SkillLevel>>({})
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([])
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [error, setError] = useState('')
-  const [profileCheckError, setProfileCheckError] = useState('')
-  const [isCheckingProfile, setIsCheckingProfile] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [profileCheckAttempt, setProfileCheckAttempt] = useState(0)
-  const calculatedAge = useMemo(() => calculateAgeFromDateOfBirth(dateOfBirth), [dateOfBirth])
+  const [checkError, setCheckError] = useState('')
+  const [isChecking, setIsChecking] = useState(true)
+  const [checkAttempt, setCheckAttempt] = useState(0)
+  const [isSaving, setIsSaving] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
+  const [claimOpen, setClaimOpen] = useState(false)
+  const [prClaimed, setPrClaimed] = useState(false)
+  const age = useMemo(() => calculateAgeFromDateOfBirth(dateOfBirth), [dateOfBirth])
+  const step = steps[stepIndex]
 
   useEffect(() => {
     let active = true
     async function ensureSession() {
       if (!supabase) {
-        setProfileCheckError(getSupabaseSetupHint())
-        setIsCheckingProfile(false)
+        setCheckError(getSupabaseSetupHint())
+        setIsChecking(false)
         return
       }
-
       const { data: sessionData, error: sessionError } = await supabase.auth.getUser()
       if (sessionError || !sessionData.user) {
         navigate('/login')
         return
       }
-
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('onboarding_complete')
         .eq('id', sessionData.user.id)
         .maybeSingle()
-
       if (!active) return
       if (profileError) {
-        setProfileCheckError(profileError.message)
-        setIsCheckingProfile(false)
+        setCheckError(profileError.message)
+        setIsChecking(false)
         return
       }
-
       if (profile?.onboarding_complete) {
         navigate('/', { replace: true })
         return
       }
-
-      setIsCheckingProfile(false)
+      setIsChecking(false)
     }
-
     void ensureSession()
     return () => {
       active = false
     }
-  }, [navigate, profileCheckAttempt])
+  }, [navigate, checkAttempt])
 
-  const canSubmit = useMemo(() => {
-    const age = calculateAgeFromDateOfBirth(dateOfBirth)
-    return !!firstName.trim() && !!suburb.trim() && typeof age === 'number' && age >= 18 && age <= 99 && selectedSports.length > 0 && selectedAvailability.length > 0
-  }, [dateOfBirth, firstName, selectedAvailability.length, selectedSports.length, suburb])
+  useEffect(() => () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+  }, [photoPreview])
 
-  if (isCheckingProfile || profileCheckError) {
+  if (isChecking || checkError) {
     return (
       <main className="screen onboarding-check-screen">
-        {isCheckingProfile ? (
+        {isChecking ? (
           <p role="status">Checking your profile…</p>
         ) : (
           <>
-            <p className="wizard-error" role="alert">{profileCheckError}</p>
+            <p className="wizard-error" role="alert">{checkError}</p>
             <button type="button" className="button button-secondary" onClick={() => {
-              setProfileCheckError('')
-              setIsCheckingProfile(true)
-              setProfileCheckAttempt((attempt) => attempt + 1)
+              setCheckError('')
+              setIsChecking(true)
+              setCheckAttempt((attempt) => attempt + 1)
             }}>
               Try again
             </button>
@@ -120,312 +122,334 @@ export function OnboardingScreen() {
     )
   }
 
+  function goTo(index: number) {
+    setError('')
+    setStepIndex(Math.max(0, Math.min(steps.length - 1, index)))
+  }
+
+  function nextIndexAfter(index: number) {
+    // No sports chosen: there are no levels to set.
+    const next = index + 1
+    return steps[next] === 'levels' && selectedSports.length === 0 ? next + 1 : next
+  }
+
+  function previousIndexBefore(index: number) {
+    const previous = index - 1
+    return steps[previous] === 'levels' && selectedSports.length === 0 ? previous - 1 : previous
+  }
+
   function toggleSport(sport: string) {
     setSelectedSports((current) => {
-      if (current.includes(sport)) {
-        const next = current.filter((item) => item !== sport)
-        setSportSkills((skills) => {
-          const nextSkills = { ...skills }
-          delete nextSkills[sport]
-          return nextSkills
-        })
-        return next
-      }
-
+      if (current.includes(sport)) return current.filter((item) => item !== sport)
       setSportSkills((skills) => ({ ...skills, [sport]: skills[sport] ?? 'Intermediate' }))
       return [...current, sport]
     })
   }
 
-  function toggleAvailability(slot: string) {
-    setSelectedAvailability((current) => current.includes(slot)
-      ? current.filter((item) => item !== slot)
-      : [...current, slot])
-  }
-
   async function handlePhotoSelect(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
-
     try {
       const compressed = await compressProfilePhoto(file)
       setPhotoFile(compressed)
       setPhotoPreview(URL.createObjectURL(compressed))
-    } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : copy.photoUpdateFailed)
+    } catch (photoError) {
+      setError(photoError instanceof Error ? photoError.message : 'Unable to use this photo.')
     }
   }
 
-  async function handleSubmit() {
+  // Saves the profile once the profile questions are done (or skipped).
+  async function saveAndContinue(skipRest: boolean) {
     if (!supabase) {
       setError(getSupabaseSetupHint())
       return
     }
-
-    const ageValue = calculateAgeFromDateOfBirth(dateOfBirth)
-    if (!canSubmit || typeof ageValue !== 'number' || ageValue < 18 || ageValue > 99) {
-      setError(copy.invalidDateOfBirth)
+    if (typeof age !== 'number' || age < 18 || age > 99) {
+      setError('Enter a valid date of birth. You need to be 18 or older.')
+      goTo(steps.indexOf('birthday'))
       return
     }
-
-    setIsSubmitting(true)
+    setIsSaving(true)
     setError('')
-
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser()
       if (userError || !userData.user) {
         navigate('/login')
         return
       }
-
-      const compressedPhoto = photoFile ? await compressProfilePhoto(photoFile) : null
-      const photoUrl = compressedPhoto ? await uploadProfilePhoto(compressedPhoto, userData.user.id) : undefined
-
+      const photoUrl = photoFile ? await uploadProfilePhoto(photoFile, userData.user.id) : undefined
       await saveProfile({
         id: userData.user.id,
         email: userData.user.email ?? '',
         firstName: firstName.trim(),
-        age: ageValue,
+        age,
         dateOfBirth,
         suburb: suburb.trim(),
         bio: bio.trim(),
         photoUrl,
-        sports: selectedSports.map((sport) => ({
-          sport,
-          skill: sportSkills[sport] ?? 'Intermediate',
-        })),
+        sports: selectedSports.map((sport) => ({ sport, skill: sportSkills[sport] ?? 'Intermediate' })),
         availability: selectedAvailability,
       })
-
-      navigate('/')
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : copy.saveFailed)
+      setProfileSaved(true)
+      if (skipRest) finish()
+      else goTo(steps.indexOf('patches'))
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Unable to save your profile.')
     } finally {
-      setIsSubmitting(false)
+      setIsSaving(false)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-[#0a1621] px-5 py-8 text-[#e6e2d8]">
-      <div className="mx-auto max-w-md">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[#7fb7a8]">{copy.profileLabel}</p>
-            <h1 className="text-3xl font-bold text-white">{copy.pageTitle}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-2 rounded-full border border-[#22384a] bg-[#0a1621] p-1 text-xs">
+  function finish() {
+    navigate('/', { replace: true })
+  }
+
+  const progress = (stepIndex + 1) / steps.length
+  const onBack = stepIndex > 0 && !(profileSaved && stepIndex <= steps.indexOf('patches'))
+    ? () => goTo(previousIndexBefore(stepIndex))
+    : undefined
+  const errorBox = error ? <p className="flow-error" role="alert">{error}</p> : null
+
+  if (step === 'name') {
+    return (
+      <FlowLayout
+        progress={progress}
+        align="start"
+        title={<>Welcome! <em>What should the crew call you?</em></>}
+        subtitle="Your first name and photo show on your profile and your activities."
+        primaryLabel="Continue"
+        primaryDisabled={!firstName.trim()}
+        onPrimary={() => goTo(nextIndexAfter(stepIndex))}
+      >
+        <button type="button" className="onboarding-photo" onClick={() => photoInputRef.current?.click()} aria-label={photoPreview ? 'Change profile photo' : 'Add a profile photo'}>
+          {photoPreview ? <img src={photoPreview} alt="" /> : <Camera aria-hidden="true" />}
+        </button>
+        <input ref={photoInputRef} className="sr-only" type="file" accept="image/*" onChange={handlePhotoSelect} aria-label="Choose a profile photo" />
+        <p className="flow-hint" style={{ textAlign: 'center' }}>Profile photo (optional)</p>
+        <label className="flow-field">
+          <span>First name</span>
+          <input value={firstName} maxLength={40} autoComplete="given-name" onChange={(event) => setFirstName(event.target.value)} placeholder="For example, Matt" />
+        </label>
+        <label className="flow-field">
+          <span>Short bio (optional)</span>
+          <textarea rows={2} value={bio} maxLength={150} onChange={(event) => setBio(event.target.value)} placeholder="Keen diver, slow runner, always up for a coffee after." />
+        </label>
+        {errorBox}
+      </FlowLayout>
+    )
+  }
+
+  if (step === 'birthday') {
+    const tooYoung = typeof age === 'number' && age < 18
+    return (
+      <FlowLayout
+        progress={progress}
+        align="start"
+        title={<>When's your <em>birthday</em>?</>}
+        subtitle="We only show your age, never your date of birth. Count Me In is for men aged 18 and over."
+        onBack={onBack}
+        primaryLabel="Continue"
+        primaryDisabled={typeof age !== 'number' || age < 18 || age > 99}
+        onPrimary={() => goTo(nextIndexAfter(stepIndex))}
+      >
+        <label className="flow-field">
+          <span>Date of birth</span>
+          <input type="date" value={dateOfBirth} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setDateOfBirth(event.target.value)} />
+        </label>
+        {typeof age === 'number' && !tooYoung && <p className="flow-hint">You're {age}.</p>}
+        {tooYoung && <p className="flow-error" role="alert">You need to be 18 or older to join.</p>}
+        {errorBox}
+      </FlowLayout>
+    )
+  }
+
+  if (step === 'suburb') {
+    return (
+      <FlowLayout
+        progress={progress}
+        align="start"
+        title={<>Where are you <em>based</em>?</>}
+        subtitle="We use your suburb to show activities and people nearby."
+        onBack={onBack}
+        primaryLabel="Continue"
+        primaryDisabled={!suburb.trim()}
+        onPrimary={() => goTo(nextIndexAfter(stepIndex))}
+      >
+        <label className="flow-field">
+          <span>Suburb</span>
+          <input value={suburb} list="onboarding-suburbs" autoComplete="address-level2" onChange={(event) => setSuburb(event.target.value)} placeholder="For example, Brighton" />
+          <datalist id="onboarding-suburbs">
+            {adelaideSuburbs.map((option) => <option key={option} value={option} />)}
+          </datalist>
+        </label>
+        {errorBox}
+      </FlowLayout>
+    )
+  }
+
+  if (step === 'sports') {
+    return (
+      <FlowLayout
+        progress={progress}
+        align="start"
+        title={<>What are you <em>into</em>?</>}
+        subtitle="Pick as many as you like. Your home feed shows these sports first."
+        onBack={onBack}
+        onSkip={() => goTo(steps.indexOf('availability'))}
+        primaryLabel={selectedSports.length ? `Continue (${selectedSports.length})` : 'Continue'}
+        onPrimary={() => goTo(nextIndexAfter(stepIndex))}
+      >
+        <div className="sport-tile-grid">
+          {sportOptions.map((sport) => {
+            const selected = selectedSports.includes(sport)
+            return (
               <button
+                key={sport}
                 type="button"
-                onClick={() => {
-                  setLanguage('en')
-                  setStoredLanguage('en')
-                }}
-                className={`rounded-full px-2 py-1 ${language === 'en' ? 'bg-[#163430] text-[#dff4ef]' : 'text-[#9fb3c2]'}`}
+                className={`sport-tile ${selected ? 'selected' : ''}`}
+                aria-pressed={selected}
+                onClick={() => toggleSport(sport)}
               >
-                EN
+                {selected && <span className="sport-tile-check"><Check aria-hidden="true" /></span>}
+                <SportIcon sport={sport} className="sport-tile-icon" />
+                {sport}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLanguage('nl')
-                  setStoredLanguage('nl')
-                }}
-                className={`rounded-full px-2 py-1 ${language === 'nl' ? 'bg-[#163430] text-[#dff4ef]' : 'text-[#9fb3c2]'}`}
-              >
-                NL
-              </button>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#163430] text-[#7fb7a8]">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-          </div>
+            )
+          })}
         </div>
+      </FlowLayout>
+    )
+  }
 
-        <div className="space-y-6 rounded-3xl border border-[#22384a] bg-[#132433] p-5 shadow-2xl shadow-black/20">
-          <p className="text-xs uppercase tracking-[0.18em] text-[#9fb3c2]">{copy.requiredNote}</p>
-
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-[#7fb7a8] bg-[#163430] text-[#dff4ef]"
-              >
-                {photoPreview ? (
-                  <img src={photoPreview} alt="Profielfoto preview" className="h-full w-full object-cover" />
-                ) : (
-                  <Camera className="h-8 w-8 text-[#7fb7a8]" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                aria-label="Profielfoto wijzigen"
-                className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#7fb7a8] bg-[#0a1621] text-[#7fb7a8] shadow-lg shadow-black/30"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            <input ref={inputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
-            <p className="text-sm text-[#9fb3c2]">{copy.uploadPhoto} ({copy.optional})</p>
-          </div>
-
-          <div className="grid gap-4">
-            <label className="grid gap-2 text-sm text-[#dfe5ea]">
-              {copy.firstName} *
-              <input
-                value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
-                className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-base text-white outline-none focus:border-[#7fb7a8]"
-                placeholder={copy.firstNamePlaceholder}
-              />
-            </label>
-
-            <div className="grid grid-cols-2 gap-4">
-              <label className="grid gap-2 text-sm text-[#dfe5ea]">
-                {copy.dateOfBirth} *
-                <input
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(event) => setDateOfBirth(event.target.value)}
-                  className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-base text-white outline-none focus:border-[#7fb7a8]"
-                  placeholder={copy.dateOfBirthPlaceholder}
-                  max={new Date().toISOString().slice(0, 10)}
-                />
-              </label>
-
-              <div className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-sm text-[#dfe5ea]">
-                <div className="text-[#9fb3c2]">{copy.ageLabel}</div>
-                <div className="mt-2 text-lg font-semibold text-white">
-                  {typeof calculatedAge === 'number' ? calculatedAge : '--'}
-                </div>
-              </div>
-            </div>
-
-            <label className="grid gap-2 text-sm text-[#dfe5ea]">
-              {copy.suburb} *
-              <input
-                value={suburb}
-                onChange={(event) => setSuburb(event.target.value)}
-                list="suburb-options"
-                className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-base text-white outline-none focus:border-[#7fb7a8]"
-                placeholder={copy.suburbPlaceholder}
-              />
-              <datalist id="suburb-options">
-                {adelaideSuburbs.map((option) => (
-                  <option key={option} value={option} />
-                ))}
-              </datalist>
-            </label>
-
-            <label className="grid gap-2 text-sm text-[#dfe5ea]">
-              {copy.bio}
-              <textarea
-                value={bio}
-                onChange={(event) => setBio(event.target.value.slice(0, 150))}
-                rows={3}
-                className="rounded-2xl border border-[#22384a] bg-[#0a1621] px-4 py-3 text-base text-white outline-none focus:border-[#7fb7a8]"
-                placeholder={copy.bioPlaceholder}
-              />
-            </label>
-          </div>
-
-          <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#7fb7a8]">{copy.sports} *</p>
-            <div className="flex flex-wrap gap-2">
-              {sportOptions.map((sport) => {
-                const isSelected = selectedSports.includes(sport)
-                return (
-                  <button
-                    key={sport}
-                    type="button"
-                    onClick={() => toggleSport(sport)}
-                    className={`rounded-full border px-3 py-2 text-sm transition ${
-                      isSelected
-                        ? 'border-[#7fb7a8] bg-[#163430] text-[#dff4ef]'
-                        : 'border-[#22384a] bg-[#0a1621] text-[#dfe5ea]'
-                    }`}
-                  >
-                    {isSelected ? <span className="inline-flex items-center gap-2"><Check className="h-4 w-4" />{sport}</span> : sport}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {selectedSports.length > 0 ? (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#7fb7a8]">{copy.level}</p>
-              {selectedSports.map((sport) => (
-                <div key={sport} className="rounded-2xl border border-[#22384a] bg-[#0a1621] p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="font-medium text-white">{sport}</span>
-                    <span className="text-xs uppercase tracking-[0.1em] text-[#9fb3c2]">{sportSkills[sport] ?? 'Intermediate'}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {skillOptions.map((level) => (
-                      <button
-                        key={level}
-                        type="button"
-                        onClick={() => setSportSkills((skills) => ({ ...skills, [sport]: level }))}
-                        className={`rounded-full border px-3 py-1.5 text-sm ${
-                          sportSkills[sport] === level
-                            ? 'border-[#7fb7a8] bg-[#163430] text-[#dff4ef]'
-                            : 'border-[#22384a] bg-[#132433] text-[#dfe5ea]'
-                        }`}
-                      >
-                        {level}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+  if (step === 'levels') {
+    return (
+      <FlowLayout
+        progress={progress}
+        align="start"
+        title={<>How <em>experienced</em> are you?</>}
+        subtitle="So people know what to expect. You can change this any time."
+        onBack={onBack}
+        onSkip={() => goTo(nextIndexAfter(stepIndex))}
+        primaryLabel="Continue"
+        onPrimary={() => goTo(nextIndexAfter(stepIndex))}
+      >
+        {selectedSports.map((sport) => (
+          <div className="level-card" key={sport}>
+            <span className="level-card-title"><SportIcon sport={sport} />{sport}</span>
+            <div className="choice-chips">
+              {skillOptions.map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  className={`choice-chip ${sportSkills[sport] === level ? 'selected' : ''}`}
+                  aria-pressed={sportSkills[sport] === level}
+                  onClick={() => setSportSkills((skills) => ({ ...skills, [sport]: level }))}
+                >
+                  {level}
+                </button>
               ))}
             </div>
-          ) : null}
-
-          <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#7fb7a8]">{copy.availability} *</p>
-            <div className="flex flex-wrap gap-2">
-              {availabilityOptions.map((slot) => {
-                const isSelected = selectedAvailability.includes(slot)
-                return (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => toggleAvailability(slot)}
-                    className={`rounded-full border px-3 py-2 text-sm ${
-                      isSelected
-                        ? 'border-[#7fb7a8] bg-[#163430] text-[#dff4ef]'
-                        : 'border-[#22384a] bg-[#0a1621] text-[#dfe5ea]'
-                    }`}
-                  >
-                    {slot}
-                  </button>
-                )
-              })}
-            </div>
           </div>
+        ))}
+      </FlowLayout>
+    )
+  }
 
-          {error ? (
-            <p className="rounded-2xl border border-[#f0645a]/40 bg-[#2f1413] px-3 py-2 text-sm text-[#ffc4c0]">
-              {error}
-            </p>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !canSubmit}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6b2c] px-4 py-3 font-semibold text-[#1a0d05] transition hover:bg-[#ff8250] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isSubmitting ? copy.saving : copy.saveProfile}
-            <ChevronRight className="h-4 w-4" />
-          </button>
+  if (step === 'availability') {
+    return (
+      <FlowLayout
+        progress={progress}
+        align="start"
+        title={<>When are you <em>usually free</em>?</>}
+        subtitle="This helps us suggest plans that fit your week."
+        onBack={onBack}
+        onSkip={() => void saveAndContinue(false)}
+        primaryLabel={isSaving ? 'Saving your profile…' : 'Save and continue'}
+        primaryDisabled={isSaving}
+        onPrimary={() => void saveAndContinue(false)}
+      >
+        <div className="choice-chips">
+          {availabilityOptions.map((slot) => {
+            const selected = selectedAvailability.includes(slot)
+            return (
+              <button
+                key={slot}
+                type="button"
+                className={`choice-chip ${selected ? 'selected' : ''}`}
+                aria-pressed={selected}
+                onClick={() => setSelectedAvailability((current) => selected ? current.filter((item) => item !== slot) : [...current, slot])}
+              >
+                {slot}
+              </button>
+            )
+          })}
         </div>
-      </div>
-    </div>
+        {errorBox}
+      </FlowLayout>
+    )
+  }
+
+  if (step === 'patches') {
+    return (
+      <FlowLayout
+        progress={progress}
+        title={<>Show up and <em>earn patches</em></>}
+        onSkip={finish}
+        primaryLabel="Continue"
+        onPrimary={() => goTo(steps.indexOf('record'))}
+      >
+        <div className="flow-showcase">
+          <div className="showcase-patches" aria-hidden="true">
+            <span className="showcase-patch"><PatchIcon name="shield" />First meetup</span>
+            <span className="showcase-patch"><PatchIcon name="fish" />Reef rookie</span>
+            <span className="showcase-patch"><PatchIcon name="sunrise" />First light</span>
+            <span className="showcase-patch"><PatchIcon name="users" />Crew</span>
+          </div>
+          <div className="flow-bullets">
+            <p className="flow-bullet"><QrCode aria-hidden="true" /><span><strong>Check in with a QR scan</strong> when you meet up. Each confirmed meetup counts towards your patches.</span></p>
+            <p className="flow-bullet"><ShieldCheck aria-hidden="true" /><span><strong>Over 240 patches</strong>, with 20 for every sport: from your first session to legend status.</span></p>
+            <p className="flow-bullet"><CalendarDays aria-hidden="true" /><span><strong>Join challenges</strong> like the monthly grind or weekend warrior. Reach the goal in time for a limited patch.</span></p>
+          </div>
+        </div>
+        <p className="flow-hint" style={{ textAlign: 'center' }}>Find them all under More, then Patches.</p>
+      </FlowLayout>
+    )
+  }
+
+  return (
+    <>
+      <FlowLayout
+        progress={progress}
+        title={<>Got a <em>personal record</em>?</>}
+        subtitle="Claim it with a photo as proof. Once 3 members confirm it, it gets a verified tick on your profile."
+        onSkip={finish}
+        skipLabel="Later"
+        primaryLabel={prClaimed ? 'Start exploring' : 'Claim a PR'}
+        onPrimary={() => (prClaimed ? finish() : setClaimOpen(true))}
+        footerNote={!prClaimed ? (
+          <button type="button" className="flow-skip" onClick={finish}>Not now, start exploring</button>
+        ) : null}
+      >
+        <div className="flow-showcase">
+          <div className="showcase-row">
+            <Trophy aria-hidden="true" />
+            <span className="grow">
+              <strong>{prClaimed ? 'PR claimed!' : 'Deepest dive, fastest 10 km, heaviest deadlift'}</strong>
+              <small>{prClaimed ? 'Members can now confirm it.' : 'Pick your sport and record type.'}</small>
+            </span>
+          </div>
+        </div>
+      </FlowLayout>
+      {claimOpen && (
+        <ClaimPrDialog
+          preferredSports={selectedSports}
+          onClose={() => setClaimOpen(false)}
+          onClaimed={() => {
+            setClaimOpen(false)
+            setPrClaimed(true)
+          }}
+        />
+      )}
+    </>
   )
 }

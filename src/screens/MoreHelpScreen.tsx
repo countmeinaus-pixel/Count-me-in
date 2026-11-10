@@ -1,10 +1,13 @@
-import { ClipboardCopy } from 'lucide-react'
+import { ClipboardCopy, Compass, Presentation } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { resetTour } from '../lib/onboardingFlags'
 import { MorePageHeader } from '../components/MorePageHeader'
 import { useBackToMore } from '../lib/moreNavigation'
 
 export function MoreHelpScreen() {
   const backToMore = useBackToMore()
+  const navigate = useNavigate()
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState('')
@@ -31,6 +34,21 @@ export function MoreHelpScreen() {
   return (
     <main className="screen more-settings-page">
       <MorePageHeader title="Help and feedback" onBack={backToMore} />
+      <section className="help-tour-actions" aria-label="Get to know the app">
+        <button
+          type="button"
+          className="button button-secondary button-md"
+          onClick={() => {
+            resetTour()
+            navigate('/', { state: { startTour: true } })
+          }}
+        >
+          <Compass aria-hidden="true" /> Take the app tour again
+        </button>
+        <button type="button" className="button button-secondary button-md" onClick={() => navigate('/welcome')}>
+          <Presentation aria-hidden="true" /> See the welcome slides
+        </button>
+      </section>
       <p className="more-settings-intro">Share an idea, ask a question or let us know if something isn’t working.</p>
       <label className="more-feedback-field">
         <span>Subject</span>

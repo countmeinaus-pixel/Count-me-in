@@ -139,10 +139,9 @@ export async function saveProfile(input: SaveProfileInput) {
   if (profileError) throw profileError
 
   const sportNames = input.sports.map((item) => item.sport)
-  const { data: sportCatalog, error: sportCatalogError } = await supabase
-    .from('sports')
-    .select('id, name')
-    .in('name', sportNames)
+  const { data: sportCatalog, error: sportCatalogError } = sportNames.length
+    ? await supabase.from('sports').select('id, name').in('name', sportNames)
+    : { data: [], error: null }
 
   if (sportCatalogError) throw sportCatalogError
 
@@ -160,22 +159,25 @@ export async function saveProfile(input: SaveProfileInput) {
     })
     .filter(Boolean) as Array<{ profile_id: string; sport_id: number; skill: string }>
 
-  const { error: sportError } = await supabase.from('profile_sports').upsert(sportRows, {
-    onConflict: 'profile_id,sport_id',
-  })
-
-  if (sportError) throw sportError
+  // Sports and availability can be skipped during onboarding.
+  if (sportRows.length > 0) {
+    const { error: sportError } = await supabase.from('profile_sports').upsert(sportRows, {
+      onConflict: 'profile_id,sport_id',
+    })
+    if (sportError) throw sportError
+  }
 
   const availabilityRows = input.availability.map((slot) => ({
     profile_id: input.id,
     availability: slot,
   }))
 
-  const { error: availabilityError } = await supabase.from('profile_availability').upsert(availabilityRows, {
-    onConflict: 'profile_id,availability',
-  })
-
-  if (availabilityError) throw availabilityError
+  if (availabilityRows.length > 0) {
+    const { error: availabilityError } = await supabase.from('profile_availability').upsert(availabilityRows, {
+      onConflict: 'profile_id,availability',
+    })
+    if (availabilityError) throw availabilityError
+  }
 
   return true
 }

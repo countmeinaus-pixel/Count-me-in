@@ -49,7 +49,7 @@ Use semantic tokens first. Raw palette values are only a fallback when no semant
   --accent: #FF6B2C;
   --accent-hover: #FF8250;
   --accent-pressed: #E55A1F;
-  --on-accent: #1A0D05;       /* text and icons on orange */
+  --on-accent: #FFFFFF;       /* text and icons on orange (white, chosen by Jai; contrast 2.8:1) */
   --accent-subtle: #3A2218;   /* orange tint background */
 
   /* Secondary: seafoam, dates, status, highlights, verified */

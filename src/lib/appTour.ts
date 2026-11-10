@@ -11,8 +11,8 @@ export const appTourSteps: TourStep[] = [
   { path: '/activities', target: 'create-activity', title: 'Post your own callout', body: 'Keen to do something? Tap Create activity here. Your upcoming plans, invites and past meetups are on this page too.' },
   { path: '/create', target: 'create-steps', title: 'Five quick steps', body: 'Pick a sport, set when and where, add a few details, invite friends and check it before you post.' },
   {
-    path: '/activities',
-    target: 'create-activity',
+    path: '/create',
+    target: 'create-sports',
     title: 'For example',
     body: 'Tap a sport to start. A finished callout could look like this:',
     example: {

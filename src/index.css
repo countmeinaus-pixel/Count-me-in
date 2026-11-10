@@ -36,8 +36,11 @@ html, body, #root { margin: 0; min-height: 100%; background: var(--bg); }
 /* Room to scroll fields above the on-screen keyboard (set in keyboardInset.ts). */
 body { padding-bottom: var(--keyboard-inset, 0px); }
 body { font-family: var(--font-body); background: var(--bg); color: var(--text-primary); }
-button, input { font: inherit; }
-button { color: inherit; }
+/* In the base layer so Tailwind text colours on buttons can override it. */
+@layer base {
+  button, input { font: inherit; }
+  button { color: inherit; }
+}
 img { max-width: 100%; display: block; }
 
 h1, h2, h3, p { margin: 0; }

@@ -14,6 +14,10 @@ export function PasswordResetScreen() {
   const [hasRecoverySession, setHasRecoverySession] = useState(false)
   const [isBusy, setIsBusy] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  // Supabase adds #error_code=otp_expired when the link expired or was already used.
+  const [linkError] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('error_code'))
+  const [email, setEmail] = useState('')
+  const [notice, setNotice] = useState('')
   const copy = getTranslations(language)
 
   useEffect(() => {
@@ -47,6 +51,29 @@ export function PasswordResetScreen() {
   function handleLanguageChange(nextLanguage: Language) {
     setLanguage(nextLanguage)
     setStoredLanguage(nextLanguage)
+  }
+
+  async function handleSendNewLink() {
+    if (!supabase) {
+      setError(getSupabaseSetupHint())
+      return
+    }
+    if (!email.trim()) {
+      setError(copy.emailRequired)
+      return
+    }
+    setIsBusy(true)
+    setError('')
+    setNotice('')
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    setIsBusy(false)
+    if (resetError) {
+      setError(resetError.message)
+      return
+    }
+    setNotice(copy.resetEmailSent)
   }
 
   async function handleUpdatePassword() {
@@ -177,8 +204,32 @@ export function PasswordResetScreen() {
           ) : (
             <div>
               <p className="rounded-xl border border-[var(--danger)]/40 bg-[var(--danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]">
-                {copy.resetLinkInvalid}
+                {linkError ? copy.resetLinkExpired : copy.resetLinkInvalid}
               </p>
+              <label htmlFor="reset-email" className="mb-2 mt-5 block text-sm text-[var(--text-primary)]">{copy.emailLabel}</label>
+              <input
+                id="reset-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder={copy.emailPlaceholder}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-base outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--seafoam)]"
+              />
+              <button
+                type="button"
+                onClick={() => void handleSendNewLink()}
+                disabled={isBusy}
+                className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-3 font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)] disabled:opacity-60"
+              >
+                {isBusy ? copy.sendingResetLink : copy.sendNewResetLink}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              {notice ? (
+                <p role="status" className="mt-4 rounded-xl border border-[var(--seafoam)]/30 bg-[var(--seafoam-subtle)] px-3 py-2 text-sm text-[var(--seafoam)]">
+                  {notice}
+                </p>
+              ) : null}
               <button
                 type="button"
                 onClick={() => navigate('/login')}

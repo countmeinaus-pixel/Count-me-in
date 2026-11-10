@@ -44,14 +44,34 @@ import { ModerationScreen } from "./screens/ModerationScreen"
 
 const pathsWithoutWelcome = ["/welcome", "/login", "/reset-password", "/onboarding"]
 
+// Read before Supabase handles the link: a password reset link (or its error,
+// such as an expired link) can land on any page, depending on Supabase settings.
+const initialAuthHash = window.location.hash
+const isPasswordLinkLanding =
+  /(^|[#&])type=recovery(&|$)/.test(initialAuthHash) || /(^|[#&])error_code=/.test(initialAuthHash)
+
 function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const path = location.pathname
 
+  // A password reset link always opens the reset page, also when it expired.
+  useEffect(() => {
+    if (isPasswordLinkLanding && location.pathname !== "/reset-password") {
+      navigate(`/reset-password${initialAuthHash}`, { replace: true })
+    }
+    if (!supabase) return
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") navigate("/reset-password", { replace: true })
+    })
+    return () => subscription.unsubscribe()
+    // Only on first load of the app.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // First visit without an account: show the welcome slides first.
   useEffect(() => {
-    if (hasSeenWelcome() || pathsWithoutWelcome.includes(location.pathname)) return
+    if (isPasswordLinkLanding || hasSeenWelcome() || pathsWithoutWelcome.includes(location.pathname)) return
     let active = true
     async function checkFirstVisit() {
       if (!supabase) return

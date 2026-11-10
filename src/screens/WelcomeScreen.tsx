@@ -8,6 +8,16 @@ import { activities, communityMembers } from '../data/mockData'
 import { markWelcomeSeen } from '../lib/onboardingFlags'
 import { supabase } from '../lib/supabase'
 
+// Example PRs for the last slide: verified after 3 confirms from the crew.
+const prExamples = [
+  { sport: 'Spearfishing', label: 'Deepest dive', value: '18.1 m', confirms: 3 },
+  { sport: 'Running', label: '5 km time', value: '21:45', confirms: 3 },
+  { sport: 'Kitesurfing', label: 'Highest jump', value: '9.2 m', confirms: 2 },
+  { sport: 'Hiking', label: 'Longest hike', value: '32 km', confirms: 1 },
+  { sport: 'Gym', label: 'Deadlift', value: '180 kg', confirms: 3 },
+  { sport: 'Surfing', label: 'Biggest wave', value: '8 ft', confirms: 2 },
+]
+
 // Shown once, before signing in: what Count Me In is about.
 const slides = [
   {
@@ -93,20 +103,25 @@ const slides = [
     title: <>Claim your <em>personal records</em> and let the crew confirm them</>,
     visual: (
       <div className="flow-showcase" aria-hidden="true">
-        <div className="showcase-row">
-          <Fish />
-          <span className="grow">
-            <small>Spearfishing</small>
-            <strong>Deepest dive · 18.1 m</strong>
-          </span>
-          <BadgeCheck />
-        </div>
-        <div className="showcase-row">
-          <Users />
-          <span className="grow">
-            <strong>3 of 3 confirms</strong>
-            <small>Verified by the crew</small>
-          </span>
+        <div className="showcase-prs">
+          {prExamples.map((pr, index) => (
+            // Rows 2 and 3 drop out on short screens, the last row first.
+            <div
+              key={pr.label}
+              className={`showcase-pr${pr.confirms === 3 ? ' is-verified' : ''}`}
+              data-optional={index >= 2 ? `pr-row-${Math.floor(index / 2) + 1}` : undefined}
+            >
+              <small>{pr.sport}</small>
+              <strong>{pr.label}</strong>
+              <span className="showcase-pr-value">
+                {pr.value}
+                {pr.confirms === 3 && <BadgeCheck />}
+              </span>
+              <span className="showcase-pr-status">
+                {pr.confirms === 3 ? 'Verified by the crew' : `${pr.confirms} of 3 confirms`}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     ),

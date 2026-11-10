@@ -21,10 +21,9 @@ export function Skeleton({
 // Same shape as an ActivityCard.
 export function ActivityCardSkeleton() {
   return (
-    <div className="activity-card skeleton-card" aria-hidden="true">
-      <div className="skeleton-row">
-        <Skeleton width={96} height={12} />
-        <Skeleton width={80} height={12} />
+    <div className="activity-card has-image skeleton-card" aria-hidden="true">
+      <div className="card-media">
+        <Skeleton width="100%" height="100%" radius={0} />
       </div>
       <Skeleton width="80%" height={20} />
       <Skeleton width="55%" />

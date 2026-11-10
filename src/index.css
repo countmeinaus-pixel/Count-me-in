@@ -488,6 +488,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   }
 
   .activity-card {
+    --card-pad: 14px;
     min-height: 238px;
     padding: 14px 14px 12px;
   }
@@ -879,17 +880,40 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 
 .activity-card {
+  --card-pad: 16px;
   width: 100%;
   text-align: left;
   border: 1px solid var(--border);
   background: var(--surface-1);
-  padding: 16px;
+  padding: var(--card-pad);
   border-radius: var(--radius-lg);
   display: grid;
   gap: 11px;
   transition: transform 0.2s ease-out;
 }
 .activity-card:active { transform: scale(0.98); }
+/* Activity photo at the top of the card, edge to edge. */
+.activity-card.has-image { overflow: hidden; align-content: start; }
+.card-media {
+  position: relative;
+  height: 132px;
+  margin: calc(-1 * var(--card-pad)) calc(-1 * var(--card-pad)) 2px;
+  background: var(--surface-2);
+}
+.card-media img { width: 100%; height: 100%; object-fit: cover; }
+.card-media-top {
+  position: absolute;
+  inset: 12px 12px auto;
+}
+.card-media-top span,
+.card-media-top time {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--scrim);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.card-media-top span { color: var(--text-primary); }
 
 .card-top,
 .card-bottom,
@@ -3886,7 +3910,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   gap: 12px;
   margin-top: 24px;
 }
-.profile-activities h3 {
+.profile-activities > h3 {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -3896,7 +3920,7 @@ h3 { font: 700 21px/24px var(--font-display); }
 /* Upcoming activities: stacked on phones, 3 in a row on larger screens. */
 @container app (min-width: 900px) {
   .profile-activities { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
-  .profile-activities h3 { grid-column: 1 / -1; }
+  .profile-activities > h3 { grid-column: 1 / -1; }
 }
 .edit-activity-cancel {
   margin-top: 40px;

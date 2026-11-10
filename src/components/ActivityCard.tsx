@@ -21,10 +21,14 @@ export function ActivityCard({ activity, onClick }: { activity: ActivityCardData
             : Dumbbell
 
   return (
-    <button className="activity-card" onClick={onClick} type="button">
-      <div className="card-top">
-        <span><Icon />{activity.sport}</span>
-        <time>{formatActivityDate(activity.startsAt, { weekday: 'short', day: 'numeric', month: 'short' })}</time>
+    <button className="activity-card has-image" onClick={onClick} type="button">
+      {/* Photo strip; sport and date sit on dark pills so they stay readable on any photo. */}
+      <div className="card-media">
+        <img src={activity.hero} alt="" loading="lazy" />
+        <div className="card-top card-media-top">
+          <span><Icon />{activity.sport}</span>
+          <time>{formatActivityDate(activity.startsAt, { weekday: 'short', day: 'numeric', month: 'short' })}</time>
+        </div>
       </div>
 
       <h3>{activity.title}</h3>

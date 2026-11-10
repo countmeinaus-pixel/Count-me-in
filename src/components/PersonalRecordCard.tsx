@@ -1,9 +1,12 @@
-import { BadgeCheck, Flag, ThumbsUp, Trash2 } from 'lucide-react'
+import { BadgeCheck, Flag, ShieldCheck, ThumbsUp, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { formatPrValue } from '../data/prTypes'
 import {
   deletePersonalRecord,
+  isRecordVerified,
   prVerifyThreshold,
+  removePersonalRecordById,
+  staffVerifyRecord,
   voteOnPersonalRecord,
   type PersonalRecord,
 } from '../lib/personalRecords'
@@ -14,14 +17,16 @@ type Props = {
   showOwner?: boolean
   onChanged: () => void
   onOpenOwner?: () => void
+  // Admins and moderators: verify or remove instead of confirm and flag.
+  staffMode?: boolean
 }
 
-export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpenOwner }: Props) {
+export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpenOwner, staffMode = false }: Props) {
   const [isBusy, setIsBusy] = useState(false)
   const [error, setError] = useState('')
   const [photoOpen, setPhotoOpen] = useState(false)
-  const verified = record.confirmCount >= prVerifyThreshold
-  const hidden = record.flagCount >= prVerifyThreshold
+  const verified = isRecordVerified(record)
+  const hidden = record.flagCount >= prVerifyThreshold && !record.staffVerified
   const label = record.type?.label ?? record.recordType
 
   async function run(action: () => Promise<void>) {
@@ -61,12 +66,37 @@ export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpe
         <span className={`pr-card-status ${verified ? 'verified' : ''}`}>
           {hidden
             ? 'Hidden: flagged by 3 members, waiting for a moderator'
-            : verified
-              ? <><BadgeCheck aria-hidden="true" /> Verified by {record.confirmCount} members</>
-              : `${record.confirmCount} of ${prVerifyThreshold} confirms`}
+            : record.staffVerified
+              ? <><BadgeCheck aria-hidden="true" /> Verified by a moderator</>
+              : verified
+                ? <><BadgeCheck aria-hidden="true" /> Verified by {record.confirmCount} members</>
+                : `${record.confirmCount} of ${prVerifyThreshold} confirms${record.flagCount > 0 ? ` · ${record.flagCount} ${record.flagCount === 1 ? 'flag' : 'flags'}` : ''}`}
         </span>
 
-        {record.viewerIsOwner ? (
+        {staffMode ? (
+          <div className="pr-card-actions">
+            <button
+              type="button"
+              className="pr-vote active"
+              disabled={isBusy}
+              onClick={() => void run(() => staffVerifyRecord(record.id))}
+            >
+              <ShieldCheck aria-hidden="true" /> Verify
+            </button>
+            <button
+              type="button"
+              className="pr-vote flag"
+              disabled={isBusy}
+              onClick={() => {
+                if (window.confirm(`Remove ${record.ownerName}'s PR and its proof photo for good?`)) {
+                  void run(() => removePersonalRecordById(record.id))
+                }
+              }}
+            >
+              <Trash2 aria-hidden="true" /> Remove
+            </button>
+          </div>
+        ) : record.viewerIsOwner ? (
           <button
             type="button"
             className="pr-card-delete"

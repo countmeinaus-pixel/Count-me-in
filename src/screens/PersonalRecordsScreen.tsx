@@ -5,7 +5,7 @@ import { Button } from '../components/Button'
 import { ClaimPrDialog } from '../components/ClaimPrDialog'
 import { PersonalRecordCard } from '../components/PersonalRecordCard'
 import { getMoreOrigin } from '../lib/moreNavigation'
-import { getPersonalRecordsForProfile, type PersonalRecord } from '../lib/personalRecords'
+import { getPersonalRecordsForProfile, isRecordVerified, type PersonalRecord } from '../lib/personalRecords'
 import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 
@@ -55,7 +55,7 @@ export function PersonalRecordsScreen() {
     }
   }, [version])
 
-  const verifiedCount = records.filter((record) => record.confirmCount >= 3).length
+  const verifiedCount = records.filter(isRecordVerified).length
 
   return (
     <div className="screen patches-page">

@@ -60,6 +60,7 @@ const titles = {
   activity_cancelled: 'Activity cancelled',
   pr_confirmed: 'PR confirmed',
   pr_flagged: 'PR flagged',
+  pr_verified: 'PR verified',
 } as const
 
 function formatRelativeTime(value: string) {
@@ -98,8 +99,8 @@ export function NotificationsScreen() {
           title: item.type === 'participant_left' && item.actorName ? `${item.actorName} can’t make it` : titles[item.type],
           message: item.message ? `${item.body} “${item.message}”` : item.body,
           time: formatRelativeTime(item.createdAt),
-          href: item.type === 'pr_confirmed' || item.type === 'pr_flagged'
-            ? '/profile'
+          href: item.type === 'pr_confirmed' || item.type === 'pr_flagged' || item.type === 'pr_verified'
+            ? '/profile/records'
             : item.activityId ? `/activity/${item.activityId}` : '/activities',
           unread: item.unread,
           icon: item.type === 'invite' ? CalendarDays : CheckCircle2,

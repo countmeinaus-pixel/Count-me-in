@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react"
 import { MorePageHeader } from "../components/MorePageHeader"
 import { useBackToMore } from "../lib/moreNavigation"
-import { removePersonalRecordById } from "../lib/personalRecords"
+import {
+  getRecordsForStaffReview,
+  removePersonalRecordById,
+  type PersonalRecord,
+} from "../lib/personalRecords"
+import { PersonalRecordCard } from "../components/PersonalRecordCard"
 import {
   getCurrentModerationRole,
   getModerationReports,
@@ -43,6 +48,29 @@ export function ModerationScreen() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [updatingReportId, setUpdatingReportId] = useState<string | null>(null)
+  const [tab, setTab] = useState<"reports" | "records">("reports")
+  const [recordsToCheck, setRecordsToCheck] = useState<PersonalRecord[] | null>(null)
+  const [recordsError, setRecordsError] = useState("")
+  const [recordsVersion, setRecordsVersion] = useState(0)
+
+  useEffect(() => {
+    if (!role || tab !== "records") return
+    let active = true
+    setRecordsError("")
+    getRecordsForStaffReview()
+      .then((records) => {
+        if (active) setRecordsToCheck(records)
+      })
+      .catch((loadError: unknown) => {
+        if (active)
+          setRecordsError(
+            loadError instanceof Error ? loadError.message : "Unable to load PRs to check.",
+          )
+      })
+    return () => {
+      active = false
+    }
+  }, [role, tab, recordsVersion])
 
   useEffect(() => {
     let active = true
@@ -129,6 +157,53 @@ export function ModerationScreen() {
         <p className="more-settings-note">Loading reports…</p>
       ) : role ? (
         <>
+          <div className="segment-bar">
+            <button
+              type="button"
+              className={tab === "reports" ? "active" : ""}
+              aria-pressed={tab === "reports"}
+              onClick={() => setTab("reports")}
+            >
+              Reports
+            </button>
+            <button
+              type="button"
+              className={tab === "records" ? "active" : ""}
+              aria-pressed={tab === "records"}
+              onClick={() => setTab("records")}
+            >
+              PRs to check
+            </button>
+          </div>
+          {tab === "records" ? (
+            <>
+              <p className="more-settings-intro">
+                Personal records that are not verified yet, flagged ones first.
+                Verify counts as fully verified (like 3 confirms) and makes a
+                flagged PR visible again.
+              </p>
+              {recordsError ? (
+                <p className="edit-form-error" role="alert">{recordsError}</p>
+              ) : recordsToCheck === null ? (
+                <p className="more-settings-note">Loading PRs…</p>
+              ) : recordsToCheck.length ? (
+                <div className="pr-list">
+                  {recordsToCheck.map((record) => (
+                    <PersonalRecordCard
+                      key={record.id}
+                      record={record}
+                      showOwner
+                      staffMode
+                      onChanged={() => setRecordsVersion((version) => version + 1)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="more-settings-note">No PRs waiting for a check.</p>
+              )}
+            </>
+          ) : (
+          <>
           <p className="more-settings-intro">
             Reports are ordered by safety priority, then by newest first. Staff
             actions are restricted by Supabase.
@@ -198,6 +273,8 @@ export function ModerationScreen() {
               <h3>No reports yet</h3>
               <p>New profile and activity reports will appear here.</p>
             </div>
+          )}
+          </>
           )}
         </>
       ) : (

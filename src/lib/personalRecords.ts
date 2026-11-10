@@ -21,6 +21,12 @@ export type PersonalRecord = {
   createdAt: string
   viewerVote: 'confirm' | 'flag' | null
   viewerIsOwner: boolean
+  staffVerified: boolean
+}
+
+// 3 confirms from members, or one check by an admin or moderator.
+export function isRecordVerified(record: Pick<PersonalRecord, 'confirmCount' | 'staffVerified'>) {
+  return record.staffVerified || record.confirmCount >= prVerifyThreshold
 }
 
 type RecordRow = {
@@ -34,9 +40,25 @@ type RecordRow = {
   confirm_count: number
   flag_count: number
   created_at: string
+  staff_verified_at?: string | null
 }
 
-const recordColumns = 'id, user_id, sport, record_type, value, note, photo_url, confirm_count, flag_count, created_at'
+const baseRecordColumns = 'id, user_id, sport, record_type, value, note, photo_url, confirm_count, flag_count, created_at'
+const recordColumns = `${baseRecordColumns}, staff_verified_at`
+
+type RecordQueryResult = { data: RecordRow[] | null; error: { code?: string; message: string } | null }
+
+// Reads records with the staff verification column. Until that database
+// update has run, the column does not exist yet: then read without it.
+async function selectRecords(
+  build: (columns: string) => PromiseLike<RecordQueryResult>,
+): Promise<RecordQueryResult> {
+  const result = await build(recordColumns)
+  if (result.error && (result.error.code === '42703' || /staff_verified_at/.test(result.error.message))) {
+    return build(baseRecordColumns)
+  }
+  return result
+}
 
 function requireSupabase() {
   if (!supabase) throw new Error('Supabase is not configured yet.')
@@ -89,6 +111,7 @@ async function toRecords(rows: RecordRow[], viewerId: string | null): Promise<Pe
     createdAt: row.created_at,
     viewerVote: votes.get(row.id) ?? null,
     viewerIsOwner: row.user_id === viewerId,
+    staffVerified: Boolean(row.staff_verified_at),
   }))
 }
 
@@ -97,11 +120,15 @@ export async function getPersonalRecordsForProfile(profileId: string): Promise<P
   if (!supabase) return null
   const viewerId = await getViewerId()
   if (!viewerId) return null
-  const { data, error } = await supabase
-    .from('personal_records')
-    .select(recordColumns)
-    .eq('user_id', profileId)
-    .order('created_at', { ascending: false })
+  const client = supabase
+  const { data, error } = await selectRecords((columns) =>
+    client
+      .from('personal_records')
+      .select(columns)
+      .eq('user_id', profileId)
+      .order('created_at', { ascending: false })
+      .returns<RecordRow[]>(),
+  )
   if (error) rethrow(error)
   return toRecords(data ?? [], viewerId)
 }
@@ -111,19 +138,54 @@ export async function getRecordsToConfirm(limit = 6): Promise<PersonalRecord[]> 
   if (!supabase) return []
   const viewerId = await getViewerId()
   if (!viewerId) return []
-  const { data, error } = await supabase
-    .from('personal_records')
-    .select(recordColumns)
-    .neq('user_id', viewerId)
-    .lt('confirm_count', prVerifyThreshold)
-    .order('created_at', { ascending: false })
-    .limit(30)
+  const client = supabase
+  const { data, error } = await selectRecords((columns) =>
+    client
+      .from('personal_records')
+      .select(columns)
+      .neq('user_id', viewerId)
+      .lt('confirm_count', prVerifyThreshold)
+      .order('created_at', { ascending: false })
+      .limit(30)
+      .returns<RecordRow[]>(),
+  )
   if (error) {
     if (isMissingDatabaseFeature(error)) return []
     throw error
   }
   const records = await toRecords(data ?? [], viewerId)
-  return records.filter((record) => record.viewerVote === null).slice(0, limit)
+  return records
+    .filter((record) => record.viewerVote === null && !record.staffVerified)
+    .slice(0, limit)
+}
+
+// For admins and moderators: every record that is not verified yet, flagged
+// ones first. Row Level Security also returns hidden records to staff.
+export async function getRecordsForStaffReview(): Promise<PersonalRecord[]> {
+  const client = requireSupabase()
+  const viewerId = await getViewerId()
+  const { data, error } = await client
+    .from('personal_records')
+    .select(recordColumns)
+    .is('staff_verified_at', null)
+    .lt('confirm_count', prVerifyThreshold)
+    .order('flag_count', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(50)
+    .returns<RecordRow[]>()
+  if (error) {
+    if (error.code === '42703') throw new Error(databaseUpdateNeededMessage)
+    rethrow(error)
+  }
+  return toRecords(data ?? [], viewerId)
+}
+
+export async function staffVerifyRecord(recordId: string, verify = true) {
+  const { error } = await requireSupabase().rpc('staff_verify_personal_record', {
+    target_record_id: recordId,
+    verify,
+  })
+  if (error) rethrow(error)
 }
 
 export async function compressProofPhoto(file: File) {

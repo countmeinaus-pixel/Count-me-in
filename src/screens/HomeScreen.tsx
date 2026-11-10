@@ -662,6 +662,7 @@ export function HomeScreen() {
                 <div className="crew-suggestion" key={member.id ?? member.name}>
                   <span className="crew-suggestion-reason">{reason}</span>
                   <MateCard
+                    horizontal
                     member={member}
                     onClick={() => navigate(`/profile/${encodeURIComponent(member.name)}`)}
                   />

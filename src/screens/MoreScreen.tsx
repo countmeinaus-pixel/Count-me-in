@@ -93,6 +93,9 @@ export function MoreScreen() {
     sports: currentUser.stats.sports,
   })
   const [profileError, setProfileError] = useState("")
+  const [prCount, setPrCount] = useState(0)
+  // While the real profile loads, show placeholders instead of the demo user.
+  const [isProfileLoading, setIsProfileLoading] = useState(Boolean(supabase))
   const [checkinVersion, setCheckinVersion] = useState(0)
   const [language, setLanguage] = useState(getStoredLanguage())
   const [isStaff, setIsStaff] = useState(false)
@@ -123,9 +126,15 @@ export function MoreScreen() {
       try {
         const { data: userData, error: userError } =
           await supabase.auth.getUser()
-        if (userError?.message === "Auth session missing!") return
+        if (userError?.message === "Auth session missing!") {
+          if (active) setIsProfileLoading(false)
+          return
+        }
         if (userError) throw userError
-        if (!userData.user) return
+        if (!userData.user) {
+          if (active) setIsProfileLoading(false)
+          return
+        }
 
         const [profileResult, sportsResult] = await Promise.all([
           supabase
@@ -144,6 +153,14 @@ export function MoreScreen() {
           throw new Error(
             "Your profile could not be found. Please complete onboarding first.",
           )
+        // Claimed personal records; 0 until the PR database update has run.
+        void supabase
+          .from("personal_records")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userData.user.id)
+          .then(({ count, error }) => {
+            if (active && !error) setPrCount(count ?? 0)
+          })
         if (active) {
           setProfile({
             name: profileResult.data.first_name,
@@ -153,9 +170,13 @@ export function MoreScreen() {
             sports: sportsResult.count ?? 0,
           })
           await loadSavedMeetupsForUser(profileResult.data.first_name)
-          if (active) setCheckinVersion((version) => version + 1)
+          if (active) {
+            setCheckinVersion((version) => version + 1)
+            setIsProfileLoading(false)
+          }
         }
       } catch (error) {
+        if (active) setIsProfileLoading(false)
         if (active)
           setProfileError(
             error instanceof Error
@@ -273,40 +294,45 @@ export function MoreScreen() {
 
       <button
         type="button"
-        className="more-profile-card"
+        className={`more-profile-card ${isProfileLoading ? "is-loading" : ""}`}
+        aria-busy={isProfileLoading}
         onClick={() =>
           navigate("/profile", { state: { returnTo: "/more", from: closeTo } })
         }
       >
         <span className="more-profile-avatar">
-          {profile.photoUrl ? (
+          {isProfileLoading ? null : profile.photoUrl ? (
             <img src={profile.photoUrl} alt="" />
           ) : (
             <span>{profile.name[0]?.toUpperCase() ?? "?"}</span>
           )}
-          {profile.verified && (
+          {!isProfileLoading && profile.verified && (
             <span className="more-verified-badge">
               <ShieldCheck aria-label="Verified member" />
             </span>
           )}
         </span>
         <span className="more-profile-main">
-          <strong>{profile.name}</strong>
-          <small>{profile.suburb}</small>
+          <strong>{isProfileLoading ? "Loading…" : profile.name}</strong>
+          <small>{isProfileLoading ? "\u00a0" : profile.suburb}</small>
         </span>
         <ChevronRight aria-hidden="true" className="more-profile-chevron" />
         <span className="more-profile-stats">
           <span>
-            <strong>{meetupStats.length}</strong>
-            <small>Confirmed meetups</small>
+            <strong>{isProfileLoading ? "–" : meetupStats.length}</strong>
+            <small>Meetups</small>
           </span>
           <span>
-            <strong>{hostedCount}</strong>
+            <strong>{isProfileLoading ? "–" : hostedCount}</strong>
             <small>Hosted</small>
           </span>
           <span>
-            <strong>{profile.sports}</strong>
+            <strong>{isProfileLoading ? "–" : profile.sports}</strong>
             <small>Sports</small>
+          </span>
+          <span>
+            <strong>{isProfileLoading ? "–" : prCount}</strong>
+            <small>PRs</small>
           </span>
         </span>
       </button>
@@ -351,7 +377,9 @@ export function MoreScreen() {
               const Icon = item.icon
               const trailing =
                 item.label === "Patches"
-                  ? `${earnedPatches} of ${patchesTotal}`
+                  ? isProfileLoading
+                    ? ""
+                    : `${earnedPatches} of ${patchesTotal}`
                   : item.label === "Language"
                     ? language.toUpperCase()
                     : item.trailing

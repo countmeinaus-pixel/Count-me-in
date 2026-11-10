@@ -82,6 +82,8 @@ export function ProfileScreen() {
 
   const isCurrentUser =
     !profileParam || decodeURIComponent(profileParam) === currentUser.name
+  // While your own profile loads, show a loading state instead of the demo user.
+  const [isOwnProfileLoading, setIsOwnProfileLoading] = useState(Boolean(supabase))
   const [profileActivities, setProfileActivities] = useState<{
     upcoming: ActivityCardData[]
     latest: ActivityCardData | null
@@ -118,7 +120,10 @@ export function ProfileScreen() {
   useEffect(() => {
     let active = true
     async function loadProfile() {
-      if (!isCurrentUser || !supabase) return
+      if (!isCurrentUser || !supabase) {
+        setIsOwnProfileLoading(false)
+        return
+      }
 
       try {
         const { data: userData, error: userError } =
@@ -139,6 +144,8 @@ export function ProfileScreen() {
               ? error.message
               : "Unable to load your profile.",
           )
+      } finally {
+        if (active) setIsOwnProfileLoading(false)
       }
     }
 
@@ -323,11 +330,8 @@ export function ProfileScreen() {
   const earnedPatches = patchList.filter((patch) => patch.earned)
   const chartData = useMemo(
     () =>
-      getLollipopChartForUser(
-        isCurrentUser ? currentUser.name : profile.name,
-        6,
-      ),
-    [isCurrentUser, profile.name, checkinVersion],
+      getLollipopChartForUser(profile.name, 6),
+    [profile.name, checkinVersion],
   )
 
   async function handleReportUser(name: string) {
@@ -363,6 +367,14 @@ export function ProfileScreen() {
     setOpenFriendMenu(null)
     setProfileMenuOpen(false)
     return true
+  }
+
+  if (isCurrentUser && isOwnProfileLoading) {
+    return (
+      <div className="screen profile-page" aria-busy="true">
+        <p className="text-[var(--text-secondary)]" role="status">Loading your profile…</p>
+      </div>
+    )
   }
 
   return (
@@ -494,7 +506,7 @@ export function ProfileScreen() {
       <div className="stats-grid">
         <div>
           <strong>{profileMeetups}</strong>
-          <span>Confirmed meetups</span>
+          <span>Meetups</span>
         </div>
         <div>
           <strong>{hostedActivities}</strong>
@@ -503,6 +515,10 @@ export function ProfileScreen() {
         <div>
           <strong>{sportCount}</strong>
           <span>Sports</span>
+        </div>
+        <div>
+          <strong>{personalRecords?.length ?? 0}</strong>
+          <span>PRs</span>
         </div>
       </div>
 

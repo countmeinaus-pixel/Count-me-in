@@ -15,7 +15,7 @@ export type PersonalRecord = {
   recordType: string
   value: number
   note: string
-  photoUrl: string
+  photoUrl: string | null // removed once the record is verified
   confirmCount: number
   flagCount: number
   createdAt: string
@@ -36,7 +36,7 @@ type RecordRow = {
   record_type: string
   value: number | string
   note: string
-  photo_url: string
+  photo_url: string | null
   confirm_count: number
   flag_count: number
   created_at: string
@@ -130,7 +130,26 @@ export async function getPersonalRecordsForProfile(profileId: string): Promise<P
       .returns<RecordRow[]>(),
   )
   if (error) rethrow(error)
-  return toRecords(data ?? [], viewerId)
+  const records = await toRecords(data ?? [], viewerId)
+  // The owner tidies up proof photos of records that are verified now.
+  for (const record of records) {
+    if (record.viewerIsOwner && record.photoUrl && isRecordVerified(record)) {
+      void clearVerifiedPhoto(record.id).catch(() => undefined)
+      record.photoUrl = null
+    }
+  }
+  return records
+}
+
+// Removes the proof photo of a verified record (owner or moderator).
+export async function clearVerifiedPhoto(recordId: string) {
+  const client = requireSupabase()
+  const { data: path, error } = await client.rpc('clear_verified_record_photo', { target_record_id: recordId })
+  if (error) {
+    if (isMissingDatabaseFeature(error)) return
+    throw error
+  }
+  if (typeof path === 'string' && path) await client.storage.from(proofBucket).remove([path])
 }
 
 // New records from other members that the viewer has not voted on yet.
@@ -186,6 +205,7 @@ export async function staffVerifyRecord(recordId: string, verify = true) {
     verify,
   })
   if (error) rethrow(error)
+  if (verify) await clearVerifiedPhoto(recordId).catch(() => undefined)
 }
 
 export async function compressProofPhoto(file: File) {

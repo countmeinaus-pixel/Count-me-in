@@ -49,6 +49,7 @@ import {
   resolveProfileIdByName,
 } from "../lib/moderation"
 import { getMoreOrigin } from "../lib/moreNavigation"
+import { useMediaQuery } from "../lib/useMediaQuery"
 
 const initialFriends = ["Matt", "Hamish", "Sam", "Luca"].map((name) => ({
   name,
@@ -274,6 +275,9 @@ export function ProfileScreen() {
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[] | null>(null)
   const [personalRecordsError, setPersonalRecordsError] = useState("")
   const [recordsVersion, setRecordsVersion] = useState(0)
+  const [showAllRecords, setShowAllRecords] = useState(false)
+  // A preview grid: 2 by 2 on phones, 5 in a row on wider screens.
+  const recordsPreviewCount = useMediaQuery("(min-width: 768px)") ? 5 : 4
 
   useEffect(() => {
     if (!profileId) {
@@ -598,15 +602,27 @@ export function ProfileScreen() {
           {personalRecordsError ? (
             <p className="edit-form-error" role="alert">{personalRecordsError}</p>
           ) : personalRecords && personalRecords.length > 0 ? (
-            <div className="pr-list">
-              {personalRecords.map((record) => (
-                <PersonalRecordCard
-                  key={record.id}
-                  record={record}
-                  onChanged={() => setRecordsVersion((version) => version + 1)}
-                />
-              ))}
-            </div>
+            <>
+              <div className={showAllRecords ? "pr-list" : "pr-grid"}>
+                {(showAllRecords ? personalRecords : personalRecords.slice(0, recordsPreviewCount)).map((record) => (
+                  <PersonalRecordCard
+                    key={record.id}
+                    record={record}
+                    onChanged={() => setRecordsVersion((version) => version + 1)}
+                  />
+                ))}
+              </div>
+              {personalRecords.length > recordsPreviewCount && (
+                <button
+                  type="button"
+                  className="text-action pr-view-all"
+                  aria-expanded={showAllRecords}
+                  onClick={() => setShowAllRecords((value) => !value)}
+                >
+                  {showAllRecords ? "Show less" : `View all ${personalRecords.length}`}
+                </button>
+              )}
+            </>
           ) : (
             <p className="pr-empty">
               {isCurrentUser

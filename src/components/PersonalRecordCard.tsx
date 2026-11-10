@@ -118,7 +118,8 @@ export function PersonalRecordCard({ record, showOwner = false, onChanged, onOpe
               <Trash2 aria-hidden="true" /> Remove
             </button>
           </div>
-        ) : record.viewerIsOwner ? null : (
+        ) : record.viewerIsOwner || (verified && !hidden) ? null : (
+          // Verified PRs need no more confirms or flags.
           <div className="pr-card-actions">
             <button
               type="button"

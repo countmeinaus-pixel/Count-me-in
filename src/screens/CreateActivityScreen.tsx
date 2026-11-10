@@ -397,6 +397,13 @@ export function CreateActivityScreen() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  function goBack() {
+    if (step <= 1) return
+    setStep(step - 1)
+    setError('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   function continueToNextStep() {
     if (!canContinue() || step >= steps.length) return
     const nextStep = step + 1
@@ -905,7 +912,7 @@ export function CreateActivityScreen() {
 
       <footer className="wizard-actions">
         {step > 1 ? (
-          <Button type="button" variant="secondary" onClick={() => goToStep(step - 1)}>
+          <Button type="button" variant="secondary" onClick={goBack}>
             <ArrowLeft /> Back
           </Button>
         ) : <span />}

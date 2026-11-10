@@ -15,6 +15,8 @@ Doe de bestanden in de volgorde van deze lijst.
 
 ## Open stappen
 
+De volledige, actuele lijst staat in `docs/sql-to-run.md`.
+
 - [ ] **1. Afmelden, uitnodigingen en notificaties** (taak 3 en 8)
   Bestand: `supabase/migrations/20261110120000_leave_activity_invites_notifications.sql`
   Wat het doet: een tabel `notifications` (met Row Level Security), de functie "Can't make it" (`leave_activity`), een melding als iemand je uitnodigt, en de functie om op een uitnodiging te antwoorden (`respond_to_activity_invite`).

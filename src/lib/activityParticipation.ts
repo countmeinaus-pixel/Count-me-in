@@ -2,6 +2,7 @@ import {
   databaseUpdateNeededMessage,
   isMissingDatabaseFeature,
 } from "./notifications"
+import { isMissingLocationColumns } from "./location"
 import { supabase } from "./supabase"
 import {
   getDefaultActivityHero,
@@ -172,7 +173,7 @@ async function toFeedActivities(
   const activityIds = rows.map((activity) => activity.id)
   const profileIds = [...new Set(rows.map((activity) => activity.host_id))]
   const sportIds = [...new Set(rows.map((activity) => activity.sport_id))]
-  const [requestsResult, profilesResult, sportsResult] = await Promise.all([
+  const [requestsResult, profilesResult, sportsResult, pinsResult] = await Promise.all([
     viewerId
       ? client
           .from("activity_join_requests")
@@ -182,8 +183,14 @@ async function toFeedActivities(
       : Promise.resolve({ data: [], error: null }),
     client.from("profiles").select("id, first_name, photo_url").in("id", profileIds),
     client.from("sports").select("id, name").in("id", sportIds),
+    // Separate query so the feed still loads before the map pin columns exist.
+    client.from("activities").select("id, latitude, longitude").in("id", activityIds),
   ])
   if (requestsResult.error) throw requestsResult.error
+  if (pinsResult.error && !isMissingLocationColumns(pinsResult.error)) throw pinsResult.error
+  const pinsById = new Map(
+    (pinsResult.error ? [] : pinsResult.data ?? []).map((pin) => [pin.id, pin]),
+  )
   if (profilesResult.error) throw profilesResult.error
   if (sportsResult.error) throw sportsResult.error
 
@@ -247,6 +254,8 @@ async function toFeedActivities(
         details: {},
         place: activity.meeting_point,
         suburb: activity.suburb,
+        latitude: pinsById.get(activity.id)?.latitude ?? null,
+        longitude: pinsById.get(activity.id)?.longitude ?? null,
         host,
         spotsTotal: activity.spots_total,
         spotsTaken: acceptedRequests.length,

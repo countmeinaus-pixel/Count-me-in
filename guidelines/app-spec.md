@@ -29,6 +29,7 @@ Every activity has the **common fields** plus the **preset fields** of its sport
 - Date
 - Start time
 - Meeting point (free text, for example "Car park at Port Noarlunga jetty") and suburb
+- Optional address and optional map pin (latitude, longitude pasted from Google Maps, with a "How do I find the map pin?" help). Activities with a map pin show on the Home map.
 - Optional activity banner. Recommend 1200 × 600 px (2:1); resize the long edge to 1200 px and compress to JPEG in the browser before upload.
 - Group size: "1 buddy" or "Small group" (2 to 8 spots, stepper)
 - Level wanted: Any, Beginner friendly, Intermediate, Experienced
@@ -123,7 +124,7 @@ Use ProgressSteps on steps 2 to 9.
 - Large header image for the sport or spot, back button and share icon over it.
 - Sport label, title `h1`, date and time in seafoam.
 - Facts grid: preset fields as 2-column tiles (label + value in Barlow Condensed).
-- Meeting point row with suburb.
+- Meeting point row with address and suburb. Tapping it opens the spot in Google Maps (plain link, no API).
 - Level wanted (LevelPill) and SpotsIndicator.
 - Host card: Avatar 48, name, verified tick, "12 confirmed meetups", their level in this sport, "View profile".
 - "Who's going": row of avatars.
@@ -139,7 +140,7 @@ Use ProgressSteps on steps 2 to 9.
 ### Create activity flow (from the Create activity button on My activities)
 1. **What are you up to?**: SportTile grid with the full sports catalogue, including "Open activity". Show the user's profile sports first, but allow any catalogue sport to be selected.
 2. **The details**: preset fields for the chosen sport (see table), using Inputs, Chips and steppers. Show a default banner with an option to upload a custom image and the recommended image size.
-3. **When and where**: date picker (next 30 days), start time, meeting point, suburb.
+3. **When and where**: date picker (next 30 days), start time, location name, suburb, optional address and map pin.
 4. **Who are you after?**: "1 buddy" or "Small group" toggle; spots stepper if group; level wanted Chips; Auto-accept toggle; notes.
 5. **Review**: preview of the ActivityCard exactly as others will see it, plus all details. "Post activity" (primary). "Edit" links per section.
 6. **Posted**: "Your callout is live." with the card, "View activity" and "Back to home".

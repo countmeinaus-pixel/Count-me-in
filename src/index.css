@@ -502,49 +502,100 @@ h3 { font: 700 21px/24px var(--font-display); }
   gap: 18px;
   margin-top: 12px;
 }
-.map-surface {
+.activity-map {
   position: relative;
-  height: 320px;
+  height: 360px;
   border-radius: 24px;
   overflow: hidden;
   border: 1px solid var(--border);
-  background:
-    linear-gradient(135deg, rgba(19, 36, 51, 0.95), rgba(15, 27, 35, 0.95)),
-    linear-gradient(0deg, rgba(127, 183, 168, 0.06), rgba(127, 183, 168, 0.06));
+  background: var(--bg);
 }
-.map-surface::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(127, 183, 168, 0.12), transparent 18%),
-    radial-gradient(circle at 68% 38%, rgba(127, 183, 168, 0.12), transparent 22%),
-    linear-gradient(90deg, transparent 0, transparent 90%, rgba(255,255,255,0.04) 90%, rgba(255,255,255,0.04) 100%);
-  opacity: 0.9;
-}
-.map-water {
-  position: absolute;
-  inset: 40% 0 0;
-  background: linear-gradient(180deg, rgba(89, 151, 183, 0.18), rgba(89, 151, 183, 0.28));
-  border-top: 1px solid rgba(127, 183, 168, 0.25);
-}
-.map-pin {
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  background: var(--accent);
+.activity-map-loading {
   display: grid;
   place-items: center;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 6px rgba(255, 107, 44, 0.18);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.activity-map .activity-map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.activity-marker {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.activity-marker:focus-visible { outline: none; }
+/* Teardrop pin. MapLibre positions the button, so the shape rotates inside it. */
+.activity-marker-pin {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 8px;
+  border: 2px solid var(--bg);
+  border-radius: 50% 50% 50% 4px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+  transform: rotate(-45deg);
+  transition: box-shadow 0.15s;
+}
+.activity-marker-pin svg { width: 18px; height: 18px; transform: rotate(45deg); }
+.activity-marker.going .activity-marker-pin { background: var(--seafoam); color: var(--on-seafoam); box-shadow: 0 0 0 3px var(--seafoam-subtle); }
+.activity-marker.selected .activity-marker-pin,
+.activity-marker:focus-visible .activity-marker-pin { box-shadow: 0 0 0 3px var(--text-primary); }
+.activity-map-card {
+  position: absolute;
+  right: 12px;
+  bottom: 40px;
+  left: 12px;
   z-index: 2;
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  text-align: left;
+  cursor: pointer;
 }
-.map-pin span {
-  font: 700 13px var(--font-display);
-  color: white;
+.activity-map-card .map-callout-header { margin-bottom: 4px; }
+.activity-map-card strong { font-size: 17px; font-weight: 700; }
+.activity-map-card-place { color: var(--text-secondary); font-size: 14px; }
+.activity-map-note {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 56px;
+  z-index: 1;
+  width: fit-content;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-size: 12px;
 }
+.activity-map .maplibregl-ctrl.maplibregl-ctrl-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  box-shadow: none;
+}
+.activity-map .maplibregl-ctrl-group button + button { border-top: 1px solid var(--border); }
+.activity-map .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(0.85); }
+.activity-map .maplibregl-ctrl.maplibregl-ctrl-attrib,
+.activity-map .maplibregl-ctrl.maplibregl-ctrl-attrib.maplibregl-compact-show {
+  background: var(--surface-1);
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.activity-map .maplibregl-ctrl-attrib a { color: var(--text-secondary); }
+.activity-map .maplibregl-ctrl-attrib-button { filter: invert(0.85); }
+.activity-map .maplibregl-ctrl-attrib.maplibregl-compact-show { padding-right: 24px; }
 .map-callouts {
   display: grid;
   gap: 10px;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, Bike, CalendarDays, Check, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, ListFilter, MapPin, Mountain, Waves } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { ActivityCard, type ActivityCardData } from '../components/ActivityCard'
@@ -21,6 +21,9 @@ import { PersonalRecordCard } from '../components/PersonalRecordCard'
 import { getRecordsToConfirm, type PersonalRecord } from '../lib/personalRecords'
 import { getUnreadNotificationCount } from '../lib/notifications'
 
+// Loaded only when the Map tab opens, so Home stays fast.
+const ActivityMap = lazy(() => import('../components/ActivityMap'))
+
 type ViewMode = 'list' | 'map' | 'calendar'
 type CalendarMode = 'week' | 'month'
 
@@ -32,13 +35,6 @@ function getWeekStart(date: Date) {
   start.setDate(start.getDate() - daysSinceMonday)
   return start
 }
-
-const mapPins = {
-  1: { x: '28%', y: '52%' },
-  2: { x: '52%', y: '28%' },
-  3: { x: '66%', y: '62%' },
-  4: { x: '40%', y: '74%' },
-} as const
 
 const activityIcons = {
   fish: Fish,
@@ -431,24 +427,9 @@ export function HomeScreen() {
 
       {view === 'map' && (
         <div className="map-panel">
-          <div className="map-surface" aria-label="Map of Adelaide callouts">
-            <div className="map-water" />
-            {visible.map((activity) => {
-              const pin = mapPins[activity.id as keyof typeof mapPins] ?? { x: '50%', y: '50%' }
-              return (
-                <button
-                  key={activity.id}
-                  type="button"
-                  className="map-pin"
-                  style={{ left: pin.x, top: pin.y }}
-                  onClick={() => navigate(`/activity/${activity.id}`)}
-                  aria-label={`Open ${activity.title}`}
-                >
-                  <span>{activity.sport.slice(0, 1)}</span>
-                </button>
-              )
-            })}
-          </div>
+          <Suspense fallback={<div className="activity-map activity-map-loading" role="status">Loading map…</div>}>
+            <ActivityMap activities={visible} onOpenActivity={(id) => navigate(`/activity/${id}`)} />
+          </Suspense>
 
           <div className="map-callouts">
             {visible.map((activity) => (

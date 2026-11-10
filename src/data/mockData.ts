@@ -19,6 +19,8 @@ export type Activity = {
   notes: string
   attendees: string[]
   attendeePhotos?: Array<string | null>
+  latitude?: number | null
+  longitude?: number | null
 }
 
 function getDemoStart(daysFromToday: number, hour: number, minute = 0) {
@@ -192,6 +194,8 @@ export const activities: Activity[] = [
     startsAt: getDemoStart(2, 7),
     facts: '5 to 10 m · Shore dive · 2 hrs',
     place: 'Port Noarlunga jetty car park',
+    latitude: -35.1462,
+    longitude: 138.4706,
     suburb: 'Port Noarlunga',
     host: 'Matt',
     spotsTotal: 4,
@@ -213,6 +217,8 @@ export const activities: Activity[] = [
     facts: '8 km · Steep · 3 hrs',
     details: { Distance: '8 km', Difficulty: 'Steep', Duration: '3 hours' },
     place: 'Waterfall Gully car park',
+    latitude: -34.9663,
+    longitude: 138.6789,
     suburb: 'Waterfall Gully',
     host: 'Jai',
     spotsTotal: 6,
@@ -233,6 +239,8 @@ export const activities: Activity[] = [
     facts: '12 km · Steady pace · Trail',
     details: { Distance: '12 km', Pace: 'Steady', Terrain: 'Trail' },
     place: 'Old Noarlunga footbridge',
+    latitude: -35.1812,
+    longitude: 138.5003,
     suburb: 'Old Noarlunga',
     host: 'Sam',
     spotsTotal: 3,
@@ -253,6 +261,8 @@ export const activities: Activity[] = [
     facts: '2 hrs · Freeride · Windy',
     details: { Duration: '2 hours', Style: 'Freeride' },
     place: 'Brighton jetty',
+    latitude: -35.0185,
+    longitude: 138.5141,
     suburb: 'Brighton',
     host: 'Luca',
     spotsTotal: 1,

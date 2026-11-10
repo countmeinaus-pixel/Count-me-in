@@ -2,23 +2,43 @@ import { Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
+import { Avatar } from "../components/Avatar"
 import { Button } from "../components/Button"
 import { activities } from "../data/mockData"
 import {
   getMySavedActivities,
+  getPendingInvites,
+  respondToActivityInvite,
+  type InvitedActivity,
   type MySavedActivity,
 } from "../lib/activityParticipation"
 import { hasDemoJoinRequest } from "../lib/demoParticipation"
 
 export function MyActivitiesScreen() {
   const navigate = useNavigate()
-  const [segment, setSegment] = useState<"upcoming" | "past">("upcoming")
+  const [segment, setSegment] = useState<"upcoming" | "invited" | "past">(
+    "upcoming",
+  )
   const [savedActivities, setSavedActivities] = useState<MySavedActivity[]>([])
+  const [invites, setInvites] = useState<InvitedActivity[]>([])
+  const [inviteError, setInviteError] = useState("")
+  const [inviteFeedback, setInviteFeedback] = useState("")
+  const [respondingTo, setRespondingTo] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState("")
 
   useEffect(() => {
     let active = true
+    void getPendingInvites()
+      .then((result) => {
+        if (active) setInvites(result)
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setInviteError(
+            error instanceof Error ? error.message : "Unable to load invitations.",
+          )
+      })
     void getMySavedActivities()
       .then((result) => {
         if (active) setSavedActivities(result)
@@ -62,18 +82,43 @@ export function MyActivitiesScreen() {
           )
           .map((activity) => {
             const isRequested = hasDemoJoinRequest(activity.id)
-            const defaultStatus =
+            const defaultStatus: "hosting" | "going" =
               activity.id === activities[1].id ? "hosting" : "going"
             return {
               activity: {
                 ...activity,
                 joinStatus: isRequested ? "pending" as const : undefined,
               },
-              status: isRequested ? "requested" as const : defaultStatus,
+              status: isRequested ? ("requested" as const) : defaultStatus,
               pendingRequestCount: 0,
             }
           }),
       ]
+
+  async function answerInvite(
+    invite: InvitedActivity,
+    response: "accepted" | "declined",
+  ) {
+    setRespondingTo(invite.id)
+    setInviteError("")
+    setInviteFeedback("")
+    try {
+      await respondToActivityInvite(invite.id, response)
+      setInvites((current) => current.filter((item) => item.id !== invite.id))
+      if (response === "accepted") {
+        setSavedActivities(await getMySavedActivities())
+        setInviteFeedback(`You’re going to ${invite.title}. It’s under Upcoming.`)
+      } else {
+        setInviteFeedback(`No worries. We’ve let ${invite.invitedBy} know.`)
+      }
+    } catch (error) {
+      setInviteError(
+        error instanceof Error ? error.message : "Unable to answer this invitation.",
+      )
+    } finally {
+      setRespondingTo(null)
+    }
+  }
 
   const statusLabels = {
     going: "Going",
@@ -107,6 +152,20 @@ export function MyActivitiesScreen() {
         </button>
         <button
           type="button"
+          className={segment === "invited" ? "active" : ""}
+          onClick={() => setSegment("invited")}
+          aria-pressed={segment === "invited"}
+          aria-label={invites.length ? `Invited, ${invites.length} open` : "Invited"}
+        >
+          Invited
+          {invites.length > 0 && (
+            <span className="segment-count" aria-hidden="true">
+              {invites.length}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
           className={segment === "past" ? "active" : ""}
           onClick={() => setSegment("past")}
           aria-pressed={segment === "past"}
@@ -115,7 +174,66 @@ export function MyActivitiesScreen() {
         </button>
       </div>
 
-      {loadError ? (
+      {inviteFeedback && (
+        <p className="activity-join-feedback" role="status">
+          {inviteFeedback}
+        </p>
+      )}
+
+      {segment === "invited" ? (
+        <div className="my-activities-grid">
+          {inviteError && (
+            <p className="wizard-error" role="alert">
+              {inviteError}
+            </p>
+          )}
+          {invites.length === 0 ? (
+            <div className="empty-state-card compact">
+              <h3>No open invitations</h3>
+              <p>When a mate invites you to an activity, it lands here.</p>
+              <Button variant="secondary" onClick={() => navigate("/")}>
+                Find activities
+              </Button>
+            </div>
+          ) : (
+            invites.map((invite) => (
+              <section className="invite-card" key={invite.id}>
+                <p className="invite-card-from">
+                  <Avatar
+                    name={invite.invitedBy}
+                    photoUrl={invite.invitedByPhotoUrl}
+                    size={32}
+                  />
+                  <span>
+                    <strong>{invite.invitedBy}</strong> invited you
+                  </span>
+                </p>
+                <ActivityCard
+                  activity={invite}
+                  onClick={() => navigate(`/activity/${invite.id}`)}
+                />
+                <div className="invite-card-actions">
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    disabled={respondingTo !== null}
+                    onClick={() => void answerInvite(invite, "declined")}
+                  >
+                    Not this time
+                  </Button>
+                  <Button
+                    size="md"
+                    disabled={respondingTo !== null}
+                    onClick={() => void answerInvite(invite, "accepted")}
+                  >
+                    Count me in
+                  </Button>
+                </div>
+              </section>
+            ))
+          )}
+        </div>
+      ) : loadError ? (
         <p className="wizard-error" role="alert">
           {loadError}
         </p>

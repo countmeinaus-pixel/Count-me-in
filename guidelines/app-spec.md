@@ -15,7 +15,7 @@ Count Me In helps men in Adelaide find a mate for the sports and outdoor activit
 Bottom navigation with 5 tabs:
 1. **Home**: feed of upcoming activities in Adelaide.
 2. **Friends**: friends and their profiles.
-3. **My activities** (centre): activities I'm hosting or have joined (Upcoming / Past). A "Create activity" button below the page heading starts a new activity.
+3. **My activities** (centre): activities I'm hosting or have joined, and open invitations (Upcoming / Invited / Past). A "Create activity" button below the page heading starts a new activity.
 4. **Chats**: one group chat per activity I'm part of.
 5. **More**: my profile, stats, achievement patches, settings, About.
 
@@ -153,9 +153,18 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 - Actions: "Edit activity", "Cancel activity" (destructive, confirmation sheet).
 
 ### My activities
-- Segmented control: Upcoming / Past.
+- Segmented control: Upcoming / Invited / Past. The Invited tab shows a count badge when there are open invitations.
 - Cards with a status tag: Hosting, Going, Requested, Confirmed (after check-in).
+- Invited: each open invitation as an ActivityCard with "[name] invited you" (avatar + name) above it and "Not this time" (secondary) and "Count me in" (primary) below. Accepting confirms the spot straight away and moves the activity to Upcoming (Going). Declining removes it from Invited and notifies the host.
+- Going, before the activity day: "Open chat" (secondary) and "Can't make it" (destructive). "Can't make it" opens a confirmation sheet ("Let [host] know you can't make it?", optional short message, "Yes, I'm out"). Leaving frees the spot, removes the member from Who's going and the group chat (system message "[name] can't make it anymore."), notifies the host and removes the activity from Upcoming.
+- "Check in" only appears on the activity day.
 - Past activities without a check-in show "Did you meet up? Check in" link.
+
+### Notifications (bell on Home)
+- Unread dot on the bell when there are new notifications.
+- Rows: actor avatar (or icon), title, body, time. Grouped into New and Earlier, with "Mark all read".
+- Invitation: "[name] invited you to [activity]." with "Not this time" and "Count me in" buttons while the invitation is open.
+- Host notifications: a participant can't make it (with their optional message), an invitation was accepted or declined.
 
 ### Chats
 - List of activity group chats: sport icon, activity title, last message, time, unread dot.

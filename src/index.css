@@ -1187,7 +1187,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   padding: 12px;
 }
 .facts-grid span,
-.host-card span,
+.host-card .grow span,
 .meta-row span { display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 4px; }
 .facts-grid strong,
 .meta-row strong { font: 700 18px var(--font-display); }
@@ -3742,7 +3742,8 @@ h3 { font: 700 21px/24px var(--font-display); }
 @media (min-width: 600px) { .app-shell { box-shadow: 0 0 0 1px var(--border); } }
 
 /* Avatar component: photo with initial fallback */
-.user-avatar {
+/* span.user-avatar: wins over broad text rules like .host-card span. */
+span.user-avatar {
   position: relative;
   display: inline-grid;
   flex: 0 0 auto;
@@ -3753,6 +3754,12 @@ h3 { font: 700 21px/24px var(--font-display); }
   background: var(--surface-3);
   color: var(--text-primary);
   font: 700 calc(var(--avatar-size) * 0.45) / 1 var(--font-display);
+}
+.user-avatar .user-avatar-initial {
+  display: block;
+  margin: 0;
+  color: inherit;
+  font: inherit;
 }
 .user-avatar img {
   width: 100%;

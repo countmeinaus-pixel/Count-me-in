@@ -101,31 +101,3 @@ export function saveProfileVisibility(visibility: ProfileVisibility) {
   window.localStorage.setItem(profileVisibilityKey, JSON.stringify(visibility))
 }
 
-// Location: search radius and device location, saved on this device only.
-export type LocationPreferences = {
-  radiusKm: number | null
-  useDeviceLocation: boolean
-  lastPosition: { latitude: number; longitude: number } | null
-}
-
-export const radiusOptions = [5, 10, 25, 50] as const
-export const defaultLocationPreferences: LocationPreferences = { radiusKm: null, useDeviceLocation: false, lastPosition: null }
-const locationPreferencesKey = 'count-me-in-location-preferences'
-
-export function getLocationPreferences(): LocationPreferences {
-  const stored = readStoredJson(locationPreferencesKey)
-  if (stored === null || typeof stored !== 'object') return defaultLocationPreferences
-  const value = stored as Record<string, unknown>
-  const position = value.lastPosition as Record<string, unknown> | null | undefined
-  return {
-    radiusKm: typeof value.radiusKm === 'number' ? value.radiusKm : null,
-    useDeviceLocation: value.useDeviceLocation === true,
-    lastPosition: position && typeof position.latitude === 'number' && typeof position.longitude === 'number'
-      ? { latitude: position.latitude, longitude: position.longitude }
-      : null,
-  }
-}
-
-export function saveLocationPreferences(preferences: LocationPreferences) {
-  window.localStorage.setItem(locationPreferencesKey, JSON.stringify(preferences))
-}

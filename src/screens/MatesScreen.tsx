@@ -1,5 +1,5 @@
-import { ArrowLeft, Search, UserPlus } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { ArrowLeft, ChevronRight, Search, SlidersHorizontal, UserPlus } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
 import { getProfilePath } from "../lib/profile"
@@ -305,6 +305,22 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "crew" })
         </div>
       )}
       </section>
+      {filtersOpen && (
+        <MateFilterPanel
+          filters={filters}
+          location={locationPreference}
+          sports={sports}
+          countFor={(draft, location) => applyMateFilters(candidates, draft, { ...filterContext, location }).length}
+          onApply={(next, location) => {
+            setFilters(next)
+            setLocationPreference(location)
+            setFiltersOpen(false)
+          }}
+          onClose={() => setFiltersOpen(false)}
+        />
+      )}
+      </>
+      )}
     </div>
   )
 }

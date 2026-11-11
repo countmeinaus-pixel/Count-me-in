@@ -4924,5 +4924,56 @@ h1 .skeleton { margin: 4px 0; }
   .crew-bento { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .crew-top-extra { display: block; }
   .crew-more-row .friend-tile.top-on-desktop { display: none; }
->>>>>>> debfbd5d706e9617bd8c70fed1d5df244211994a
+  /* The small suggestion tiles share one row and stretch to the full width. */
+  .friend-tile-row.crew-more-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    overflow: visible;
+    margin: 12px 0 0;
+    padding: 0;
+  }
+  .crew-more-row .friend-tile { grid-template-rows: auto auto; }
+  .crew-more-row .friend-tile-photo { aspect-ratio: 1 / 1; }
+  .crew-more-row .friend-tile.beyond-grid { display: grid; }
+}
+
+/* Friends page: link row to Find new crew, also used for Invite a mate. */
+.mates-crew-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.mates-crew-link .grow { flex: 1; min-width: 0; }
+.mates-crew-link strong { display: block; font-weight: 600; }
+.mates-crew-link small { color: var(--text-secondary); font-size: 13px; }
+.mates-crew-link > svg { width: 20px; height: 20px; color: var(--text-muted); }
+.mates-crew-link-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--seafoam-subtle);
+  color: var(--seafoam);
+}
+.mates-crew-link-icon svg { width: 20px; height: 20px; }
+.mates-crew-link-badge {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
 }

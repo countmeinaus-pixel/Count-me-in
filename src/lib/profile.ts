@@ -353,10 +353,23 @@ export async function toCommunityMembers(rows: CommunityProfileRow[]): Promise<C
   if (!supabase || rows.length === 0) return []
 
   const profileIds = rows.map((row) => row.id)
-  const [profileSportsResult, hostedResult] = await Promise.all([
-    supabase.from('profile_sports').select('profile_id, sport_id, skill').in('profile_id', profileIds),
-    supabase.from('activities').select('host_id').in('host_id', profileIds),
+  const client = supabase
+  const [profileSportsResult, hostedResult, availabilityResult, extrasResult] = await Promise.all([
+    client.from('profile_sports').select('profile_id, sport_id, skill').in('profile_id', profileIds),
+    client.from('activities').select('host_id').in('host_id', profileIds),
+    client.from('profile_availability').select('profile_id, availability').in('profile_id', profileIds),
+    // Shared location columns only exist after the database update: fall back without them.
+    client.from('profiles').select('id, created_at, shared_latitude, shared_longitude').in('id', profileIds)
+      .then((result) => result.error
+        ? client.from('profiles').select('id, created_at').in('id', profileIds)
+        : result),
   ])
+  const availabilityById = new Map<string, string[]>()
+  for (const row of availabilityResult.data ?? []) {
+    availabilityById.set(row.profile_id, [...(availabilityById.get(row.profile_id) ?? []), row.availability])
+  }
+  type ExtrasRow = { id: string; created_at: string; shared_latitude?: number | null; shared_longitude?: number | null }
+  const extrasById = new Map(((extrasResult.data ?? []) as ExtrasRow[]).map((row) => [row.id, row]))
   if (profileSportsResult.error) throw profileSportsResult.error
   if (hostedResult.error) throw hostedResult.error
 
@@ -389,6 +402,11 @@ export async function toCommunityMembers(rows: CommunityProfileRow[]): Promise<C
         hosted: (hostedResult.data ?? []).filter((activity) => activity.host_id === row.id).length,
         sports: sports.length,
       },
+      createdAt: extrasById.get(row.id)?.created_at,
+      availability: availabilityById.get(row.id) ?? [],
+      sharedLocation: extrasById.get(row.id)?.shared_latitude != null && extrasById.get(row.id)?.shared_longitude != null
+        ? { latitude: extrasById.get(row.id)!.shared_latitude!, longitude: extrasById.get(row.id)!.shared_longitude! }
+        : null,
     }
   })
 }
@@ -451,4 +469,22 @@ export async function getCommunityProfileByName(name: string): Promise<Community
   if (error) throw error
   const [member] = await toCommunityMembers(data ?? [])
   return member ?? null
+}
+
+// Share (rounded to about 1 km) or stop sharing your approximate location.
+export async function saveSharedLocation(userId: string, point: { latitude: number; longitude: number } | null) {
+  if (!supabase) throw new Error('Supabase is not configured yet.')
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      shared_latitude: point ? Math.round(point.latitude * 100) / 100 : null,
+      shared_longitude: point ? Math.round(point.longitude * 100) / 100 : null,
+      location_shared_at: point ? new Date().toISOString() : null,
+    })
+    .eq('id', userId)
+  if (error) {
+    const code = 'code' in error ? String(error.code) : ''
+    if (code === 'PGRST204' || code === '42703') throw new Error('Sharing your location needs a database update first.')
+    throw error
+  }
 }

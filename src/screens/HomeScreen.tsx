@@ -1,10 +1,13 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
-import { Bell, Bike, CalendarDays, Check, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, ListFilter, MapPin, Mountain, Waves } from 'lucide-react'
+import { Bell, Bike, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, ListFilter, MapPin, Mountain, Waves } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { ActivityCard, type ActivityCardData } from '../components/ActivityCard'
 import { Button } from '../components/Button'
 import { activities, currentUser } from '../data/mockData'
 import { CrewSection } from '../components/CrewSection'
+import { LocationControls } from '../components/LocationControls'
+import { SidePanel } from '../components/SidePanel'
+import { isWithinRadius, memberCoordinates, setLocationPreference, suburbCoordinates, useLocationPreference, type LocationPreference } from '../lib/distance'
 import {
   getSavedActivityFeed,
   type FeedActivity,
@@ -56,6 +59,9 @@ let cachedFeed: FeedActivity[] | null = null
 
 export function HomeScreen() {
   const navigate = useNavigate()
+  const locationPreference = useLocationPreference()
+  const [locationOpen, setLocationOpen] = useState(false)
+  const [locationDraft, setLocationDraft] = useState<LocationPreference | null>(null)
   const filterRowRef = useRef<HTMLDivElement | null>(null)
   const { members: communityMembers } = useCommunityMembers()
   const [unreadNotifications, setUnreadNotifications] = useState(0)
@@ -144,12 +150,12 @@ export function HomeScreen() {
   }, [communityMembers, blockedNames, friendships])
   const crewSuggestions = useMemo(
     () => getCrewSuggestions(
-      communityMembers,
+      communityMembers.filter((member) => isWithinRadius(locationPreference, memberCoordinates(member))),
       { name: firstName, sports: userSportNames, suburb: userSuburb },
       [...(friendships ? friendships.friends.map((member) => member.name) : friendNames), ...blockedNames],
       10,
     ),
-    [communityMembers, firstName, userSportNames, userSuburb, blockedNames, friendships],
+    [communityMembers, firstName, userSportNames, userSuburb, blockedNames, friendships, locationPreference],
   )
 
   useEffect(() => {
@@ -193,23 +199,10 @@ export function HomeScreen() {
     }))
     return [...savedCards, ...demoCards]
   }, [savedActivities])
-  // Distance filter from Settings > Location. Activities whose place is unknown stay visible.
-  const [locationPreferences] = useState(() => {
-    try { return getLocationPreferences() } catch { return defaultLocationPreferences }
-  })
-  const radiusKm = locationPreferences.radiusKm
-  const origin = (locationPreferences.useDeviceLocation ? locationPreferences.lastPosition : null) ?? getSuburbCoordinates(userSuburb)
-  const visible = useMemo(() => {
-    const bySport = filter === 'My sports' ? allActivities : allActivities.filter((item) => item.sport === filter)
-    if (radiusKm === null || !origin) return bySport
-    return bySport.filter((item) => {
-      if (item.host === firstName) return true
-      const place = item.latitude != null && item.longitude != null
-        ? { latitude: item.latitude, longitude: item.longitude }
-        : getSuburbCoordinates(item.suburb)
-      return !place || distanceKm(origin, place) <= radiusKm
-    })
-  }, [allActivities, filter, radiusKm, origin?.latitude, origin?.longitude, firstName])
+  const visible = useMemo(
+    () => (filter === 'My sports' ? allActivities : allActivities.filter((item) => item.sport === filter)),
+    [allActivities, filter],
+  )
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 60_000)
@@ -326,7 +319,20 @@ export function HomeScreen() {
   return (
     <div className="screen">
       <header className="topbar">
-        <div className="location"><MapPin />Adelaide</div>
+        <button
+          type="button"
+          className="location location-button"
+          onClick={() => {
+            setLocationDraft(locationPreference)
+            setLocationOpen(true)
+          }}
+          aria-label={`Location: ${locationPreference ? `${locationPreference.label}, ${locationPreference.radiusKm === null ? 'no distance limit' : `within ${locationPreference.radiusKm} km`}` : 'all of Adelaide'}. Change location`}
+        >
+          <MapPin />
+          {locationPreference?.label ?? 'Adelaide'}
+          {locationPreference?.radiusKm != null && <small>· {locationPreference.radiusKm} km</small>}
+          <ChevronDown className="location-chevron" aria-hidden="true" />
+        </button>
         <button data-tour="home-notifications" className="icon-button notification-bell" aria-label={unreadNotifications ? `Notifications, ${unreadNotifications} new` : 'Notifications'} onClick={() => navigate('/notifications')} type="button"><Bell />{unreadNotifications > 0 && <span className="notification-bell-dot" aria-hidden="true" />}</button>
       </header>
 
@@ -621,6 +627,27 @@ export function HomeScreen() {
         />
       </section>
 
+      {locationOpen && (
+        <SidePanel
+          title="Your location"
+          onClose={() => setLocationOpen(false)}
+          footer={
+            <>
+              <button type="button" className="button button-secondary button-md" onClick={() => {
+                setLocationPreference(null)
+                setLocationOpen(false)
+              }}>All of Adelaide</button>
+              <button type="button" className="button button-primary button-md" onClick={() => {
+                setLocationPreference(locationDraft)
+                setLocationOpen(false)
+              }}>Show results</button>
+            </>
+          }
+        >
+          <p className="location-hint">Activities and suggested mates on Home are filtered to this area.</p>
+          <LocationControls value={locationDraft} onChange={setLocationDraft} />
+        </SidePanel>
+      )}
     </div>
   )
 }

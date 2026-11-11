@@ -96,6 +96,10 @@ export type CommunityMember = {
   photoUrl?: string
   sports: Array<{ name: string; level: string; meetups: number }>
   stats: { meetups: number; hosted: number; sports: number }
+  // Only for real accounts; used by the filters on the Friends page.
+  createdAt?: string
+  availability?: string[]
+  sharedLocation?: { latitude: number; longitude: number } | null
 }
 
 // Placeholder portraits from Unsplash (free to use), cropped small around the face.

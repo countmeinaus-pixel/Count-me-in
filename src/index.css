@@ -4941,3 +4941,9 @@ h1 .skeleton { margin: 4px 0; }
 .mate-grid > .mate-card,
 .mate-grid .profile-friend-card,
 .mate-grid .profile-friend-card .mate-card { height: 100%; }
+
+/* Pages opened from More keep the bottom nav on phones: leave room for it. */
+@media (max-width: 979px) {
+  .more-settings-page,
+  .more-about-page { padding-bottom: var(--bottom-nav-clearance); }
+}

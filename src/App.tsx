@@ -148,6 +148,8 @@ function AppShell() {
       : // Desktop: More pages are highlighted in the side nav groups instead.
         isSideNav && (path.startsWith("/more") || (path.startsWith("/profile/") && path !== "/profile"))
         ? null
+      : path === "/more"
+        ? "more"
       : path === "/activities" || path === "/create"
         ? "activities"
         : path === "/friends" || path === "/mates"
@@ -170,7 +172,8 @@ function AppShell() {
       "/profile/sports/edit",
     ].includes(path) &&
     !/^\/activity\/[^/]+\/edit$/.test(path) &&
-    !path.startsWith("/more") &&
+    // The More panel itself keeps the bottom nav; its subpages do not.
+    !(path.startsWith("/more") && path !== "/more") &&
     !(path.startsWith("/chats/") && path !== "/chats" && !isWideChatLayout)
 
   return (

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { getCurrentModerationRole } from '../lib/moderation'
+import { getMoreOrigin } from '../lib/moreNavigation'
 import { logOut, moderationGroup, sideNavGroups, type MenuItem } from '../lib/moreMenu'
 import { useMediaQuery } from '../lib/useMediaQuery'
 import { useViewerProfile } from '../lib/viewerProfile'
@@ -166,9 +167,12 @@ export function BottomNav({
         type="button"
         data-tour="nav-more"
         className={active === 'more' ? 'active' : ''}
-        onClick={() =>
-          isSideNav ? navigate('/profile') : navigate('/more', { state: { from: location.pathname } })
-        }
+        onClick={() => {
+          if (isSideNav) navigate('/profile')
+          // Phone: More opens the panel, tapping it again closes the panel.
+          else if (location.pathname === '/more') navigate(getMoreOrigin(location.state))
+          else navigate('/more', { state: { from: location.pathname } })
+        }}
         aria-label={profileError
           ? `${isSideNav ? 'Your profile' : 'More'}. ${profileError}`
           : isSideNav ? `Your profile, ${profilePhoto.name}` : 'More'}

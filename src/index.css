@@ -4678,3 +4678,11 @@ h1 .skeleton { margin: 4px 0; }
   border-block: 1px solid var(--border);
 }
 .profile-skeleton-stat { display: grid; justify-items: center; gap: 8px; }
+
+/* Phone: the More panel slides in above the page but keeps the bottom nav
+   visible, so you can close it or jump straight to another tab. */
+@media (max-width: 979px) {
+  .more-menu-screen { padding-bottom: var(--bottom-nav-clearance); }
+  .more-menu-screen ~ .bottom-nav,
+  body:has(.more-menu-screen) .bottom-nav { z-index: 45; }
+}

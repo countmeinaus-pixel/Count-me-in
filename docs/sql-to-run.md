@@ -14,6 +14,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 6 | `supabase/migrations/20261111100000_pr_photo_cleanup.sql` | Bewijsfoto van een PR wordt verwijderd zodra de PR verified is |
 | 7 | `supabase/migrations/20261111110000_activity_location.sql` | Adres en kaartpin bij een activiteit, zodat hij op de kaart op Home staat |
 | 8 | `supabase/migrations/20261111120000_friend_requests.sql` | Vriendschapsverzoeken: Add friend, Accept/Decline, echte vriendenlijst |
+| 9 | `supabase/migrations/20261112090000_profile_shared_location.sql` | Leden kunnen hun afgeronde locatie (~1 km) delen voor afstanden in km |
 
 ## Zo doe je het (per bestand)
 
@@ -33,3 +34,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 5:** ga naar **More** > **Moderation** en tik op **PRs to check**. Je ziet PR's die nog niet verified zijn, met de knoppen **Verify** en **Remove**.
 - **Na 7:** maak een activiteit en plak bij **Map pin** bijvoorbeeld `-34.9799, 138.5144` (Glenelg). Open daarna Home > **Map**: je activiteit staat als oranje pin op de kaart.
 - **Na 8:** open het profiel van een ander lid. Onder zijn naam staat **Add friend**.
+- **Na 9:** tik op Home linksboven op de locatie, vink **Also share my approximate location** aan en tik op **Use my current location**. Je krijgt geen foutmelding.

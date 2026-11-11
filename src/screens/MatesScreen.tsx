@@ -1,4 +1,4 @@
-import { ArrowLeft, Search } from "lucide-react"
+import { ArrowLeft, Search, UserPlus } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
@@ -9,7 +9,8 @@ import { useBackToMore } from "../lib/moreNavigation"
 import { useCommunityMembers } from "../lib/useCommunityMembers"
 import { friendNames } from "../lib/friends"
 import { respondToFriendRequest, useMyFriendships } from "../lib/friendships"
-import { Avatar } from "../components/Avatar"
+import { TopMatchCard } from "../components/CrewSection"
+import { useViewerProfile } from "../lib/viewerProfile"
 
 
 // Friends and Find your crew live on one page: your friends first, everyone else below.
@@ -27,6 +28,10 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
   const { data: friendships, error: friendshipsError } = useMyFriendships()
   const [respondingTo, setRespondingTo] = useState<string | null>(null)
   const [requestError, setRequestError] = useState("")
+  const viewer = useViewerProfile()
+  const viewerProfile = viewer.status === "ready" ? viewer.profile : null
+  const viewerSports = viewerProfile?.sports.map((sport) => sport.name) ?? []
+  const viewerSuburb = viewerProfile?.suburb ?? ""
   const { members: communityMembers, error: membersError } =
     useCommunityMembers()
   const sports = [
@@ -134,21 +139,28 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
             <h2 id="friend-requests-heading">Friend requests</h2>
             <span>{incoming.length}</span>
           </div>
-          {incoming.map(({ requestId, member }) => (
-            <div className="friend-request-row" key={requestId}>
-              <button type="button" className="friend-request-who" onClick={() => navigate(getProfilePath(member))} aria-label={`View ${member.name}'s profile`}>
-                <Avatar name={member.name} photoUrl={member.photoUrl} size={48} verified={member.verified} />
-              </button>
-              <span className="grow">
-                <strong>{member.name}, {member.age}</strong>
-                <small>{member.suburb} · wants to be friends</small>
-              </span>
-              <span className="friend-request-actions">
-                <button type="button" className="button button-secondary button-md" disabled={respondingTo !== null} onClick={() => void answerRequest(requestId, false)}>Decline</button>
-                <button type="button" className="button button-primary button-md" disabled={respondingTo !== null} onClick={() => void answerRequest(requestId, true)}>Accept</button>
-              </span>
-            </div>
-          ))}
+          <div className="friend-request-cards">
+            {incoming.map(({ requestId, member }) => {
+              const shared = member.sports.map((sport) => sport.name).filter((sport) => viewerSports.includes(sport))
+              const nearby = Boolean(viewerSuburb) && member.suburb.toLowerCase() === viewerSuburb.toLowerCase()
+              return (
+                <TopMatchCard
+                  key={requestId}
+                  suggestion={{ member, reason: '', shared, nearby }}
+                  hosting={null}
+                  label="New friend request"
+                  icon={UserPlus}
+                  ctaVariant="secondary"
+                  onOpenProfile={(person) => navigate(getProfilePath(person))}
+                >
+                  <div className="friend-request-buttons">
+                    <button type="button" className="button button-secondary button-md" disabled={respondingTo !== null} onClick={() => void answerRequest(requestId, false)}>Decline</button>
+                    <button type="button" className="button button-primary button-md" disabled={respondingTo !== null} onClick={() => void answerRequest(requestId, true)}>Accept</button>
+                  </div>
+                </TopMatchCard>
+              )
+            })}
+          </div>
           {requestError && <p className="inline-error" role="alert">{requestError}</p>}
         </section>
       )}

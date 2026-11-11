@@ -4911,3 +4911,6 @@ h1 .skeleton { margin: 4px 0; }
 .friend-request-actions .button { width: auto; padding-inline: 14px; }
 .friend-request-who { padding: 0; border: 0; background: transparent; cursor: pointer; }
 .friend-button-pending { border: 1px dashed var(--seafoam); color: var(--seafoam); }
+.friend-request-cards { display: grid; gap: 12px; }
+@media (min-width: 760px) { .friend-request-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.friend-request-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

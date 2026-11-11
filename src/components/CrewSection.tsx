@@ -1,4 +1,5 @@
 import { CalendarDays, Check, MapPin, ShieldCheck, Sparkles, UserPlus, Users } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { ActivityCardData } from './ActivityCard'
 import { Avatar } from './Avatar'
 import { SportIcon } from './SportIcon'
@@ -171,14 +172,23 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
   )
 }
 
-function TopMatchCard({
+// Also used for friend requests: a different label and extra buttons below.
+export function TopMatchCard({
   suggestion,
   hosting,
   onOpenProfile,
+  label = 'Top match this week',
+  icon: LabelIcon = Sparkles,
+  ctaVariant = 'primary',
+  children,
 }: {
   suggestion: CrewSuggestion
   hosting: ActivityCardData | null
   onOpenProfile: (member: CommunityMember) => void
+  label?: string
+  icon?: typeof Sparkles
+  ctaVariant?: 'primary' | 'secondary'
+  children?: ReactNode
 }) {
   const { member, shared, nearby } = suggestion
   const bannerSport = shared[0] ?? member.sports[0]?.name ?? 'Open activity'
@@ -188,7 +198,7 @@ function TopMatchCard({
   return (
     <article className="crew-top-card">
       <div className="crew-top-banner">
-        <span className="crew-top-label"><Sparkles aria-hidden="true" /> Top match this week</span>
+        <span className="crew-top-label"><LabelIcon aria-hidden="true" /> {label}</span>
         <SportIcon sport={bannerSport} className="crew-top-sport" />
       </div>
       <div className="crew-top-body">
@@ -221,9 +231,10 @@ function TopMatchCard({
           <span><strong>{member.stats.hosted}</strong><small>hosted</small></span>
           <span><strong>{member.stats.sports}</strong><small>sports</small></span>
         </div>
-        <button type="button" className="button button-primary button-md crew-top-cta" onClick={() => onOpenProfile(member)}>
+        <button type="button" className={`button button-${ctaVariant} button-md crew-top-cta`} onClick={() => onOpenProfile(member)}>
           View profile
         </button>
+        {children}
       </div>
     </article>
   )

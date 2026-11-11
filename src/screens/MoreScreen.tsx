@@ -1,5 +1,5 @@
 import { ChevronRight, ShieldCheck, X } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { currentUser } from "../data/mockData"
 import {
@@ -11,7 +11,7 @@ import { getStoredLanguage } from "../lib/i18n"
 import { Skeleton } from "../components/Skeleton"
 import { getViewerProfileState } from "../lib/viewerProfile"
 import { logOut, menuGroups, moderationGroup, type MenuItem } from "../lib/moreMenu"
-import { getMoreOrigin } from "../lib/moreNavigation"
+import { closeMoreMenuEvent, getMoreOrigin, moreMenuSlideMs } from "../lib/moreNavigation"
 import { getCurrentModerationRole } from "../lib/moderation"
 import { supabase } from "../lib/supabase"
 
@@ -166,13 +166,34 @@ export function MoreScreen() {
     }
   }, [])
 
+  // Closing slides the panel out first, at the same speed as opening.
+  const [isClosing, setIsClosing] = useState(false)
+  const closeMenu = useCallback((to: string = closeTo) => {
+    if (isClosing) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      navigate(to)
+      return
+    }
+    setIsClosing(true)
+    window.setTimeout(() => navigate(to), moreMenuSlideMs)
+  }, [closeTo, isClosing, navigate])
+
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") navigate(closeTo)
+      if (event.key === "Escape") closeMenu()
+    }
+    // The bottom nav asks the panel to close (More again, or another tab).
+    function handleCloseRequest(event: Event) {
+      const to = event instanceof CustomEvent && typeof event.detail === "string" ? event.detail : closeTo
+      closeMenu(to)
     }
     window.addEventListener("keydown", handleEscape)
-    return () => window.removeEventListener("keydown", handleEscape)
-  }, [closeTo, navigate])
+    window.addEventListener(closeMoreMenuEvent, handleCloseRequest)
+    return () => {
+      window.removeEventListener("keydown", handleEscape)
+      window.removeEventListener(closeMoreMenuEvent, handleCloseRequest)
+    }
+  }, [closeMenu, closeTo])
 
   async function handleLogOut() {
     const error = await logOut(() => navigate("/login", { replace: true }))
@@ -205,7 +226,7 @@ export function MoreScreen() {
 
   return (
     <main
-      className="screen more-menu-screen"
+      className={`screen more-menu-screen${isClosing ? " is-closing" : ""}`}
       aria-label="More menu"
       onTouchStart={(event) => {
         const touch = event.touches[0]
@@ -220,7 +241,7 @@ export function MoreScreen() {
           touch.clientX - start.x > 90 &&
           Math.abs(touch.clientY - start.y) < 70
         ) {
-          navigate(closeTo)
+          closeMenu()
         }
       }}
     >
@@ -230,7 +251,7 @@ export function MoreScreen() {
           type="button"
           className="icon-button"
           aria-label="Close More menu"
-          onClick={() => navigate(closeTo)}
+          onClick={() => closeMenu()}
         >
           <X aria-hidden="true" />
         </button>

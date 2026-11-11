@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { getCurrentModerationRole } from '../lib/moderation'
-import { getMoreOrigin } from '../lib/moreNavigation'
+import { getMoreOrigin, requestCloseMoreMenu } from '../lib/moreNavigation'
 import { logOut, moderationGroup, sideNavGroups, type MenuItem } from '../lib/moreMenu'
 import { useMediaQuery } from '../lib/useMediaQuery'
 import { useViewerProfile } from '../lib/viewerProfile'
@@ -110,7 +110,7 @@ export function BottomNav({
           type="button"
           data-tour={`nav-${id}`}
           className={active === id ? 'active' : ''}
-          onClick={() => navigate(href)}
+          onClick={() => (location.pathname === '/more' && !isSideNav ? requestCloseMoreMenu(href) : navigate(href))}
           aria-label={chatUnreadError && id === 'chats' ? `${label}. ${chatUnreadError}` : label}
           aria-current={active === id ? 'page' : undefined}
         >
@@ -170,7 +170,7 @@ export function BottomNav({
         onClick={() => {
           if (isSideNav) navigate('/profile')
           // Phone: More opens the panel, tapping it again closes the panel.
-          else if (location.pathname === '/more') navigate(getMoreOrigin(location.state))
+          else if (location.pathname === '/more') requestCloseMoreMenu(getMoreOrigin(location.state))
           else navigate('/more', { state: { from: location.pathname } })
         }}
         aria-label={profileError

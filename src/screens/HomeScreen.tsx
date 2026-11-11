@@ -12,6 +12,9 @@ import {
 import { hasDemoJoinRequest } from '../lib/demoParticipation'
 import { getProfilePath } from '../lib/profile'
 import { useViewerProfile } from '../lib/viewerProfile'
+import { defaultLocationPreferences, getLocationPreferences } from '../lib/localPreferences'
+import { distanceKm } from '../lib/location'
+import { getSuburbCoordinates } from '../data/suburbCoordinates'
 import { useCommunityMembers } from '../lib/useCommunityMembers'
 import { friendNames, getCrewSuggestions } from '../lib/friends'
 import { useMyFriendships } from '../lib/friendships'
@@ -190,10 +193,23 @@ export function HomeScreen() {
     }))
     return [...savedCards, ...demoCards]
   }, [savedActivities])
-  const visible = useMemo(
-    () => (filter === 'My sports' ? allActivities : allActivities.filter((item) => item.sport === filter)),
-    [allActivities, filter],
-  )
+  // Distance filter from Settings > Location. Activities whose place is unknown stay visible.
+  const [locationPreferences] = useState(() => {
+    try { return getLocationPreferences() } catch { return defaultLocationPreferences }
+  })
+  const radiusKm = locationPreferences.radiusKm
+  const origin = (locationPreferences.useDeviceLocation ? locationPreferences.lastPosition : null) ?? getSuburbCoordinates(userSuburb)
+  const visible = useMemo(() => {
+    const bySport = filter === 'My sports' ? allActivities : allActivities.filter((item) => item.sport === filter)
+    if (radiusKm === null || !origin) return bySport
+    return bySport.filter((item) => {
+      if (item.host === firstName) return true
+      const place = item.latitude != null && item.longitude != null
+        ? { latitude: item.latitude, longitude: item.longitude }
+        : getSuburbCoordinates(item.suburb)
+      return !place || distanceKm(origin, place) <= radiusKm
+    })
+  }, [allActivities, filter, radiusKm, origin?.latitude, origin?.longitude, firstName])
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 60_000)
@@ -384,8 +400,8 @@ export function HomeScreen() {
           ) : visible.length === 0 ? (
             <div className="empty-state-card">
               <div className="empty-state-icon">⌁</div>
-              <h3>Nothing on for this sport yet</h3>
-              <p>Be the first. Post a callout.</p>
+              <h3>{radiusKm !== null && origin ? `Nothing on within ${radiusKm} km yet` : 'Nothing on for this sport yet'}</h3>
+              <p>{radiusKm !== null && origin ? 'Be the first, or search further away in Settings > Location.' : 'Be the first. Post a callout.'}</p>
               <Button onClick={() => navigate('/create')}>Create activity</Button>
             </div>
           ) : (

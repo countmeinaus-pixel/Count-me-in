@@ -37,3 +37,30 @@ export function isMissingLocationColumns(error: unknown) {
   const code = typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : ''
   return code === 'PGRST204' || code === '42703'
 }
+
+// Straight-line distance in kilometres (haversine formula).
+export function distanceKm(from: Coordinates, to: Coordinates) {
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180
+  const dLat = toRadians(to.latitude - from.latitude)
+  const dLon = toRadians(to.longitude - from.longitude)
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRadians(from.latitude)) * Math.cos(toRadians(to.latitude)) * Math.sin(dLon / 2) ** 2
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+// Asks the browser for the device position. Free, no API key.
+export function requestDevicePosition(): Promise<Coordinates> {
+  return new Promise((resolve, reject) => {
+    if (!('geolocation' in navigator)) {
+      reject(new Error('This browser cannot share your location.'))
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+      (error) => reject(new Error(error.code === error.PERMISSION_DENIED
+        ? 'Location is blocked. Allow it in your browser or phone settings, then try again.'
+        : 'Your location could not be found. Try again in a moment.')),
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 10 * 60_000 },
+    )
+  })
+}

@@ -3054,6 +3054,9 @@ h3 { font: 700 21px/24px var(--font-display); }
   background: var(--seafoam);
   content: "";
 }
+.more-settings-subtitle { margin-top: 8px; color: var(--text-secondary); font: 600 12px/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; }
+.more-setting-hint { display: block; margin-top: 2px; color: var(--text-muted); font-size: 13px; }
+.more-setting-link { color: var(--seafoam); font-weight: 600; }
 .more-settings-note { color: var(--text-muted); font-size: 13px; line-height: 19px; }
 .more-setting-section { display: grid; gap: 8px; }
 .blocked-user-list {

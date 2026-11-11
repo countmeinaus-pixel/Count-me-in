@@ -36,6 +36,7 @@ import { MoreHelpScreen } from "./screens/MoreHelpScreen"
 import { MoreScreen } from "./screens/MoreScreen"
 import { MySportsScreen } from "./screens/MySportsScreen"
 import { LanguageSettingsScreen } from "./screens/LanguageSettingsScreen"
+import { LocationSettingsScreen } from "./screens/LocationSettingsScreen"
 import { PrivacySettingsScreen } from "./screens/PrivacySettingsScreen"
 import { SportProfileScreen } from "./screens/SportProfileScreen"
 import { MatesScreen } from "./screens/MatesScreen"
@@ -241,6 +242,7 @@ const router = createBrowserRouter([
       { path: "/more/notifications", element: <NotificationSettingsScreen /> },
       { path: "/more/privacy", element: <PrivacySettingsScreen /> },
       { path: "/more/language", element: <LanguageSettingsScreen /> },
+      { path: "/more/location", element: <LocationSettingsScreen /> },
       { path: "/more/about", element: <MoreAboutScreen /> },
       { path: "/more/help", element: <MoreHelpScreen /> },
       { path: "/more/moderation", element: <ModerationScreen /> },

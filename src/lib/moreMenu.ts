@@ -6,6 +6,7 @@ import {
   Languages,
   LockKeyhole,
   LogOut,
+  MapPin,
   MessageCircleQuestion,
   ShieldCheck,
   Trophy,
@@ -49,6 +50,7 @@ export const menuGroups: MenuGroup[] = [
     title: 'Settings',
     items: [
       { label: 'Notification settings', href: '/more/notifications', icon: Bell },
+      { label: 'Location', href: '/more/location', icon: MapPin },
       { label: 'Privacy and safety', href: '/more/privacy', icon: LockKeyhole },
       { label: 'Language', href: '/more/language', icon: Languages },
     ],

@@ -14,6 +14,7 @@ import { getProfilePath } from '../lib/profile'
 import { useViewerProfile } from '../lib/viewerProfile'
 import { useCommunityMembers } from '../lib/useCommunityMembers'
 import { friendNames, getCrewSuggestions } from '../lib/friends'
+import { useMyFriendships } from '../lib/friendships'
 import { getBlockedUsers } from '../lib/localPreferences'
 import { getBlockedProfiles } from '../lib/moderation'
 import { Avatar } from '../components/Avatar'
@@ -127,21 +128,24 @@ export function HomeScreen() {
     }
   }, [])
 
+  // Signed in: your real friends. Signed out: the demo friends.
+  const { data: friendships } = useMyFriendships()
   const crewFriends = useMemo(() => {
+    if (friendships) return friendships.friends.filter((member) => !blockedNames.includes(member.name))
     const seen = new Set<string>()
     return communityMembers.filter((member) => {
       if (!friendNames.includes(member.name) || blockedNames.includes(member.name) || seen.has(member.name)) return false
       seen.add(member.name)
       return true
     })
-  }, [communityMembers, blockedNames])
+  }, [communityMembers, blockedNames, friendships])
   const crewSuggestions = useMemo(
     () => getCrewSuggestions(
       communityMembers,
       { name: firstName, sports: userSportNames, suburb: userSuburb },
-      [...friendNames, ...blockedNames],
+      [...(friendships ? friendships.friends.map((member) => member.name) : friendNames), ...blockedNames],
     ),
-    [communityMembers, firstName, userSportNames, userSuburb, blockedNames],
+    [communityMembers, firstName, userSportNames, userSuburb, blockedNames, friendships],
   )
 
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 De automatische database-update via GitHub werkt nog niet (de geheime instellingen ontbreken). Plak deze bestanden daarom zelf in Supabase, **in deze volgorde**, één per keer.
 
-Alle zeven zijn veilig om opnieuw te draaien. Weet je niet zeker of je er een al gedaan hebt? Draai hem gewoon nog een keer.
+Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er een al gedaan hebt? Draai hem gewoon nog een keer.
 
 | # | Bestand | Wat het doet |
 | --- | --- | --- |
@@ -13,6 +13,7 @@ Alle zeven zijn veilig om opnieuw te draaien. Weet je niet zeker of je er een al
 | 5 | `supabase/migrations/20261111090000_staff_verify_personal_records.sql` | Admins en moderators kunnen een PR direct verifiëren (Moderation > PRs to check) |
 | 6 | `supabase/migrations/20261111100000_pr_photo_cleanup.sql` | Bewijsfoto van een PR wordt verwijderd zodra de PR verified is |
 | 7 | `supabase/migrations/20261111110000_activity_location.sql` | Adres en kaartpin bij een activiteit, zodat hij op de kaart op Home staat |
+| 8 | `supabase/migrations/20261111120000_friend_requests.sql` | Vriendschapsverzoeken: Add friend, Accept/Decline, echte vriendenlijst |
 
 ## Zo doe je het (per bestand)
 
@@ -31,3 +32,4 @@ Alle zeven zijn veilig om opnieuw te draaien. Weet je niet zeker of je er een al
 - **Na 6:** open **More** > **Personal records**. Bij een verified PR staat geen **View proof** meer.
 - **Na 5:** ga naar **More** > **Moderation** en tik op **PRs to check**. Je ziet PR's die nog niet verified zijn, met de knoppen **Verify** en **Remove**.
 - **Na 7:** maak een activiteit en plak bij **Map pin** bijvoorbeeld `-34.9799, 138.5144` (Glenelg). Open daarna Home > **Map**: je activiteit staat als oranje pin op de kaart.
+- **Na 8:** open het profiel van een ander lid. Onder zijn naam staat **Add friend**.

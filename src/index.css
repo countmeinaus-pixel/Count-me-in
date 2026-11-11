@@ -4887,3 +4887,26 @@ h1 .skeleton { margin: 4px 0; }
   /* Same space below the top match as between the tiles. */
   .friend-tile-grid.crew-more-row { margin-top: 12px; }
 }
+
+/* Friend button on profiles */
+.friend-button { display: grid; gap: 8px; width: 100%; max-width: 360px; margin: 12px auto 0; }
+.friend-button .button { gap: 8px; }
+.friend-button .button svg { width: 18px; height: 18px; }
+.friend-button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.friend-button-note { text-align: center; color: var(--text-secondary); font-size: 14px; }
+.friend-requests { display: grid; gap: 10px; margin-bottom: 24px; }
+.friend-request-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+}
+.friend-request-row .grow { flex: 1; min-width: 0; }
+.friend-request-row strong { display: block; }
+.friend-request-row small { color: var(--text-secondary); font-size: 13px; }
+.friend-request-actions { display: flex; gap: 8px; }
+.friend-request-actions .button { width: auto; padding-inline: 14px; }
+.friend-request-who { padding: 0; border: 0; background: transparent; cursor: pointer; }

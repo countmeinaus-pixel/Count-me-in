@@ -340,7 +340,7 @@ export async function updateProfilePhoto(userId: string, file: File) {
   return photoUrl
 }
 
-type CommunityProfileRow = {
+export type CommunityProfileRow = {
   id: string
   first_name: string
   age: number
@@ -349,7 +349,7 @@ type CommunityProfileRow = {
   selfie_verified: boolean
 }
 
-async function toCommunityMembers(rows: CommunityProfileRow[]): Promise<CommunityMember[]> {
+export async function toCommunityMembers(rows: CommunityProfileRow[]): Promise<CommunityMember[]> {
   if (!supabase || rows.length === 0) return []
 
   const profileIds = rows.map((row) => row.id)
@@ -393,7 +393,7 @@ async function toCommunityMembers(rows: CommunityProfileRow[]): Promise<Communit
   })
 }
 
-const communityProfileColumns = 'id, first_name, age, suburb, photo_url, selfie_verified'
+export const communityProfileColumns = 'id, first_name, age, suburb, photo_url, selfie_verified'
 
 export async function getCommunityProfiles(limit = 50): Promise<CommunityMember[]> {
   if (!supabase) return []

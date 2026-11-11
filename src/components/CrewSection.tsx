@@ -77,7 +77,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
 
   return (
     <>
-      {friends.length > 0 && (
+      {(
         <div className="crew-friends">
           <h3>Your friends</h3>
           <div className="friend-tile-row friend-tile-grid">

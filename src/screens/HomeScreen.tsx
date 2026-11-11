@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ActivityCard, type ActivityCardData } from '../components/ActivityCard'
 import { Button } from '../components/Button'
 import { activities, currentUser } from '../data/mockData'
-import { MateCard } from '../components/MateCard'
+import { CrewSection } from '../components/CrewSection'
 import {
   getSavedActivityFeed,
   type FeedActivity,
@@ -89,7 +89,6 @@ export function HomeScreen() {
       return []
     }
   })
-  const [activeSuggestion, setActiveSuggestion] = useState(0)
   const [recordsToConfirm, setRecordsToConfirm] = useState<PersonalRecord[]>([])
   const [recordsVersion, setRecordsVersion] = useState(0)
   useEffect(() => {
@@ -103,7 +102,6 @@ export function HomeScreen() {
       active = false
     }
   }, [recordsVersion])
-  const suggestionRowRef = useRef<HTMLDivElement | null>(null)
   const sportLoadError = viewer.status === 'ready' ? viewer.error : ''
   // The last feed is kept while you move around the app, and refreshed in the background.
   const [savedActivities, setSavedActivities] = useState<FeedActivity[]>(() => cachedFeed ?? [])
@@ -146,28 +144,6 @@ export function HomeScreen() {
     [communityMembers, firstName, userSportNames, userSuburb, blockedNames],
   )
 
-  // Start at the first suggestion when Home opens or the list reloads.
-  const suggestionKey = crewSuggestions.map(({ member }) => member.id ?? member.name).join('|')
-  useEffect(() => {
-    const row = suggestionRowRef.current
-    if (row) row.scrollLeft = 0
-    setActiveSuggestion(0)
-  }, [suggestionKey])
-
-  function handleSuggestionScroll() {
-    const row = suggestionRowRef.current
-    const first = row?.firstElementChild as HTMLElement | null
-    if (!row || !first) return
-    const step = first.offsetWidth + 12
-    setActiveSuggestion(Math.min(crewSuggestions.length - 1, Math.round(row.scrollLeft / step)))
-  }
-
-  function scrollToSuggestion(index: number) {
-    const row = suggestionRowRef.current
-    const card = row?.children[index] as HTMLElement | undefined
-    if (row && card) row.scrollTo({ left: card.offsetLeft - row.offsetLeft, behavior: 'smooth' })
-  }
-
   useEffect(() => {
     let active = true
     void getSavedActivityFeed()
@@ -196,7 +172,7 @@ export function HomeScreen() {
     if (!filterOptions.includes(filter)) setFilter('My sports')
   }, [filter, filterOptions])
 
-  const visible = useMemo(() => {
+  const allActivities = useMemo(() => {
     const savedCards: ActivityCardData[] = savedActivities.map(
       ({ viewerJoinStatus, ...activity }) => ({
         ...activity,
@@ -207,10 +183,12 @@ export function HomeScreen() {
       ...activity,
       joinStatus: hasDemoJoinRequest(activity.id) ? 'pending' : undefined,
     }))
-    const allActivities = [...savedCards, ...demoCards]
-    if (filter === 'My sports') return allActivities
-    return allActivities.filter((item) => item.sport === filter)
-  }, [filter, savedActivities])
+    return [...savedCards, ...demoCards]
+  }, [savedActivities])
+  const visible = useMemo(
+    () => (filter === 'My sports' ? allActivities : allActivities.filter((item) => item.sport === filter)),
+    [allActivities, filter],
+  )
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 60_000)
@@ -613,61 +591,13 @@ export function HomeScreen() {
           <button type="button" className="text-action" onClick={() => navigate('/friends#crew')}>View all</button>
         </div>
 
-        {crewFriends.length > 0 && (
-          <div className="crew-friends">
-            <h3>Your friends</h3>
-            <div className="crew-friends-row">
-              {crewFriends.map((member) => (
-                <button
-                  type="button"
-                  key={member.id ?? member.name}
-                  className="crew-friend"
-                  onClick={() => navigate(getProfilePath(member))}
-                >
-                  <Avatar name={member.name} photoUrl={member.photoUrl} size={48} verified={member.verified} />
-                  <span>{member.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {crewSuggestions.length > 0 && (
-          <div className="crew-suggestions">
-            <h3>Suggested for you</h3>
-            <div
-              className="crew-suggestion-row"
-              ref={suggestionRowRef}
-              onScroll={handleSuggestionScroll}
-              aria-label="Suggested members. Swipe to see more."
-            >
-              {crewSuggestions.map(({ member, reason }) => (
-                <div className="crew-suggestion" key={member.id ?? member.name}>
-                  <span className="crew-suggestion-reason">{reason}</span>
-                  <MateCard
-                    horizontal
-                    member={member}
-                    onClick={() => navigate(getProfilePath(member))}
-                  />
-                </div>
-              ))}
-            </div>
-            {crewSuggestions.length > 1 && (
-              <div className="crew-suggestion-dots">
-                {crewSuggestions.map(({ member }, index) => (
-                  <button
-                    type="button"
-                    key={member.id ?? member.name}
-                    className={index === activeSuggestion ? 'active' : ''}
-                    aria-label={`Show suggestion ${index + 1} of ${crewSuggestions.length}`}
-                    aria-current={index === activeSuggestion}
-                    onClick={() => scrollToSuggestion(index)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <CrewSection
+          friends={crewFriends}
+          suggestions={crewSuggestions}
+          activities={allActivities}
+          onOpenProfile={(member) => navigate(getProfilePath(member))}
+          onOpenActivity={(activity) => navigate(`/activity/${activity.id}`)}
+        />
       </section>
 
     </div>

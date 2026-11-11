@@ -31,6 +31,8 @@ export async function getMetMates(userId: string): Promise<MetMate[]> {
 export type CrewSuggestion = {
   member: CommunityMember
   reason: string
+  shared: string[] // sports you both do
+  nearby: boolean // same suburb
 }
 
 // Members who are not friends yet, best matches first: shared sports and the
@@ -66,10 +68,12 @@ export function getCrewSuggestions(
       return {
         member,
         reason: nearby && shared.length > 0 ? `${reason} · ${member.suburb}` : reason,
+        shared,
+        nearby,
         score: shared.length * 2 + (nearby ? 3 : 0) + Math.random(),
       }
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map(({ member, reason }) => ({ member, reason }))
+    .map(({ member, reason, shared, nearby }) => ({ member, reason, shared, nearby }))
 }

@@ -4884,4 +4884,6 @@ h1 .skeleton { margin: 4px 0; }
   .friend-tile-grid .friend-tile-photo { aspect-ratio: 4 / 3; }
   .friend-tile-grid .friend-tile.beyond-grid { display: none; }
   .friend-tile-grid .friend-tile-invite { min-height: 100%; }
+  /* Same space below the top match as between the tiles. */
+  .friend-tile-grid.crew-more-row { margin-top: 12px; }
 }

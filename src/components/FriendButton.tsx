@@ -1,4 +1,4 @@
-import { Check, UserCheck, UserPlus, X } from 'lucide-react'
+import { Check, Clock3, UserCheck, UserPlus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
   friendsChangedEvent,
@@ -54,30 +54,54 @@ export function FriendButton({ profileId, name }: { profileId: string; name: str
   return (
     <div className="friend-button">
       {status === 'none' && (
-        <button type="button" className="button button-primary button-md" disabled={isBusy} onClick={() => void run(() => sendFriendRequest(profileId))}>
-          <UserPlus aria-hidden="true" /> Add friend
+        <button
+          type="button"
+          className="button button-primary button-md"
+          disabled={isBusy}
+          onClick={() => void run(async () => {
+            const result = await sendFriendRequest(profileId)
+            // Show the new state straight away (he may have asked you first).
+            setStatus(result === 'accepted' ? 'friends' : 'outgoing')
+          })}
+        >
+          <UserPlus aria-hidden="true" /> {isBusy ? 'Sending…' : 'Add friend'}
         </button>
       )}
       {status === 'outgoing' && (
-        <button
-          type="button"
-          className="button button-secondary button-md"
-          disabled={isBusy}
-          onClick={() => {
-            if (window.confirm(`Cancel your friend request to ${name}?`)) void run(() => removeFriend(profileId))
-          }}
-        >
-          <Check aria-hidden="true" /> Requested
-        </button>
+        <>
+          <button
+            type="button"
+            className="button button-secondary button-md friend-button-pending"
+            disabled={isBusy}
+            aria-describedby="friend-pending-note"
+            onClick={() => {
+              if (window.confirm(`Cancel your friend request to ${name}?`)) {
+                void run(async () => {
+                  await removeFriend(profileId)
+                  setStatus('none')
+                })
+              }
+            }}
+          >
+            <Clock3 aria-hidden="true" /> Request sent
+          </button>
+          <p className="friend-button-note" id="friend-pending-note">Waiting for {name} to accept · Tap to cancel</p>
+        </>
       )}
       {status === 'incoming' && requestId && (
         <>
           <p className="friend-button-note">{name} wants to be friends</p>
           <div className="friend-button-row">
-            <button type="button" className="button button-secondary button-md" disabled={isBusy} onClick={() => void run(() => respondToFriendRequest(requestId, false))}>
+            <button type="button" className="button button-secondary button-md" disabled={isBusy} onClick={() => void run(async () => {
+              await respondToFriendRequest(requestId, false)
+              setStatus('none')
+            })}>
               <X aria-hidden="true" /> Decline
             </button>
-            <button type="button" className="button button-primary button-md" disabled={isBusy} onClick={() => void run(() => respondToFriendRequest(requestId, true))}>
+            <button type="button" className="button button-primary button-md" disabled={isBusy} onClick={() => void run(async () => {
+              await respondToFriendRequest(requestId, true)
+              setStatus('friends')
+            })}>
               <Check aria-hidden="true" /> Accept
             </button>
           </div>
@@ -89,7 +113,12 @@ export function FriendButton({ profileId, name }: { profileId: string; name: str
           className="button button-secondary button-md"
           disabled={isBusy}
           onClick={() => {
-            if (window.confirm(`Remove ${name} from your friends?`)) void run(() => removeFriend(profileId))
+            if (window.confirm(`Remove ${name} from your friends?`)) {
+              void run(async () => {
+                await removeFriend(profileId)
+                setStatus('none')
+              })
+            }
           }}
         >
           <UserCheck aria-hidden="true" /> Friends

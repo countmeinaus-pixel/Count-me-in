@@ -4910,3 +4910,4 @@ h1 .skeleton { margin: 4px 0; }
 .friend-request-actions { display: flex; gap: 8px; }
 .friend-request-actions .button { width: auto; padding-inline: 14px; }
 .friend-request-who { padding: 0; border: 0; background: transparent; cursor: pointer; }
+.friend-button-pending { border: 1px dashed var(--seafoam); color: var(--seafoam); }

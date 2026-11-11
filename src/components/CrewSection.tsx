@@ -76,11 +76,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
   // Phones show 1 top match, desktop shows 3 in a row; the tiles below skip
   // whoever is already shown as a top match on that screen size.
   const [top, ...rest] = suggestions
-<<<<<<< HEAD
-  // Desktop: 4 next to the top match, 5 in the row below.
-=======
   const tops = suggestions.slice(0, 3)
->>>>>>> debfbd5d706e9617bd8c70fed1d5df244211994a
   const side = rest.slice(0, 9)
 
   return (

@@ -143,12 +143,8 @@ export function HomeScreen() {
     () => getCrewSuggestions(
       communityMembers,
       { name: firstName, sports: userSportNames, suburb: userSuburb },
-<<<<<<< HEAD
-      [...friendNames, ...blockedNames],
-      10,
-=======
       [...(friendships ? friendships.friends.map((member) => member.name) : friendNames), ...blockedNames],
->>>>>>> debfbd5d706e9617bd8c70fed1d5df244211994a
+      10,
     ),
     [communityMembers, firstName, userSportNames, userSuburb, blockedNames, friendships],
   )

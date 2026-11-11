@@ -4863,23 +4863,6 @@ h1 .skeleton { margin: 4px 0; }
 .friend-tile-info strong { display: flex; align-items: center; gap: 4px; }
 .friend-tile-info strong svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }
 
-<<<<<<< HEAD
-/* Desktop: five columns. The top match spans three with a 2 by 2 block of
-   suggestions beside it, and the next five fill one row underneath. */
-@container app (min-width: 900px) {
-  .crew-suggest-layout {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 12px;
-  }
-  .crew-suggest-layout .crew-bento,
-  .crew-suggest-layout .crew-more-row { display: contents; }
-  .crew-suggest-layout .crew-top-card { grid-column: span 3; grid-row: span 2; }
-  .crew-suggest-layout .crew-more-row .friend-tile { grid-template-rows: 1fr auto; }
-  /* The photo fills the tile without setting its height, so the top match decides the row height. */
-  .crew-suggest-layout .crew-more-row .friend-tile-photo { min-height: 120px; }
-  .crew-suggest-layout .crew-more-row .friend-tile-photo img { position: absolute; inset: 0; }
-=======
 /* Phone: friends as a 2 by 3 grid; the 6th spot is Invite a mate. */
 @media (max-width: 639px) {
   .friend-tile-grid {
@@ -4934,5 +4917,27 @@ h1 .skeleton { margin: 4px 0; }
   .crew-bento { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .crew-top-extra { display: block; }
   .crew-more-row .friend-tile.top-on-desktop { display: none; }
->>>>>>> debfbd5d706e9617bd8c70fed1d5df244211994a
 }
+
+/* Mate cards: stats as three small blocks pinned to the bottom of the card. */
+.mate-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.mate-card-stats > span { display: grid; gap: 2px; min-width: 0; }
+.mate-card-stats strong { font: 700 18px/1 var(--font-display); color: var(--text-primary); }
+.mate-card-stats small {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mate-grid > .mate-card,
+.mate-grid .profile-friend-card,
+.mate-grid .profile-friend-card .mate-card { height: 100%; }

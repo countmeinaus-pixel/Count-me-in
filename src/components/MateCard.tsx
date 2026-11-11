@@ -1,4 +1,4 @@
-import { MapPin, ShieldCheck, Users } from 'lucide-react'
+import { MapPin, ShieldCheck } from 'lucide-react'
 import type { CommunityMember } from '../data/mockData'
 import { Avatar } from './Avatar'
 
@@ -27,9 +27,11 @@ export function MateCard({
         {member.sports.slice(0, 2).map((sport) => <span className="mate-sport" key={sport.name}>{sport.name}</span>)}
         {member.sports.length > 2 && <span className="mate-sport-more">+{member.sports.length - 2}</span>}
       </span>
-      <span className="mate-card-meta">
-        <Users aria-hidden="true" />
-        {member.stats.meetups} meetups · {member.stats.hosted} hosted · {member.stats.sports} sports
+      {/* Always at the bottom of the card, so stats line up across a row. */}
+      <span className="mate-card-stats">
+        <span><strong>{member.stats.meetups}</strong><small>meetups</small></span>
+        <span><strong>{member.stats.hosted}</strong><small>hosted</small></span>
+        <span><strong>{member.stats.sports}</strong><small>sports</small></span>
       </span>
     </button>
   )

@@ -73,8 +73,11 @@ type Props = {
 }
 
 export function CrewSection({ friends, suggestions, activities, onOpenProfile, onOpenActivity }: Props) {
+  // Phones show 1 top match, desktop shows 3 in a row; the tiles below skip
+  // whoever is already shown as a top match on that screen size.
   const [top, ...rest] = suggestions
-  const side = rest.slice(0, 7)
+  const tops = suggestions.slice(0, 3)
+  const side = rest.slice(0, 9)
 
   return (
     <>
@@ -123,11 +126,15 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
         <div className="crew-suggestions">
           <h3>Suggested for you</h3>
           <div className="crew-bento">
-            <TopMatchCard
-              suggestion={top}
-              hosting={activities.find((activity) => activity.host === top.member.name && activity.startsAt >= new Date()) ?? null}
-              onOpenProfile={onOpenProfile}
-            />
+            {tops.map((suggestion, index) => (
+              <div key={suggestion.member.id ?? suggestion.member.name} className={index > 0 ? 'crew-top-extra' : undefined}>
+                <TopMatchCard
+                  suggestion={suggestion}
+                  hosting={activities.find((activity) => activity.host === suggestion.member.name && activity.startsAt >= new Date()) ?? null}
+                  onOpenProfile={onOpenProfile}
+                />
+              </div>
+            ))}
           </div>
           {side.length > 0 && (
             <div className="friend-tile-row friend-tile-grid crew-more-row" aria-label="More suggested members. Swipe to see more.">
@@ -144,7 +151,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
                   <button
                     type="button"
                     key={suggestion.member.id ?? suggestion.member.name}
-                    className={`friend-tile ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'} ${index >= 6 ? 'beyond-grid' : ''}`}
+                    className={`friend-tile ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'} ${index >= 6 ? 'beyond-grid' : ''} ${index < 2 ? 'top-on-desktop' : ''}`}
                     onClick={() => onOpenProfile(suggestion.member)}
                     aria-label={`${suggestion.member.name}, ${suggestion.member.age}. ${reason}. View profile`}
                   >

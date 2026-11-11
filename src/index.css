@@ -4777,14 +4777,6 @@ h1 .skeleton { margin: 4px 0; }
 /* Find your crew: suggestions bento */
 .crew-bento { display: grid; gap: 12px; }
 .crew-bento-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-@container (min-width: 640px) {
-  .crew-bento { grid-template-columns: 1.4fr 1fr; align-items: stretch; }
-  .crew-bento-side { grid-template-columns: 1fr; }
-}
-@media (min-width: 640px) {
-  .crew-bento { grid-template-columns: 1.4fr 1fr; align-items: stretch; }
-  .crew-bento-side { grid-template-columns: 1fr; }
-}
 .crew-top-card {
   overflow: hidden;
   border: 1px solid var(--border);
@@ -4914,3 +4906,13 @@ h1 .skeleton { margin: 4px 0; }
 .friend-request-cards { display: grid; gap: 12px; }
 @media (min-width: 760px) { .friend-request-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .friend-request-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Suggestions: 1 top match on phones and tablets, 3 in a row on desktop. */
+.crew-bento > div { min-width: 0; }
+.crew-bento > div > .crew-top-card { height: 100%; }
+.crew-top-extra { display: none; }
+@media (min-width: 980px) {
+  .crew-bento { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .crew-top-extra { display: block; }
+  .crew-more-row .friend-tile.top-on-desktop { display: none; }
+}

@@ -1,4 +1,5 @@
 import { CalendarDays, Check, MapPin, ShieldCheck, Sparkles, UserPlus, Users } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { ActivityCardData } from './ActivityCard'
 import { Avatar } from './Avatar'
 import { SportIcon } from './SportIcon'
@@ -72,17 +73,23 @@ type Props = {
 }
 
 export function CrewSection({ friends, suggestions, activities, onOpenProfile, onOpenActivity }: Props) {
+  // Phones show 1 top match, desktop shows 3 in a row; the tiles below skip
+  // whoever is already shown as a top match on that screen size.
   const [top, ...rest] = suggestions
+<<<<<<< HEAD
   // Desktop: 4 next to the top match, 5 in the row below.
+=======
+  const tops = suggestions.slice(0, 3)
+>>>>>>> debfbd5d706e9617bd8c70fed1d5df244211994a
   const side = rest.slice(0, 9)
 
   return (
     <>
-      {friends.length > 0 && (
+      {(
         <div className="crew-friends">
           <h3>Your friends</h3>
-          <div className="friend-tile-row">
-            {friends.map((member) => {
+          <div className="friend-tile-row friend-tile-grid">
+            {friends.map((member, index) => {
               const next = nextActivityFor(member.name, activities)
               const isToday = next ? next.startsAt.toDateString() === new Date().toDateString() : false
               const tileSport = next?.sport ?? member.sports[0]?.name ?? 'Open activity'
@@ -90,7 +97,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
                 <button
                   type="button"
                   key={member.id ?? member.name}
-                  className={`friend-tile ${isToday ? 'is-today' : ''} ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'}`}
+                  className={`friend-tile ${isToday ? 'is-today' : ''} ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'} ${index >= 5 ? 'beyond-grid' : ''}`}
                   onClick={() => onOpenProfile(member)}
                   aria-label={`${member.name}${next ? `, ${next.sport} ${isToday ? 'today' : dayLabel(next.startsAt)}` : ''}. View profile`}
                 >
@@ -124,15 +131,19 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
           <h3>Suggested for you</h3>
           <div className="crew-suggest-layout">
           <div className="crew-bento">
-            <TopMatchCard
-              suggestion={top}
-              hosting={activities.find((activity) => activity.host === top.member.name && activity.startsAt >= new Date()) ?? null}
-              onOpenProfile={onOpenProfile}
-            />
+            {tops.map((suggestion, index) => (
+              <div key={suggestion.member.id ?? suggestion.member.name} className={index > 0 ? 'crew-top-extra' : undefined}>
+                <TopMatchCard
+                  suggestion={suggestion}
+                  hosting={activities.find((activity) => activity.host === suggestion.member.name && activity.startsAt >= new Date()) ?? null}
+                  onOpenProfile={onOpenProfile}
+                />
+              </div>
+            ))}
           </div>
           {side.length > 0 && (
-            <div className="friend-tile-row crew-more-row" aria-label="More suggested members. Swipe to see more.">
-              {side.map((suggestion) => {
+            <div className="friend-tile-row friend-tile-grid crew-more-row" aria-label="More suggested members. Swipe to see more.">
+              {side.map((suggestion, index) => {
                 const tileSport = suggestion.shared[0] ?? suggestion.member.sports[0]?.name ?? 'Open activity'
                 const reason = suggestion.shared.length > 1
                   ? `${suggestion.shared.length} sports in common`
@@ -145,7 +156,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
                   <button
                     type="button"
                     key={suggestion.member.id ?? suggestion.member.name}
-                    className={`friend-tile ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'}`}
+                    className={`friend-tile ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'} ${index >= 6 ? 'beyond-grid' : ''} ${index < 2 ? 'top-on-desktop' : ''}`}
                     onClick={() => onOpenProfile(suggestion.member)}
                     aria-label={`${suggestion.member.name}, ${suggestion.member.age}. ${reason}. View profile`}
                   >
@@ -174,14 +185,23 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
   )
 }
 
-function TopMatchCard({
+// Also used for friend requests: a different label and extra buttons below.
+export function TopMatchCard({
   suggestion,
   hosting,
   onOpenProfile,
+  label = 'Top match this week',
+  icon: LabelIcon = Sparkles,
+  ctaVariant = 'primary',
+  children,
 }: {
   suggestion: CrewSuggestion
   hosting: ActivityCardData | null
   onOpenProfile: (member: CommunityMember) => void
+  label?: string
+  icon?: typeof Sparkles
+  ctaVariant?: 'primary' | 'secondary'
+  children?: ReactNode
 }) {
   const { member, shared, nearby } = suggestion
   const bannerSport = shared[0] ?? member.sports[0]?.name ?? 'Open activity'
@@ -191,7 +211,7 @@ function TopMatchCard({
   return (
     <article className="crew-top-card">
       <div className="crew-top-banner">
-        <span className="crew-top-label"><Sparkles aria-hidden="true" /> Top match this week</span>
+        <span className="crew-top-label"><LabelIcon aria-hidden="true" /> {label}</span>
         <SportIcon sport={bannerSport} className="crew-top-sport" />
       </div>
       <div className="crew-top-body">
@@ -224,9 +244,10 @@ function TopMatchCard({
           <span><strong>{member.stats.hosted}</strong><small>hosted</small></span>
           <span><strong>{member.stats.sports}</strong><small>sports</small></span>
         </div>
-        <button type="button" className="button button-primary button-md crew-top-cta" onClick={() => onOpenProfile(member)}>
+        <button type="button" className={`button button-${ctaVariant} button-md crew-top-cta`} onClick={() => onOpenProfile(member)}>
           View profile
         </button>
+        {children}
       </div>
     </article>
   )

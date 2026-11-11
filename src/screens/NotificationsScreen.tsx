@@ -5,6 +5,8 @@ import { Avatar } from '../components/Avatar'
 import { Button } from '../components/Button'
 import { getPendingInvites, respondToActivityInvite } from '../lib/activityParticipation'
 import { getNotifications, markNotificationsRead } from '../lib/notifications'
+import { getMyFriendships, respondToFriendRequest } from '../lib/friendships'
+import { getProfilePath } from '../lib/profile'
 
 type Notification = {
   id: string
@@ -16,6 +18,7 @@ type Notification = {
   icon: typeof CalendarDays
   actor?: { name: string; photoUrl: string | null }
   inviteActivityId?: string
+  friendRequestId?: string // open friend request: show Accept / Decline
   isDemo?: boolean
 }
 
@@ -61,6 +64,8 @@ const titles = {
   pr_confirmed: 'PR confirmed',
   pr_flagged: 'PR flagged',
   pr_verified: 'PR verified',
+  friend_request: 'Friend request',
+  friend_accepted: 'New friend',
 } as const
 
 function formatRelativeTime(value: string) {
@@ -86,20 +91,23 @@ export function NotificationsScreen() {
 
   useEffect(() => {
     let active = true
-    Promise.all([getNotifications(), getPendingInvites().catch(() => [])])
-      .then(([saved, invites]) => {
+    Promise.all([getNotifications(), getPendingInvites().catch(() => []), getMyFriendships().catch(() => null)])
+      .then(([saved, invites, friendships]) => {
         if (!active) return
         if (!saved) {
           setNotifications(demoNotifications)
           return
         }
         const openInviteIds = new Set(invites.map((invite) => invite.id))
+        const openFriendRequests = new Map((friendships?.incoming ?? []).map((request) => [request.member.id, request.requestId]))
         setNotifications(saved.map((item) => ({
           id: item.id,
           title: item.type === 'participant_left' && item.actorName ? `${item.actorName} can’t make it` : titles[item.type],
           message: item.message ? `${item.body} “${item.message}”` : item.body,
           time: formatRelativeTime(item.createdAt),
-          href: item.type === 'pr_confirmed' || item.type === 'pr_flagged' || item.type === 'pr_verified'
+          href: (item.type === 'friend_request' || item.type === 'friend_accepted') && item.actorId
+            ? getProfilePath({ id: item.actorId, name: item.actorName ?? 'member' })
+            : item.type === 'pr_confirmed' || item.type === 'pr_flagged' || item.type === 'pr_verified'
             ? '/profile/records'
             : item.activityId ? `/activity/${item.activityId}` : '/activities',
           unread: item.unread,
@@ -107,6 +115,9 @@ export function NotificationsScreen() {
           actor: item.actorName ? { name: item.actorName, photoUrl: item.actorPhotoUrl } : undefined,
           inviteActivityId: item.type === 'invite' && item.activityId && openInviteIds.has(item.activityId)
             ? item.activityId
+            : undefined,
+          friendRequestId: item.type === 'friend_request' && item.actorId
+            ? openFriendRequests.get(item.actorId)
             : undefined,
         })))
       })
@@ -162,6 +173,29 @@ export function NotificationsScreen() {
     }
   }
 
+  async function answerFriendRequest(notification: Notification, accept: boolean) {
+    if (!notification.friendRequestId) return
+    setRespondingTo(notification.id)
+    setError('')
+    try {
+      await respondToFriendRequest(notification.friendRequestId, accept)
+      setNotifications((current) => current.map((item) =>
+        item.id === notification.id
+          ? {
+              ...item,
+              unread: false,
+              friendRequestId: undefined,
+              message: accept ? `${item.message} You're now friends.` : `${item.message} You declined.`,
+            }
+          : item,
+      ))
+    } catch (answerError) {
+      setError(answerError instanceof Error ? answerError.message : 'Unable to answer this friend request.')
+    } finally {
+      setRespondingTo(null)
+    }
+  }
+
   function renderNotification(notification: Notification) {
     const Icon = notification.icon
 
@@ -194,6 +228,25 @@ export function NotificationsScreen() {
               onClick={() => void answerInvite(notification, 'accepted')}
             >
               Count me in
+            </Button>
+          </div>
+        )}
+        {notification.friendRequestId && (
+          <div className="notification-actions">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={respondingTo !== null}
+              onClick={() => void answerFriendRequest(notification, false)}
+            >
+              Decline
+            </Button>
+            <Button
+              size="sm"
+              disabled={respondingTo !== null}
+              onClick={() => void answerFriendRequest(notification, true)}
+            >
+              Accept
             </Button>
           </div>
         )}

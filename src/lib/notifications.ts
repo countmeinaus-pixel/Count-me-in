@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export type AppNotificationType = 'participant_left' | 'invite' | 'invite_accepted' | 'invite_declined' | 'activity_cancelled' | 'pr_confirmed' | 'pr_flagged' | 'pr_verified'
+export type AppNotificationType = 'participant_left' | 'invite' | 'invite_accepted' | 'invite_declined' | 'activity_cancelled' | 'pr_confirmed' | 'pr_flagged' | 'pr_verified' | 'friend_request' | 'friend_accepted'
 
 export type AppNotification = {
   id: string
@@ -8,6 +8,7 @@ export type AppNotification = {
   body: string
   message: string
   activityId: string | null
+  actorId: string | null
   actorName: string | null
   actorPhotoUrl: string | null
   createdAt: string
@@ -52,6 +53,7 @@ export async function getNotifications(): Promise<AppNotification[] | null> {
     body: row.body,
     message: row.message,
     activityId: row.activity_id,
+    actorId: row.actor_id,
     actorName: row.actor_id ? actorById.get(row.actor_id)?.first_name ?? null : null,
     actorPhotoUrl: row.actor_id ? actorById.get(row.actor_id)?.photo_url ?? null : null,
     createdAt: row.created_at,

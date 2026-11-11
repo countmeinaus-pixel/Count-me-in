@@ -4777,14 +4777,6 @@ h1 .skeleton { margin: 4px 0; }
 /* Find your crew: suggestions bento */
 .crew-bento { display: grid; gap: 12px; }
 .crew-bento-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-@container (min-width: 640px) {
-  .crew-bento { grid-template-columns: 1.4fr 1fr; align-items: stretch; }
-  .crew-bento-side { grid-template-columns: 1fr; }
-}
-@media (min-width: 640px) {
-  .crew-bento { grid-template-columns: 1.4fr 1fr; align-items: stretch; }
-  .crew-bento-side { grid-template-columns: 1fr; }
-}
 .crew-top-card {
   overflow: hidden;
   border: 1px solid var(--border);
@@ -4871,6 +4863,7 @@ h1 .skeleton { margin: 4px 0; }
 .friend-tile-info strong { display: flex; align-items: center; gap: 4px; }
 .friend-tile-info strong svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }
 
+<<<<<<< HEAD
 /* Desktop: five columns. The top match spans three with a 2 by 2 block of
    suggestions beside it, and the next five fill one row underneath. */
 @container app (min-width: 900px) {
@@ -4886,4 +4879,60 @@ h1 .skeleton { margin: 4px 0; }
   /* The photo fills the tile without setting its height, so the top match decides the row height. */
   .crew-suggest-layout .crew-more-row .friend-tile-photo { min-height: 120px; }
   .crew-suggest-layout .crew-more-row .friend-tile-photo img { position: absolute; inset: 0; }
+=======
+/* Phone: friends as a 2 by 3 grid; the 6th spot is Invite a mate. */
+@media (max-width: 639px) {
+  .friend-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+  }
+  .friend-tile-grid .friend-tile { flex: none; grid-template-rows: auto auto; }
+  .friend-tile-grid .friend-tile-photo { aspect-ratio: 4 / 3; }
+  .friend-tile-grid .friend-tile.beyond-grid { display: none; }
+  .friend-tile-grid .friend-tile-invite { min-height: 100%; }
+  /* Same space below the top match as between the tiles. */
+  .friend-tile-grid.crew-more-row { margin-top: 12px; }
+}
+
+/* Friend button on profiles */
+.friend-button { display: grid; gap: 8px; width: 100%; max-width: 360px; margin: 12px auto 0; }
+.friend-button .button { gap: 8px; }
+.friend-button .button svg { width: 18px; height: 18px; }
+.friend-button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.friend-button-note { text-align: center; color: var(--text-secondary); font-size: 14px; }
+.friend-requests { display: grid; gap: 10px; margin-bottom: 24px; }
+.friend-request-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+}
+.friend-request-row .grow { flex: 1; min-width: 0; }
+.friend-request-row strong { display: block; }
+.friend-request-row small { color: var(--text-secondary); font-size: 13px; }
+.friend-request-actions { display: flex; gap: 8px; }
+.friend-request-actions .button { width: auto; padding-inline: 14px; }
+.friend-request-who { padding: 0; border: 0; background: transparent; cursor: pointer; }
+.friend-button-pending { border: 1px dashed var(--seafoam); color: var(--seafoam); }
+.friend-request-cards { display: grid; gap: 12px; }
+/* Friend requests: same width as the top match cards (2 a row on tablets, 3 on desktop). */
+@media (min-width: 760px) { .friend-request-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 980px) { .friend-request-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.friend-request-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Suggestions: 1 top match on phones and tablets, 3 in a row on desktop. */
+.crew-bento > div { min-width: 0; }
+.crew-bento > div > .crew-top-card { height: 100%; }
+.crew-top-extra { display: none; }
+@media (min-width: 980px) {
+  .crew-bento { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .crew-top-extra { display: block; }
+  .crew-more-row .friend-tile.top-on-desktop { display: none; }
+>>>>>>> debfbd5d706e9617bd8c70fed1d5df244211994a
 }

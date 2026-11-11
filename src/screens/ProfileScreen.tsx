@@ -18,6 +18,8 @@ import {
   type PersonalRecord,
 } from "../lib/personalRecords"
 import { MateCard } from "../components/MateCard"
+import { FriendButton } from "../components/FriendButton"
+import { friendsChangedEvent, getFriendsOf, removeFriend } from "../lib/friendships"
 import { PatchIcon } from "../components/PatchIcon"
 import { ReportDialog } from "../components/ReportDialog"
 import { SportIcon } from "../components/SportIcon"
@@ -251,6 +253,28 @@ export function ProfileScreen() {
             stats: { meetups: 4, hosted: 1, sports: 2 },
           })
   const profileId = isCurrentUser ? savedProfile?.id : remoteProfile?.id
+  const [realFriends, setRealFriends] = useState<CommunityMember[] | null>(null)
+  useEffect(() => {
+    if (!profileId) {
+      setRealFriends(null)
+      return
+    }
+    let active = true
+    function load() {
+      if (!profileId) return
+      getFriendsOf(profileId)
+        .then((members) => {
+          if (active) setRealFriends(members)
+        })
+        .catch(() => undefined)
+    }
+    load()
+    window.addEventListener(friendsChangedEvent, load)
+    return () => {
+      active = false
+      window.removeEventListener(friendsChangedEvent, load)
+    }
+  }, [profileId])
   const profileName = profile.name
 
   useEffect(() => {
@@ -356,7 +380,9 @@ export function ProfileScreen() {
         ).size
       : profile.stats.hosted
   const sportCount = profile.stats.sports
-  const visibleFriends = friends.filter(
+  // Signed in: real friends (accepted friend requests). Otherwise demo friends.
+  const friendMembers = realFriends ?? friends.flatMap((friend) => communityMembers.find((person) => person.name === friend.name) ?? [])
+  const visibleFriends = friendMembers.filter(
     (friend) => !blockedUsers.includes(friend.name) && friend.name !== profile.name,
   )
   // Up to 3 rows of friends: 4, 3 or 2 a row depending on the content width.
@@ -549,6 +575,9 @@ export function ProfileScreen() {
             <ShieldCheck />
             Verified member
           </span>
+        )}
+        {!isCurrentUser && profileId && (
+          <FriendButton profileId={profileId} name={profile.name} />
         )}
         {isCurrentUser && (
           <button
@@ -821,13 +850,9 @@ export function ProfileScreen() {
 
       <div className="profile-friends-grid">
         {visibleFriends.slice(0, friendsPreviewCount).map((friend) => {
-          const member = communityMembers.find(
-            (person) => person.name === friend.name,
-          )
-          if (!member) return null
-
+          const member = friend
           return (
-            <div key={friend.name} className="profile-friend-card">
+            <div key={friend.id ?? friend.name} className="profile-friend-card">
               <MateCard
                 member={member}
                 onClick={() =>
@@ -890,12 +915,20 @@ export function ProfileScreen() {
                     <button
                       type="button"
                       onClick={() => {
+                        setOpenFriendMenu(null)
+                        if (realFriends && friend.id) {
+                          if (window.confirm(`Remove ${friend.name} from your friends?`)) {
+                            void removeFriend(friend.id).catch((error: unknown) =>
+                              setProfileLoadError(error instanceof Error ? error.message : "Unable to remove this friend."),
+                            )
+                          }
+                          return
+                        }
                         setFriends((current) =>
                           current.filter(
                             (person) => person.name !== friend.name,
                           ),
                         )
-                        setOpenFriendMenu(null)
                       }}
                     >
                       Remove

@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
 import { getProfilePath } from "../lib/profile"
 import { friendNames } from "../lib/friends"
+import { getFriendsOf } from "../lib/friendships"
+import type { CommunityMember } from "../data/mockData"
 import { getBlockedUsers } from "../lib/localPreferences"
 import { useCommunityMembers } from "../lib/useCommunityMembers"
 
@@ -22,13 +24,24 @@ export function ProfileFriendsScreen() {
     }
   }, [])
 
-  // Demo friends until friendships are stored in the database.
-  const friends = communityMembers.filter(
-    (member) =>
-      friendNames.includes(member.name) &&
-      member.name !== name &&
-      !blockedUsers.includes(member.name),
-  )
+  // Real friends when signed in and the member has an account; demo friends otherwise.
+  const profileId = communityMembers.find((member) => member.name === name && member.id)?.id
+  const [realFriends, setRealFriends] = useState<CommunityMember[] | null>(null)
+  useEffect(() => {
+    if (!profileId) return
+    let active = true
+    getFriendsOf(profileId)
+      .then((members) => {
+        if (active) setRealFriends(members)
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [profileId])
+  const friends = (realFriends ?? communityMembers.filter(
+    (member) => friendNames.includes(member.name) && member.name !== name,
+  )).filter((member) => !blockedUsers.includes(member.name))
 
   return (
     <div className="screen mates-screen">

@@ -1,4 +1,4 @@
-import { ArrowLeft, Search } from "lucide-react"
+import { ArrowLeft, Search, UserPlus } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
@@ -8,6 +8,9 @@ import { getBlockedProfiles } from "../lib/moderation"
 import { useBackToMore } from "../lib/moreNavigation"
 import { useCommunityMembers } from "../lib/useCommunityMembers"
 import { friendNames } from "../lib/friends"
+import { respondToFriendRequest, useMyFriendships } from "../lib/friendships"
+import { TopMatchCard } from "../components/CrewSection"
+import { useViewerProfile } from "../lib/viewerProfile"
 
 
 // Friends and Find your crew live on one page: your friends first, everyone else below.
@@ -21,6 +24,14 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [blockedUsersError, setBlockedUsersError] = useState("")
   const crewSectionRef = useRef<HTMLElement | null>(null)
+  // Signed in: real friends and requests. Signed out: the demo friends.
+  const { data: friendships, error: friendshipsError } = useMyFriendships()
+  const [respondingTo, setRespondingTo] = useState<string | null>(null)
+  const [requestError, setRequestError] = useState("")
+  const viewer = useViewerProfile()
+  const viewerProfile = viewer.status === "ready" ? viewer.profile : null
+  const viewerSports = viewerProfile?.sports.map((sport) => sport.name) ?? []
+  const viewerSuburb = viewerProfile?.suburb ?? ""
   const { members: communityMembers, error: membersError } =
     useCommunityMembers()
   const sports = [
@@ -66,7 +77,7 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
   const filteredMembers = communityMembers.filter((member) => {
     if (blockedUsersError) return false
     if (blockedUsers.includes(member.name)) return false
-    if (friendNames.includes(member.name)) return false
+    if (friendships ? friendships.friends.some((friend) => friend.id === member.id) : friendNames.includes(member.name)) return false
     const matchesName = member.name.toLowerCase().includes(normalizedQuery)
     const matchesSport =
       !selectedSport ||
@@ -75,11 +86,23 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
     return matchesName && matchesSport && matchesSuburb
   })
 
-  const friends = communityMembers.filter(
-    (member) =>
-      friendNames.includes(member.name) &&
-      !blockedUsers.includes(member.name),
-  )
+  const friends = (friendships
+    ? friendships.friends
+    : communityMembers.filter((member) => friendNames.includes(member.name))
+  ).filter((member) => !blockedUsers.includes(member.name))
+  const incoming = friendships?.incoming ?? []
+
+  async function answerRequest(requestId: string, accept: boolean) {
+    setRespondingTo(requestId)
+    setRequestError("")
+    try {
+      await respondToFriendRequest(requestId, accept)
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : "Unable to answer this friend request.")
+    } finally {
+      setRespondingTo(null)
+    }
+  }
 
   function scrollToCrew() {
     crewSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -110,6 +133,39 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
         </div>
       </header>
 
+      {incoming.length > 0 && (
+        <section className="friend-requests" aria-labelledby="friend-requests-heading">
+          <div className="mates-results-heading">
+            <h2 id="friend-requests-heading">Friend requests</h2>
+            <span>{incoming.length}</span>
+          </div>
+          <div className="friend-request-cards">
+            {incoming.map(({ requestId, member }) => {
+              const shared = member.sports.map((sport) => sport.name).filter((sport) => viewerSports.includes(sport))
+              const nearby = Boolean(viewerSuburb) && member.suburb.toLowerCase() === viewerSuburb.toLowerCase()
+              return (
+                <TopMatchCard
+                  key={requestId}
+                  suggestion={{ member, reason: '', shared, nearby }}
+                  hosting={null}
+                  label="New friend request"
+                  icon={UserPlus}
+                  ctaVariant="secondary"
+                  onOpenProfile={(person) => navigate(getProfilePath(person))}
+                >
+                  <div className="friend-request-buttons">
+                    <button type="button" className="button button-secondary button-md" disabled={respondingTo !== null} onClick={() => void answerRequest(requestId, false)}>Decline</button>
+                    <button type="button" className="button button-primary button-md" disabled={respondingTo !== null} onClick={() => void answerRequest(requestId, true)}>Accept</button>
+                  </div>
+                </TopMatchCard>
+              )
+            })}
+          </div>
+          {requestError && <p className="inline-error" role="alert">{requestError}</p>}
+        </section>
+      )}
+      {friendshipsError && <p className="inline-error" role="alert">{friendshipsError}</p>}
+
       <section aria-labelledby="your-friends-heading">
         <div className="mates-results-heading">
           <h2 id="your-friends-heading">Your friends</h2>
@@ -130,7 +186,7 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
         ) : (
           <div className="mate-empty-state">
             <h2>Your crew starts here</h2>
-            <p>Meet someone at an activity and add him as a friend.</p>
+            <p>Open someone's profile and tap Add friend. Once he accepts, he shows up here.</p>
             <button type="button" onClick={scrollToCrew}>
               Find your crew
             </button>

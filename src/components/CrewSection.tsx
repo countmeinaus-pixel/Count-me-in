@@ -129,8 +129,8 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
             />
           </div>
           {side.length > 0 && (
-            <div className="friend-tile-row crew-more-row" aria-label="More suggested members. Swipe to see more.">
-              {side.map((suggestion) => {
+            <div className="friend-tile-row friend-tile-grid crew-more-row" aria-label="More suggested members. Swipe to see more.">
+              {side.map((suggestion, index) => {
                 const tileSport = suggestion.shared[0] ?? suggestion.member.sports[0]?.name ?? 'Open activity'
                 const reason = suggestion.shared.length > 1
                   ? `${suggestion.shared.length} sports in common`
@@ -143,7 +143,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
                   <button
                     type="button"
                     key={suggestion.member.id ?? suggestion.member.name}
-                    className={`friend-tile ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'}`}
+                    className={`friend-tile ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'} ${index >= 6 ? 'beyond-grid' : ''}`}
                     onClick={() => onOpenProfile(suggestion.member)}
                     aria-label={`${suggestion.member.name}, ${suggestion.member.age}. ${reason}. View profile`}
                   >

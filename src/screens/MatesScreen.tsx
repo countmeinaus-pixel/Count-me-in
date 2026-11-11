@@ -1,4 +1,4 @@
-import { ArrowLeft, Search, UserPlus } from "lucide-react"
+import { ArrowLeft, Search, SlidersHorizontal, UserPlus } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
@@ -10,6 +10,11 @@ import { useCommunityMembers } from "../lib/useCommunityMembers"
 import { friendNames } from "../lib/friends"
 import { respondToFriendRequest, useMyFriendships } from "../lib/friendships"
 import { TopMatchCard } from "../components/CrewSection"
+import { MateFilterPanel } from "../components/MateFilterPanel"
+import { activities as demoActivities } from "../data/mockData"
+import { getSavedActivityFeed } from "../lib/activityParticipation"
+import { setLocationPreference, useLocationPreference } from "../lib/distance"
+import { applyMateFilters, countActiveFilters, defaultMateFilters, type MateFilters } from "../lib/mateFilters"
 import { useViewerProfile } from "../lib/viewerProfile"
 
 
@@ -19,8 +24,10 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
   const location = useLocation()
   const backToMore = useBackToMore()
   const [query, setQuery] = useState("")
-  const [selectedSport, setSelectedSport] = useState("")
-  const [selectedSuburb, setSelectedSuburb] = useState("")
+  const [filters, setFilters] = useState<MateFilters>(defaultMateFilters)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const locationPreference = useLocationPreference()
+  const [hostingSoonNames, setHostingSoonNames] = useState<Set<string>>(new Set())
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [blockedUsersError, setBlockedUsersError] = useState("")
   const crewSectionRef = useRef<HTMLElement | null>(null)
@@ -41,9 +48,23 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
       ),
     ),
   ].sort()
-  const suburbs = [
-    ...new Set(communityMembers.map((member) => member.suburb)),
-  ].sort()
+
+  // Who hosts an activity in the next two weeks (for the "Hosting something soon" filter).
+  useEffect(() => {
+    let active = true
+    const soon = Date.now() + 14 * 24 * 60 * 60 * 1000
+    const collect = (list: Array<{ host: string; startsAt: Date }>) =>
+      list.filter((activity) => activity.startsAt.getTime() >= Date.now() && activity.startsAt.getTime() <= soon).map((activity) => activity.host)
+    setHostingSoonNames(new Set(collect(demoActivities)))
+    getSavedActivityFeed()
+      .then((feed) => {
+        if (active) setHostingSoonNames(new Set([...collect(demoActivities), ...collect(feed)]))
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -74,17 +95,16 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
   }, [])
 
   const normalizedQuery = query.trim().toLowerCase()
-  const filteredMembers = communityMembers.filter((member) => {
+  const candidates = communityMembers.filter((member) => {
     if (blockedUsersError) return false
     if (blockedUsers.includes(member.name)) return false
+    if (viewerProfile && member.id === viewerProfile.id) return false
     if (friendships ? friendships.friends.some((friend) => friend.id === member.id) : friendNames.includes(member.name)) return false
-    const matchesName = member.name.toLowerCase().includes(normalizedQuery)
-    const matchesSport =
-      !selectedSport ||
-      member.sports.some((sport) => sport.name === selectedSport)
-    const matchesSuburb = !selectedSuburb || member.suburb === selectedSuburb
-    return matchesName && matchesSport && matchesSuburb
+    return member.name.toLowerCase().includes(normalizedQuery)
   })
+  const filterContext = { viewerSports, viewerSuburb, hostingSoonNames }
+  const filteredMembers = applyMateFilters(candidates, filters, { ...filterContext, location: locationPreference })
+  const activeFilterCount = countActiveFilters(filters, locationPreference)
 
   const friends = (friendships
     ? friendships.friends
@@ -209,52 +229,30 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
           {blockedUsersError || membersError}
         </p>
       )}
-      <label className="mate-search">
-        <Search aria-hidden="true" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name"
-          aria-label="Search mates by name"
-        />
-      </label>
-
-      <div className="mate-filters">
-        <label>
-          <span>Sport</span>
-          <select
-            value={selectedSport}
-            onChange={(event) => setSelectedSport(event.target.value)}
-            aria-label="Filter by sport"
-          >
-            <option value="">All sports</option>
-            {sports.map((sport) => (
-              <option value={sport} key={sport}>
-                {sport}
-              </option>
-            ))}
-          </select>
+      <div className="mate-search-row">
+        <label className="mate-search">
+          <Search aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by name"
+            aria-label="Search mates by name"
+          />
         </label>
-        <label>
-          <span>Location</span>
-          <select
-            value={selectedSuburb}
-            onChange={(event) => setSelectedSuburb(event.target.value)}
-            aria-label="Filter by location"
-          >
-            <option value="">All locations</option>
-            {suburbs.map((suburb) => (
-              <option value={suburb} key={suburb}>
-                {suburb}
-              </option>
-            ))}
-          </select>
-        </label>
+        <button
+          type="button"
+          className={`mate-filter-button ${activeFilterCount ? 'active' : ''}`}
+          onClick={() => setFiltersOpen(true)}
+          aria-label={activeFilterCount ? `Filters, ${activeFilterCount} on` : 'Filters'}
+        >
+          <SlidersHorizontal aria-hidden="true" />
+          {activeFilterCount > 0 && <span className="mate-filter-count" aria-hidden="true">{activeFilterCount}</span>}
+        </button>
       </div>
 
       <div className="mates-results-heading">
-        <h3>Mates around Adelaide</h3>
+        <h3>{locationPreference ? `Mates near ${locationPreference.label.replace(/^Near /, '')}` : 'Mates around Adelaide'}</h3>
         <span>{filteredMembers.length} profiles</span>
       </div>
 
@@ -273,13 +271,13 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
       ) : (
         <div className="mate-empty-state">
           <h2>No mates found</h2>
-          <p>Try another name, sport or location.</p>
+          <p>Try another name, fewer filters or a bigger distance.</p>
           <button
             type="button"
             onClick={() => {
               setQuery("")
-              setSelectedSport("")
-              setSelectedSuburb("")
+              setFilters(defaultMateFilters)
+              setLocationPreference(null)
             }}
           >
             Clear filters
@@ -287,6 +285,20 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
         </div>
       )}
       </section>
+      {filtersOpen && (
+        <MateFilterPanel
+          filters={filters}
+          location={locationPreference}
+          sports={sports}
+          countFor={(draft, location) => applyMateFilters(candidates, draft, { ...filterContext, location }).length}
+          onApply={(next, location) => {
+            setFilters(next)
+            setLocationPreference(location)
+            setFiltersOpen(false)
+          }}
+          onClose={() => setFiltersOpen(false)}
+        />
+      )}
     </div>
   )
 }

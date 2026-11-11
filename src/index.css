@@ -5031,3 +5031,51 @@ h1 .skeleton { margin: 4px 0; }
 }
 .location-button small { color: var(--text-secondary); font-size: 13px; }
 .location-button .location-chevron { width: 16px; height: 16px; color: var(--text-secondary); }
+.filter-toggles { display: grid; gap: 4px; }
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.filter-toggle span { display: grid; gap: 2px; }
+.filter-toggle strong { font-weight: 600; color: var(--text-primary); font-size: 15px; }
+.filter-toggle small { color: var(--text-secondary); font-size: 13px; }
+.filter-toggle input { width: 22px; height: 22px; flex: 0 0 auto; accent-color: var(--seafoam); }
+.mate-search-row { display: flex; gap: 10px; align-items: stretch; }
+.mate-search-row .mate-search { flex: 1; min-width: 0; }
+.mate-filter-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  min-height: 48px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.mate-filter-button svg { width: 20px; height: 20px; }
+.mate-filter-button.active { border-color: var(--seafoam); color: var(--seafoam); }
+.mate-filter-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.mate-distance { color: var(--text-secondary); font-size: 13px; }

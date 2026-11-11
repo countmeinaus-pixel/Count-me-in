@@ -4870,3 +4870,25 @@ h1 .skeleton { margin: 4px 0; }
 .crew-more-row { margin-top: 12px; }
 .friend-tile-info strong { display: flex; align-items: center; gap: 4px; }
 .friend-tile-info strong svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }
+
+/* Desktop: a smaller top match with the other suggestions as a 3 by 2 grid next to it. */
+@container app (min-width: 900px) {
+  .crew-suggest-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .crew-suggest-layout .crew-bento { grid-template-columns: minmax(0, 1fr); }
+  .crew-suggest-layout .crew-top-banner { height: 64px; }
+  .crew-suggest-layout .crew-top-body h4 { font-size: 22px; }
+  .crew-suggest-layout .crew-more-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .crew-suggest-layout .crew-more-row .friend-tile { grid-template-rows: 120px auto; }
+  .crew-suggest-layout .crew-more-row > :nth-child(n + 7) { display: none; }
+}

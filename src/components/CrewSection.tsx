@@ -121,6 +121,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
       {top && (
         <div className="crew-suggestions">
           <h3>Suggested for you</h3>
+          <div className="crew-suggest-layout">
           <div className="crew-bento">
             <TopMatchCard
               suggestion={top}
@@ -165,6 +166,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
               })}
             </div>
           )}
+          </div>
         </div>
       )}
     </>

@@ -4816,6 +4816,7 @@ h1 .skeleton { margin: 4px 0; }
 /* Grows to fill spare height, so stats and button line up across cards in a row */
 .crew-top-reasons { display: grid; flex: 1; align-content: start; gap: 8px; margin: 8px 0 4px; padding: 0; list-style: none; }
 .crew-top-reasons li { display: flex; align-items: center; gap: 10px; color: var(--text-primary); font-size: 14px; line-height: 1.35; }
+.crew-reason-text { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .crew-reason-icon {
   display: grid;
   place-items: center;

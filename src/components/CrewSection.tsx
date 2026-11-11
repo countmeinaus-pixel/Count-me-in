@@ -186,7 +186,7 @@ export function TopMatchCard({
   suggestion,
   hosting,
   onOpenProfile,
-  label = 'Top match this week',
+  label = 'Top match today',
   icon: LabelIcon = Sparkles,
   ctaVariant = 'primary',
   children,
@@ -204,6 +204,18 @@ export function TopMatchCard({
   const sharedVerbs = shared.map((sport) => sportVerbs[sport] ?? sport.toLowerCase())
   const spotsLeft = hosting ? Math.max(0, hosting.spotsTotal - hosting.spotsTaken) : 0
 
+  // Always exactly two reasons, so every card in a row has the same height.
+  const reasons: { key: string; icon: ReactNode; text: string }[] = []
+  if (sharedVerbs.length > 0) reasons.push({ key: 'shared', icon: <Check aria-hidden="true" />, text: `You both ${joinWords(sharedVerbs)}` })
+  if (hosting) {
+    const day = hosting.startsAt.toLocaleDateString('en-AU', { weekday: 'short' })
+    reasons.push({ key: 'hosting', icon: <CalendarDays aria-hidden="true" />, text: `Hosting ${day}${spotsLeft > 0 ? `, ${spotsLeft} ${spotsLeft === 1 ? 'spot' : 'spots'} left` : ''}` })
+  }
+  if (nearby) reasons.push({ key: 'nearby', icon: <MapPin aria-hidden="true" />, text: `He's also in ${member.suburb}` })
+  if (member.verified) reasons.push({ key: 'verified', icon: <ShieldCheck aria-hidden="true" />, text: 'Verified member' })
+  reasons.push({ key: 'new', icon: <Users aria-hidden="true" />, text: 'New around Adelaide' })
+  reasons.splice(2)
+
   return (
     <article className="crew-top-card">
       <div className="crew-top-banner">
@@ -218,22 +230,9 @@ export function TopMatchCard({
         </h4>
         <p className="crew-top-suburb"><MapPin aria-hidden="true" />{member.suburb}</p>
         <ul className="crew-top-reasons">
-          {sharedVerbs.length > 0 && (
-            <li><span className="crew-reason-icon"><Check aria-hidden="true" /></span>You both {joinWords(sharedVerbs)}</li>
-          )}
-          {nearby && (
-            <li><span className="crew-reason-icon"><MapPin aria-hidden="true" /></span>He's also in {member.suburb}</li>
-          )}
-          {hosting && (
-            <li>
-              <span className="crew-reason-icon"><CalendarDays aria-hidden="true" /></span>
-              Hosting {hosting.title} this {hosting.startsAt.toLocaleDateString('en-AU', { weekday: 'short' })}
-              {spotsLeft > 0 ? `, ${spotsLeft} ${spotsLeft === 1 ? 'spot' : 'spots'} left` : ''}
-            </li>
-          )}
-          {sharedVerbs.length === 0 && !nearby && !hosting && (
-            <li><span className="crew-reason-icon"><Users aria-hidden="true" /></span>New around Adelaide</li>
-          )}
+          {reasons.map((reason) => (
+            <li key={reason.key}><span className="crew-reason-icon">{reason.icon}</span><span className="crew-reason-text">{reason.text}</span></li>
+          ))}
         </ul>
         <div className="crew-top-stats">
           <span><strong>{member.stats.meetups}</strong><small>meetups</small></span>

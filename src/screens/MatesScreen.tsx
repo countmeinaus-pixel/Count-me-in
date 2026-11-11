@@ -1,5 +1,5 @@
-import { ArrowLeft, Search, UserPlus } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { ArrowLeft, ChevronRight, Search, UserPlus } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
 import { getProfilePath } from "../lib/profile"
@@ -11,10 +11,14 @@ import { friendNames } from "../lib/friends"
 import { respondToFriendRequest, useMyFriendships } from "../lib/friendships"
 import { TopMatchCard } from "../components/CrewSection"
 import { useViewerProfile } from "../lib/viewerProfile"
+import { inviteMate } from "../lib/invite"
 
 
-// Friends and Find your crew live on one page: your friends first, everyone else below.
-export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
+// Two pages from one screen:
+// - "friends" (bottom nav): only the people you are friends with.
+// - "crew" (More > Community): friend requests, invite a mate, and search everyone else.
+export function MatesScreen({ view = "friends" }: { view?: "friends" | "crew" }) {
+  const isCrew = view === "crew"
   const navigate = useNavigate()
   const location = useLocation()
   const backToMore = useBackToMore()
@@ -23,7 +27,6 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
   const [selectedSuburb, setSelectedSuburb] = useState("")
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [blockedUsersError, setBlockedUsersError] = useState("")
-  const crewSectionRef = useRef<HTMLElement | null>(null)
   // Signed in: real friends and requests. Signed out: the demo friends.
   const { data: friendships, error: friendshipsError } = useMyFriendships()
   const [respondingTo, setRespondingTo] = useState<string | null>(null)
@@ -104,13 +107,11 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
     }
   }
 
-  function scrollToCrew() {
-    crewSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  function goBack() {
+    if (location.state?.from === "/more" || (isCrew && !(window.history.state?.idx > 0))) backToMore()
+    else if (isCrew) navigate(-1)
+    else navigate("/")
   }
-
-  useEffect(() => {
-    if (location.hash === "#crew") crewSectionRef.current?.scrollIntoView()
-  }, [location.hash])
 
   return (
     <div className="screen mates-screen">
@@ -118,22 +119,30 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
         <button
           type="button"
           className="icon-button"
-          aria-label={fromMore ? "Back to More" : "Back to home"}
-          onClick={() =>
-            fromMore || location.state?.from === "/more"
-              ? backToMore()
-              : navigate("/")
-          }
+          aria-label="Back"
+          onClick={goBack}
         >
           <ArrowLeft />
         </button>
         <div>
-          <p className="eyebrow">Good people, good plans</p>
-          <h1>Friends</h1>
+          <p className="eyebrow">{isCrew ? "Invites and new mates" : "Good people, good plans"}</p>
+          <h1>{isCrew ? "Find new crew" : "Friends"}</h1>
         </div>
       </header>
 
-      {incoming.length > 0 && (
+      {!isCrew && (
+        <button type="button" className="mates-crew-link" onClick={() => navigate("/more/crew")}>
+          <span className="mates-crew-link-icon"><UserPlus aria-hidden="true" /></span>
+          <span className="grow">
+            <strong>Find new crew</strong>
+            <small>{incoming.length > 0 ? `${incoming.length} friend ${incoming.length === 1 ? "request" : "requests"} waiting` : "Friend requests, invites and new mates"}</small>
+          </span>
+          {incoming.length > 0 && <span className="mates-crew-link-badge">{incoming.length}</span>}
+          <ChevronRight aria-hidden="true" />
+        </button>
+      )}
+
+      {isCrew && incoming.length > 0 && (
         <section className="friend-requests" aria-labelledby="friend-requests-heading">
           <div className="mates-results-heading">
             <h2 id="friend-requests-heading">Friend requests</h2>
@@ -166,6 +175,7 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
       )}
       {friendshipsError && <p className="inline-error" role="alert">{friendshipsError}</p>}
 
+      {!isCrew && (
       <section aria-labelledby="your-friends-heading">
         <div className="mates-results-heading">
           <h2 id="your-friends-heading">Your friends</h2>
@@ -187,17 +197,27 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
           <div className="mate-empty-state">
             <h2>Your crew starts here</h2>
             <p>Open someone's profile and tap Add friend. Once he accepts, he shows up here.</p>
-            <button type="button" onClick={scrollToCrew}>
-              Find your crew
+            <button type="button" onClick={() => navigate("/more/crew")}>
+              Find new crew
             </button>
           </div>
         )}
       </section>
+      )}
+
+      {isCrew && (
+      <>
+      <button type="button" className="mates-crew-link" onClick={() => void inviteMate()}>
+        <span className="mates-crew-link-icon"><UserPlus aria-hidden="true" /></span>
+        <span className="grow">
+          <strong>Invite a mate</strong>
+          <small>Send him a link to Count Me In</small>
+        </span>
+        <ChevronRight aria-hidden="true" />
+      </button>
 
       <section
         className="mates-crew-section"
-        id="crew"
-        ref={crewSectionRef}
         aria-labelledby="find-crew-heading"
       >
         <div className="mates-results-heading">
@@ -287,6 +307,8 @@ export function MatesScreen({ fromMore = false }: { fromMore?: boolean }) {
         </div>
       )}
       </section>
+      </>
+      )}
     </div>
   )
 }

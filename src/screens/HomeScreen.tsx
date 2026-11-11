@@ -609,7 +609,7 @@ export function HomeScreen() {
             <p className="eyebrow">Good people, good plans</p>
             <h2>Find your crew</h2>
           </div>
-          <button type="button" className="text-action" onClick={() => navigate('/friends#crew')}>View all</button>
+          <button type="button" className="text-action" onClick={() => navigate('/more/crew')}>View all</button>
         </div>
 
         <CrewSection

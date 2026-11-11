@@ -1,5 +1,6 @@
 import {
   createBrowserRouter,
+  Navigate,
   Outlet,
   RouterProvider,
   ScrollRestoration,
@@ -236,8 +237,8 @@ const router = createBrowserRouter([
       { path: "/profile/patches", element: <PatchesScreen /> },
       { path: "/profile/records", element: <PersonalRecordsScreen /> },
       { path: "/more", element: <MoreScreen /> },
-      { path: "/more/crew", element: <MatesScreen fromMore /> },
-      { path: "/more/friends", element: <MatesScreen fromMore /> },
+      { path: "/more/crew", element: <MatesScreen view="crew" /> },
+      { path: "/more/friends", element: <Navigate to="/more/crew" replace /> },
       { path: "/more/sports", element: <MySportsScreen /> },
       { path: "/more/notifications", element: <NotificationSettingsScreen /> },
       { path: "/more/privacy", element: <PrivacySettingsScreen /> },

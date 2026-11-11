@@ -10,9 +10,9 @@ import {
   MessageCircleQuestion,
   ShieldCheck,
   Trophy,
+  UserPlus,
   UserRound,
   UserRoundPen,
-  UsersRound,
   type LucideIcon,
 } from 'lucide-react'
 import { supabase } from './supabase'
@@ -43,7 +43,7 @@ export const menuGroups: MenuGroup[] = [
   {
     title: 'Community',
     items: [
-      { label: 'Friends and crew', href: '/more/friends', icon: UsersRound },
+      { label: 'Find new crew', href: '/more/crew', icon: UserPlus },
     ],
   },
   {

@@ -73,7 +73,8 @@ type Props = {
 
 export function CrewSection({ friends, suggestions, activities, onOpenProfile, onOpenActivity }: Props) {
   const [top, ...rest] = suggestions
-  const side = rest.slice(0, 7)
+  // Desktop: 4 next to the top match, 5 in the row below.
+  const side = rest.slice(0, 9)
 
   return (
     <>

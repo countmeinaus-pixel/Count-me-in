@@ -140,6 +140,7 @@ export function HomeScreen() {
       communityMembers,
       { name: firstName, sports: userSportNames, suburb: userSuburb },
       [...friendNames, ...blockedNames],
+      10,
     ),
     [communityMembers, firstName, userSportNames, userSuburb, blockedNames],
   )

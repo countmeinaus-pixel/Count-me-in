@@ -4870,3 +4870,18 @@ h1 .skeleton { margin: 4px 0; }
 .crew-more-row { margin-top: 12px; }
 .friend-tile-info strong { display: flex; align-items: center; gap: 4px; }
 .friend-tile-info strong svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }
+
+/* Phone: friends as a 2 by 3 grid; the 6th spot is Invite a mate. */
+@media (max-width: 639px) {
+  .friend-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+  }
+  .friend-tile-grid .friend-tile { flex: none; grid-template-rows: auto auto; }
+  .friend-tile-grid .friend-tile-photo { aspect-ratio: 4 / 3; }
+  .friend-tile-grid .friend-tile.beyond-grid { display: none; }
+  .friend-tile-grid .friend-tile-invite { min-height: 100%; }
+}

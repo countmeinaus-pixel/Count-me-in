@@ -80,8 +80,8 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
       {friends.length > 0 && (
         <div className="crew-friends">
           <h3>Your friends</h3>
-          <div className="friend-tile-row">
-            {friends.map((member) => {
+          <div className="friend-tile-row friend-tile-grid">
+            {friends.map((member, index) => {
               const next = nextActivityFor(member.name, activities)
               const isToday = next ? next.startsAt.toDateString() === new Date().toDateString() : false
               const tileSport = next?.sport ?? member.sports[0]?.name ?? 'Open activity'
@@ -89,7 +89,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
                 <button
                   type="button"
                   key={member.id ?? member.name}
-                  className={`friend-tile ${isToday ? 'is-today' : ''} ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'}`}
+                  className={`friend-tile ${isToday ? 'is-today' : ''} ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'} ${index >= 5 ? 'beyond-grid' : ''}`}
                   onClick={() => onOpenProfile(member)}
                   aria-label={`${member.name}${next ? `, ${next.sport} ${isToday ? 'today' : dayLabel(next.startsAt)}` : ''}. View profile`}
                 >

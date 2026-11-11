@@ -73,7 +73,7 @@ type Props = {
 
 export function CrewSection({ friends, suggestions, activities, onOpenProfile, onOpenActivity }: Props) {
   const [top, ...rest] = suggestions
-  const side = rest.slice(0, 2)
+  const side = rest.slice(0, 7)
 
   return (
     <>
@@ -127,41 +127,44 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
               hosting={activities.find((activity) => activity.host === top.member.name && activity.startsAt >= new Date()) ?? null}
               onOpenProfile={onOpenProfile}
             />
-            {side.length > 0 && (
-              <div className="crew-bento-side">
-                {side.map((suggestion) => (
+          </div>
+          {side.length > 0 && (
+            <div className="friend-tile-row crew-more-row" aria-label="More suggested members. Swipe to see more.">
+              {side.map((suggestion) => {
+                const tileSport = suggestion.shared[0] ?? suggestion.member.sports[0]?.name ?? 'Open activity'
+                const reason = suggestion.shared.length > 1
+                  ? `${suggestion.shared.length} sports in common`
+                  : suggestion.shared.length === 1
+                    ? `Also into ${suggestion.shared[0].toLowerCase()}`
+                    : suggestion.nearby
+                      ? `Also in ${suggestion.member.suburb}`
+                      : suggestion.member.suburb
+                return (
                   <button
                     type="button"
                     key={suggestion.member.id ?? suggestion.member.name}
-                    className="crew-small-card"
+                    className={`friend-tile ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'}`}
                     onClick={() => onOpenProfile(suggestion.member)}
-                    aria-label={`View ${suggestion.member.name}'s profile`}
+                    aria-label={`${suggestion.member.name}, ${suggestion.member.age}. ${reason}. View profile`}
                   >
-                    <span className="crew-small-head">
-                      <Avatar name={suggestion.member.name} photoUrl={suggestion.member.photoUrl} size={48} />
-                      <span>
-                        <strong>
-                          {suggestion.member.name}, {suggestion.member.age}
-                          {suggestion.member.verified && <ShieldCheck aria-label="Verified" />}
-                        </strong>
-                        <small>{suggestion.member.suburb}</small>
-                      </span>
+                    <span className="friend-tile-photo">
+                      {suggestion.member.photoUrl
+                        ? <img src={suggestion.member.photoUrl} alt="" loading="lazy" />
+                        : <span className="friend-tile-initials">{initials(suggestion.member.name)}</span>}
+                      <SportIcon sport={tileSport} className="friend-tile-sport" />
                     </span>
-                    <span className="crew-chips">
-                      {[...suggestion.shared, ...suggestion.member.sports.map((sport) => sport.name).filter((sport) => !suggestion.shared.includes(sport))]
-                        .slice(0, 2)
-                        .map((sport) => (
-                          <span key={sport} className={`crew-chip ${suggestion.shared.includes(sport) ? 'shared' : ''}`}>
-                            {suggestion.shared.includes(sport) && <Check aria-hidden="true" />}
-                            {sport}
-                          </span>
-                        ))}
+                    <span className="friend-tile-info">
+                      <strong>
+                        {suggestion.member.name}, {suggestion.member.age}
+                        {suggestion.member.verified && <ShieldCheck aria-label="Verified" />}
+                      </strong>
+                      <small className={suggestion.shared.length ? 'has-plan' : ''}>{reason}</small>
                     </span>
                   </button>
-                ))}
-              </div>
-            )}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </>

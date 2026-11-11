@@ -4859,3 +4859,6 @@ h1 .skeleton { margin: 4px 0; }
 }
 .crew-chip.shared { border-color: transparent; background: var(--seafoam-subtle); color: var(--seafoam); }
 .crew-chip svg { width: 12px; height: 12px; }
+.crew-more-row { margin-top: 12px; }
+.friend-tile-info strong { display: flex; align-items: center; gap: 4px; }
+.friend-tile-info strong svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }

@@ -2800,7 +2800,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   scrollbar-color: var(--border-strong) var(--bg);
   scrollbar-width: thin;
   background: var(--bg);
-  animation: more-menu-enter 240ms ease-out both;
+  animation: more-menu-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .more-menu-screen::-webkit-scrollbar {

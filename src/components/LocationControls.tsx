@@ -67,12 +67,15 @@ export function LocationControls({
         <span>Also share my approximate location (about 1 km) so mates see how far away I am</span>
       </label>
 
+      <div className="location-explore">
+        <h4>Explore other areas</h4>
+        <p>See activities and mates around another suburb, town or city.</p>
+      </div>
       <label className="location-field">
-        <span>Or look somewhere else</span>
         <SuburbInput
           variant="search"
           value={suburbText}
-          ariaLabel="Suburb, town or city"
+          ariaLabel="Explore other areas: suburb, town or city"
           placeholder="Search a suburb, town or city"
           onChange={(text) => {
             setSuburbText(text)

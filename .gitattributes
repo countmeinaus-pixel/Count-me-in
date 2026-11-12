@@ -149,3 +149,4 @@
 # Exceptions: small images the website serves directly (Vercel needs the real file)
 # ---------------------------------------------------------------------------
 public/og-image-v2.jpg  -filter -diff -merge binary
+public/icon-*.png  -filter -diff -merge binary

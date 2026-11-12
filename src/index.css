@@ -3080,6 +3080,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   transition: transform 160ms ease-out, background 160ms ease-out;
 }
 .more-setting-row input[role="switch"]:checked { background: var(--seafoam); }
+.more-setting-row input[role="switch"]:disabled { opacity: 0.45; }
 .more-setting-row input[role="switch"]:checked::before {
   background: var(--on-seafoam);
   transform: translateX(20px);

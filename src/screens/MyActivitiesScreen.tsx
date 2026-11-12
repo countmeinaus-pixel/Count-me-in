@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react"
+import { ArrowLeft, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
@@ -129,9 +129,14 @@ export function MyActivitiesScreen() {
 
   return (
     <div className="screen my-activities-screen">
-      <header className="page-title">
-        <p className="eyebrow">Your plans</p>
-        <h1>My activities</h1>
+      <header className="mates-header">
+        <button type="button" className="icon-button" aria-label="Back to home" onClick={() => navigate("/")}>
+          <ArrowLeft aria-hidden="true" />
+        </button>
+        <div>
+          <p className="eyebrow">Your plans</p>
+          <h1>My activities</h1>
+        </div>
       </header>
 
       {typeof location.state?.statusMessage === "string" && (

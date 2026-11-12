@@ -608,7 +608,7 @@ export function HomeScreen() {
             <p className="eyebrow">Keep each other honest</p>
             <h2 id="home-pr-heading">New PRs to confirm</h2>
           </div>
-          <div className="pr-list">
+          <div className="pr-grid">
             {recordsToConfirm.map((record) => (
               <PersonalRecordCard
                 key={record.id}

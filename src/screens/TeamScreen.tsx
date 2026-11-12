@@ -85,7 +85,7 @@ export function TeamScreen() {
 
   return (
     <main className="screen more-settings-page team-page">
-      <MorePageHeader title="Team" onBack={backToMore} />
+      <MorePageHeader title="Team" eyebrow="Admin" onBack={backToMore} />
       {isAdmin === null ? (
         <p className="more-settings-note">Loading…</p>
       ) : !isAdmin ? (

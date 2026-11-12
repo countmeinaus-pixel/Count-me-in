@@ -217,7 +217,7 @@ export function EditProfileScreen() {
   if (!form) {
     return (
       <main className="screen edit-profile-page">
-        <header className="edit-page-header">
+        <header className="mates-header">
           <button
             type="button"
             className="icon-button"

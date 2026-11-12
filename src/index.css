@@ -462,6 +462,8 @@ h3 { font: 700 21px/24px var(--font-display); }
   padding: 24px 0;
 }
 .mates-header .eyebrow { margin-bottom: 4px; }
+/* The text block takes the free space, so a summary (like "1 of 5 verified") sits on the right. */
+.mates-header > div { flex: 1; min-width: 0; }
 .mate-search {
   display: flex;
   align-items: center;
@@ -495,6 +497,11 @@ h3 { font: 700 21px/24px var(--font-display); }
 .mate-empty-state p { margin-top: 8px; color: var(--text-secondary); }
 .mate-empty-state button { min-height: 44px; margin-top: 16px; border: 0; background: transparent; color: var(--seafoam); }
 
+/* Profile cards, everywhere (Friends, Find new crew, profile friends, View all):
+   2 a row, 3 from 760px content width, 4 from 980px. */
+@container app (min-width: 760px) {
+  .mate-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @container app (min-width: 980px) {
   .mate-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
@@ -2591,11 +2598,15 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .all-patches-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
-@container app (min-width: 900px) {
-  .all-patches-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Same columns as the patches on the profile (.earned-patch-grid). */
+@container app (min-width: 600px) {
+  .all-patches-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@container app (min-width: 1200px) {
+  .all-patches-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 .all-patch-card {
   display: flex;
@@ -2826,7 +2837,7 @@ h3 { font: 700 21px/24px var(--font-display); }
 @container app (min-width: 760px) {
   .profile-friends-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@container app (min-width: 1200px) {
+@container app (min-width: 980px) {
   .profile-friends-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .profile-friend-card { position: relative; min-width: 0; }
@@ -3021,7 +3032,6 @@ h3 { font: 700 21px/24px var(--font-display); }
   display: grid;
   align-content: start;
   gap: 20px;
-  padding-top: 8px;
 }
 .more-page-header { justify-content: flex-start; }
 .more-page-header h1 { flex: 1; }
@@ -3997,10 +4007,13 @@ h3 { font: 700 21px/24px var(--font-display); }
   text-transform: uppercase;
   color: var(--text-secondary);
 }
-/* Upcoming activities: stacked on phones, 3 in a row on larger screens. */
-@container app (min-width: 900px) {
-  .profile-activities { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+/* Upcoming activities: same steps as Home (1, then 2 from 600px, 3 from 900px). */
+@container app (min-width: 600px) {
+  .profile-activities { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
   .profile-activities > h3 { grid-column: 1 / -1; }
+}
+@container app (min-width: 900px) {
+  .profile-activities { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .edit-activity-cancel {
   margin-top: 40px;
@@ -5332,3 +5345,29 @@ h1 .skeleton { margin: 4px 0; }
   .mate-card-location { grid-area: place; align-self: start; }
   .mate-card-identity .mate-card-sports { grid-area: sports; margin-top: 4px; }
 }
+
+/* Patches page: same compact tile as on the profile (.earned-patch-card).
+   Rule and earned date are in the details sheet that opens on tap. */
+.all-patches-grid .all-patch-card {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 88px;
+  padding: 12px 6px;
+  text-align: center;
+}
+.all-patches-grid .all-patch-card.earned { background: var(--seafoam-subtle); }
+.all-patches-grid .all-patch-card .all-patch-icon { width: auto; height: auto; background: none; }
+.all-patches-grid .all-patch-card strong { font: 500 13px/1.2 var(--font-display); }
+.all-patches-grid .all-patch-card > small,
+.all-patches-grid .all-patch-card .patch-earned-date { display: none; }
+.all-patches-grid .patch-progress { width: 80%; }
+.all-patches-grid .patch-progress small { font-size: 10px; }
+.all-patches-grid .patch-earned-mark,
+.all-patches-grid .patch-lock-mark { right: -10px; top: -6px; }
+
+/* Pages that already space their blocks with a grid gap: no extra padding under
+   the header, so the space below the title matches the Friends page. */
+.patches-page > .mates-header,
+.edit-profile-page > .mates-header,
+.more-settings-page > .mates-header { padding-bottom: 0; }

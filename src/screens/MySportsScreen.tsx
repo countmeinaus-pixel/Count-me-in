@@ -57,7 +57,7 @@ export function MySportsScreen() {
 
   return (
     <main className="screen more-settings-page">
-      <MorePageHeader title="My sports" onBack={backToMore} />
+      <MorePageHeader title="My sports" eyebrow="Your sports" onBack={backToMore} />
       <p className="more-settings-intro">The sports you’re into and the level you’re comfortable at.</p>
       {sports.length > 0 ? (
         <div className="more-sports-list">

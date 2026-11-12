@@ -34,7 +34,7 @@ export function MoreHelpScreen() {
 
   return (
     <main className="screen more-settings-page">
-      <MorePageHeader title="Help and feedback" onBack={backToMore} />
+      <MorePageHeader title="Help and feedback" eyebrow="Support" onBack={backToMore} />
       <section className="help-tour-actions" aria-label="Get to know the app">
         <button
           type="button"

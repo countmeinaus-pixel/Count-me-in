@@ -1,12 +1,16 @@
 import { ArrowLeft } from 'lucide-react'
 
-export function MorePageHeader({ title, onBack }: { title: string; onBack: () => void }) {
+// Same page header as Friends: back button, small eyebrow, large title.
+export function MorePageHeader({ title, eyebrow = 'Settings', onBack }: { title: string; eyebrow?: string; onBack: () => void }) {
   return (
-    <header className="more-page-header">
+    <header className="mates-header">
       <button type="button" className="icon-button" aria-label="Back to More" onClick={onBack}>
         <ArrowLeft aria-hidden="true" />
       </button>
-      <h1>{title}</h1>
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
+      </div>
     </header>
   )
 }

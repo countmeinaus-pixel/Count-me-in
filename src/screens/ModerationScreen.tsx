@@ -187,7 +187,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
 
   return (
     <main className="screen more-settings-page moderation-page">
-      <MorePageHeader title="Moderation" onBack={backToMore} />
+      <MorePageHeader title="Moderation" eyebrow="Keep it safe" onBack={backToMore} />
       {isLoading ? (
         <p className="more-settings-note">Loading reports…</p>
       ) : role ? (

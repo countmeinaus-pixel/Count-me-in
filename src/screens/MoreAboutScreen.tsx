@@ -13,7 +13,7 @@ export function MoreAboutScreen() {
 
   return (
     <main className="screen more-about-page">
-      <MorePageHeader title="About Count Me In" onBack={backToMore} />
+      <MorePageHeader title="About Count Me In" eyebrow="The app" onBack={backToMore} />
       <div className="about-brand">
         <span className="about-brand-mark"><UsersRound aria-hidden="true" /></span>
         <strong>Count Me In</strong>

@@ -177,7 +177,7 @@ export function PatchesScreen() {
 
   return (
     <div className="screen patches-page">
-      <header className="patches-header">
+      <header className="mates-header">
         <button
           type="button"
           className="icon-button"

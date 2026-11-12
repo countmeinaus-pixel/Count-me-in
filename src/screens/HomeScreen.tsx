@@ -53,6 +53,8 @@ const activityIcons = {
 } as const
 
 let cachedFeed: FeedActivity[] | null = null
+// Home shows the first few; the Activities page has the rest, with more filters.
+const homeActivityLimit = 6
 
 export function HomeScreen() {
   const navigate = useNavigate()
@@ -422,7 +424,7 @@ export function HomeScreen() {
                 </p>
               )}
               <div className="card-list">
-                {visible.map((activity) => (
+                {visible.slice(0, homeActivityLimit).map((activity) => (
                   <ActivityCard
                     key={activity.id}
                     activity={activity}
@@ -430,6 +432,9 @@ export function HomeScreen() {
                   />
                 ))}
               </div>
+              <Button variant="secondary" className="view-all-activities" onClick={() => navigate('/more/activities')}>
+                View all activities
+              </Button>
             </>
           )}
         </>

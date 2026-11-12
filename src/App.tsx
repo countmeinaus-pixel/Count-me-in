@@ -38,6 +38,7 @@ import { MoreScreen } from "./screens/MoreScreen"
 import { MySportsScreen } from "./screens/MySportsScreen"
 import { LanguageSettingsScreen } from "./screens/LanguageSettingsScreen"
 import { LocationSettingsScreen } from "./screens/LocationSettingsScreen"
+import { AllActivitiesScreen } from "./screens/AllActivitiesScreen"
 import { PrivacySettingsScreen } from "./screens/PrivacySettingsScreen"
 import { SportProfileScreen } from "./screens/SportProfileScreen"
 import { MatesScreen } from "./screens/MatesScreen"
@@ -237,6 +238,7 @@ const router = createBrowserRouter([
       { path: "/profile/patches", element: <PatchesScreen /> },
       { path: "/profile/records", element: <PersonalRecordsScreen /> },
       { path: "/more", element: <MoreScreen /> },
+      { path: "/more/activities", element: <AllActivitiesScreen /> },
       { path: "/more/crew", element: <MatesScreen view="crew" /> },
       { path: "/more/requests", element: <MatesScreen view="requests" /> },
       { path: "/more/friends", element: <Navigate to="/more/crew" replace /> },

@@ -5140,3 +5140,6 @@ h1 .skeleton { margin: 4px 0; }
   font-weight: 700;
 }
 .mate-distance { color: var(--text-secondary); font-size: 13px; }
+
+/* Home: button below the first activities, to the full Activities page. */
+.view-all-activities { width: 100%; margin-top: 12px; }

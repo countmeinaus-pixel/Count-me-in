@@ -39,7 +39,7 @@ export async function getActivitiesToReview(): Promise<ActivityToReview[]> {
     return {
       id: row.id,
       title: row.title,
-      suggestedSport: typeof details.suggested_sport === 'string' ? details.suggested_sport : 'Unknown sport',
+      suggestedSport: typeof details.suggested_sport === 'string' ? details.suggested_sport : row.title,
       startsAt: row.starts_at,
       meetingPoint: row.meeting_point,
       suburb: row.suburb,

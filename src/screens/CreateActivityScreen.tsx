@@ -357,8 +357,9 @@ export function CreateActivityScreen() {
   }
 
   function chooseSport(sport: SportOption) {
-    setIsSuggesting(false)
-    setSuggestedSport('')
+    // Open activity = a sport or activity that is not in the list: a moderator checks it first.
+    setIsSuggesting(sport.name === 'Open activity' && canSuggestSport)
+    if (sport.name !== selectedSport?.name) setSuggestedSport('')
     if (selectedSport && selectedSport.id !== sport.id) {
       const hadSportDetails = Object.values(sportDetails).some((value) => value.trim() !== '')
       setSportChangeNotice(
@@ -373,13 +374,6 @@ export function CreateActivityScreen() {
     setTitleEdited(false)
     setTitle(sport.name === 'Open activity' ? '' : getSuggestedTitle(sport.name, suburb))
     setDurationHours(sport.name === 'Gym' ? '1' : '2')
-  }
-
-  function startSuggesting() {
-    const openActivityOption = sports.find((sport) => sport.name === 'Open activity')
-    if (!openActivityOption) return
-    chooseSport(openActivityOption)
-    setIsSuggesting(true)
   }
 
   function updateSportDetail(key: string, value: string) {
@@ -543,7 +537,7 @@ export function CreateActivityScreen() {
 
       navigate(`/activity/${createdActivity.id}`, {
         state: isSuggesting
-          ? { statusMessage: `Waiting for review. A moderator checks new sports like ${suggestedSport.trim()} first. You get a notification when your activity is live.` }
+          ? { statusMessage: `Waiting for review. A moderator checks Open activities like ${suggestedSport.trim()} first. You get a notification when your activity is live.` }
           : locationSkipped && (address.trim() || pin) ? { statusMessage: locationNotSavedMessage } : undefined,
       })
     } catch (postError) {
@@ -663,27 +657,19 @@ export function CreateActivityScreen() {
               )
             })}
           </div>
-          {canSuggestSport && !isSuggesting && (
-            <button type="button" className="text-action wizard-suggest-link" onClick={startSuggesting}>
-              Can't find your sport? Suggest one
-            </button>
-          )}
           {isSuggesting && (
             <div className="wizard-suggest-box">
               <label className="field">
-                <span>Which sport?</span>
+                <span>Which sport or activity?</span>
                 <input
                   value={suggestedSport}
                   maxLength={40}
                   onChange={(event) => setSuggestedSport(event.target.value)}
-                  placeholder="For example, Wingfoiling"
+                  placeholder="For example, Running stairs or Wingfoiling"
                   autoFocus
                 />
               </label>
-              <p>Your activity is posted as an Open activity with this sport. A moderator checks new sports first, so it only shows to others once it is approved.</p>
-              <button type="button" className="text-action" onClick={() => { setIsSuggesting(false); setSuggestedSport('') }}>
-                Cancel
-              </button>
+              <p>Not in the list above? A moderator checks Open activities first, so yours shows to others once it is approved. Popular ones may become a sport in the list.</p>
             </div>
           )}
         </section>
@@ -959,7 +945,7 @@ export function CreateActivityScreen() {
                 <h3>Sport</h3>
                 <button type="button" onClick={() => goToStep(1)}>Edit</button>
               </div>
-              <p>{isSuggesting ? `${suggestedSport.trim()} (new sport, waiting for a moderator)` : selectedSport.name}</p>
+              <p>{isSuggesting ? `${suggestedSport.trim()} (Open activity, waiting for a moderator)` : selectedSport.name}</p>
             </div>
             <div className="wizard-review-content">
               <div className="wizard-review-heading">

@@ -843,7 +843,6 @@ export function ActivityDetailScreen() {
             name={hostName}
             photoUrl={hostPhotoUrl}
             size={48}
-            verified={savedDetails?.hostVerified !== false}
           />
           <div className="grow">
             <p className="eyebrow">Hosted by</p>

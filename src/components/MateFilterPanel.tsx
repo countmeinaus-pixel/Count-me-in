@@ -15,7 +15,6 @@ const availabilityOptions = ['Weekday mornings', 'Weekday evenings', 'Saturdays'
 const toggles: Array<{ key: 'verifiedOnly' | 'hostingSoon' | 'newMembers' | 'mySportsOnly' | 'withPhoto'; label: string; hint: string }> = [
   { key: 'mySportsOnly', label: 'Into my sports', hint: 'Shares at least one sport with you' },
   { key: 'hostingSoon', label: 'Hosting something soon', hint: 'Has an activity in the next 2 weeks' },
-  { key: 'verifiedOnly', label: 'Verified only', hint: 'Has the verified tick' },
   { key: 'newMembers', label: 'New members', hint: 'Joined in the last 30 days' },
   { key: 'withPhoto', label: 'With a profile photo', hint: 'Has added a photo' },
 ]

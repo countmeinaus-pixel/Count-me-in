@@ -49,7 +49,6 @@ export function ActivityCard({ activity, onClick }: { activity: ActivityCardData
                   key={`${name}-${index}`}
                   name={name}
                   photoUrl={activity.attendeePhotos?.[index]}
-                  verified={index === 0}
                   className="attendee-avatar"
                   label={name}
                 />
@@ -63,7 +62,6 @@ export function ActivityCard({ activity, onClick }: { activity: ActivityCardData
                   key={`${name}-${index}`}
                   name={name}
                   photoUrl={activity.attendeePhotos?.[index]}
-                  verified={index === 0}
                   className="attendee-avatar"
                   label={name}
                 />

@@ -2948,20 +2948,6 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 
 .more-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.more-verified-badge {
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  display: grid;
-  width: 20px;
-  height: 20px;
-  place-items: center;
-  border: 2px solid var(--surface-1);
-  border-radius: 50%;
-  background: var(--seafoam);
-  color: var(--on-seafoam);
-}
-.more-verified-badge svg { width: 13px; height: 13px; }
 .more-profile-main { display: grid; gap: 3px; }
 .more-profile-main strong { font: 700 22px/24px var(--font-display); }
 .more-profile-main small { color: var(--text-secondary); font-size: 14px; }

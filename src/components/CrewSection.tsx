@@ -1,4 +1,4 @@
-import { CalendarDays, Check, MapPin, ShieldCheck, Sparkles, UserPlus, Users } from 'lucide-react'
+import { CalendarDays, Check, MapPin, Sparkles, UserPlus, Users } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { InvitePanel } from './InvitePanel'
 import { sportVerbs, waterSportNames } from '../data/sports'
@@ -141,7 +141,6 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
                     <span className="friend-tile-info">
                       <strong>
                         {suggestion.member.name}, {suggestion.member.age}
-                        {suggestion.member.verified && <ShieldCheck aria-label="Verified" />}
                       </strong>
                       <small className={suggestion.shared.length ? 'has-plan' : ''}>{reason}</small>
                     </span>
@@ -188,7 +187,8 @@ export function TopMatchCard({
     reasons.push({ key: 'hosting', icon: <CalendarDays aria-hidden="true" />, text: `Hosting ${day}${spotsLeft > 0 ? `, ${spotsLeft} ${spotsLeft === 1 ? 'spot' : 'spots'} left` : ''}` })
   }
   if (nearby) reasons.push({ key: 'nearby', icon: <MapPin aria-hidden="true" />, text: `He's also in ${member.suburb}` })
-  if (member.verified) reasons.push({ key: 'verified', icon: <ShieldCheck aria-hidden="true" />, text: 'Verified member' })
+  // Every member is verified, so that is no reason to show; their track record is.
+  if (member.stats.meetups > 0) reasons.push({ key: 'meetups', icon: <Users aria-hidden="true" />, text: `${member.stats.meetups} ${member.stats.meetups === 1 ? 'meetup' : 'meetups'} with the crew` })
   reasons.push({ key: 'new', icon: <Users aria-hidden="true" />, text: 'New around Adelaide' })
   reasons.splice(2)
 
@@ -202,7 +202,6 @@ export function TopMatchCard({
         <span className="crew-top-avatar"><Avatar name={member.name} photoUrl={member.photoUrl} size={56} /></span>
         <h4>
           {member.name}, {member.age}
-          {member.verified && <ShieldCheck aria-label="Verified" />}
         </h4>
         <p className="crew-top-suburb"><MapPin aria-hidden="true" />{member.suburb}</p>
         <ul className="crew-top-reasons">

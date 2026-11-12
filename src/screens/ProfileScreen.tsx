@@ -4,8 +4,7 @@ import {
   MapPin,
   Pencil,
   Settings2,
-  ShieldCheck,
-} from "lucide-react"
+  } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
@@ -570,12 +569,6 @@ export function ProfileScreen() {
           <MapPin />
           {profile.suburb}
         </p>
-        {profile.verified && (
-          <span className="verified">
-            <ShieldCheck />
-            Verified member
-          </span>
-        )}
         {!isCurrentUser && profileId && (
           <FriendButton profileId={profileId} name={profile.name} />
         )}

@@ -1,4 +1,4 @@
-import { MapPin, ShieldCheck } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import type { CommunityMember } from '../data/mockData'
 import { waterSportNames } from '../data/sports'
 import { SportIcon } from './SportIcon'
@@ -32,7 +32,6 @@ export function MateCard({
         <span className="mate-card-identity">
           <span className="mate-card-name">
             {member.name}, {member.age}
-            {member.verified && <ShieldCheck aria-label="Verified" />}
           </span>
           <span className="mate-card-location"><MapPin aria-hidden="true" />{member.suburb}</span>
         </span>

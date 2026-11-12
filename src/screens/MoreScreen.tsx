@@ -1,4 +1,4 @@
-import { ChevronRight, ShieldCheck, X } from "lucide-react"
+import { ChevronRight, X } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { currentUser } from "../data/mockData"
@@ -274,11 +274,6 @@ export function MoreScreen() {
             <img src={profile.photoUrl} alt="" />
           ) : (
             <span>{profile.name[0]?.toUpperCase() ?? "?"}</span>
-          )}
-          {!isProfileLoading && profile.verified && (
-            <span className="more-verified-badge">
-              <ShieldCheck aria-label="Verified member" />
-            </span>
           )}
         </span>
         <span className="more-profile-main">

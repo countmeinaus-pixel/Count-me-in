@@ -78,7 +78,7 @@ export function AuthScreen() {
         password,
         // The confirmation link brings you back to the address you signed up on
         // (must be in Supabase > Authentication > URL Configuration > Redirect URLs).
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: `${window.location.origin}/` },
       })
 
       setIsBusy(false)

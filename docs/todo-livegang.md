@@ -9,10 +9,8 @@ Werk van boven naar beneden. Vink af met `[x]` als iets klaar is.
 
 ## 1. Blokkades (eerst)
 
-- [ ] 🧑 **Domeinnaam kiezen en kopen** (bijv. `countmein.com.au`, ca. AUD 15–30 per jaar). Enige kostenpost. Nodig voor e-mail en een nette link.
-- [ ] 🤝 **Eigen mailprovider (SMTP) instellen.** De ingebouwde mail van Supabase stuurt alleen naar je eigen team en maar een paar per uur, dus nieuwe gebruikers krijgen nu geen inlogcode.
-  - Opties (gratis): Resend (3000 mails per maand) of Brevo (300 per dag).
-  - Claude geeft stap voor stap de instellingen voor Supabase en de domeinnaam.
+- [x] 🤝 **Eigen mailprovider (SMTP) instellen** (13 nov). Gratis via Gmail (`count.me.in.aus@gmail.com`, App password), max. ca. 500 mails per dag. Supabase: custom SMTP aan, 100 mails per uur, Site URL en Redirect URLs op `count-me-in-nine.vercel.app`.
+  - [ ] 🧑 Testen: aanmelden met een nieuw e-mailadres, mail komt aan, link brengt je terug naar de app.
 - [ ] 🤖 **Account verwijderen.** Knop in More > Privacy and safety. Verwijdert profiel, foto's, PR's, berichten en aanmeldingen, met een bevestigingsstap.
 - [ ] 🤖 **Privacy policy** (eerste versie): wat we bewaren (naam, foto, geboortedatum, suburb, locatie bij delen), waarom, hoe lang, en hoe je het laat verwijderen.
 - [ ] 🤖 **Terms of use** (eerste versie).
@@ -43,7 +41,6 @@ Werk van boven naar beneden. Vink af met `[x]` als iets klaar is.
 
 ## 5. Live
 
-- [ ] 🤝 **Domeinnaam koppelen aan Vercel** (Claude geeft de stappen).
 - [ ] 🤖 **Laatste controle**: teksten, links, deelafbeelding, app-icoon, installeren op het beginscherm (iPhone en Android).
 - [ ] 🧑 **Live!** Delen in je eigen netwerk en lokale groepen.
 
@@ -51,5 +48,6 @@ Werk van boven naar beneden. Vink af met `[x]` als iets klaar is.
 
 ## Later (na de start)
 
+- [ ] 🧑 **Eigen domeinnaam** (bijv. `countmein.com.au`, ca. AUD 15–30 per jaar), daarna mail via Resend/Brevo vanaf dat domein en de domeinnaam koppelen aan Vercel. Pas nodig als de app groeit of Gmail te klein wordt.
 - [ ] 🤖 Herinneringen een dag en een uur voor een activiteit (pushmelding).
 - [ ] 🤝 Echte verificatie (telefoon of selfie). Kost geld per controle, dus pas als de app groeit. Claude zet eerst de opties en kosten op een rij.

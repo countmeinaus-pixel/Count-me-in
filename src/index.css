@@ -5214,11 +5214,17 @@ h1 .skeleton { margin: 4px 0; }
 .wizard-suggest-box .text-action { justify-self: start; }
 
 /* Moderation: activities with a new sport, waiting for review */
-.review-activity-card { display: grid; gap: 6px; }
-.review-activity-card h2 { font: 700 20px/1.2 var(--font-display); }
+.review-activity-list { display: grid; gap: 12px; }
+/* Desktop: 3 a row, equal height, buttons lined up at the bottom. */
+@container app (min-width: 900px) {
+  .review-activity-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.review-activity-card { display: flex; flex-direction: column; gap: 6px; height: 100%; }
+.review-activity-card .review-activity-actions { margin-top: auto; padding-top: 8px; }
+.review-activity-card h2 { font: 700 18px/1.2 var(--font-display); }
 .review-activity-card p { color: var(--text-secondary); font-size: 14px; }
 .review-activity-sport {
-  justify-self: start;
+  align-self: flex-start;
   padding: 4px 10px;
   border-radius: 999px;
   background: var(--seafoam-subtle);
@@ -5227,8 +5233,8 @@ h1 .skeleton { margin: 4px 0; }
   font-weight: 600;
 }
 .review-activity-notes { color: var(--text-primary); }
-.review-activity-card .text-action { justify-self: start; }
-.review-activity-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.review-activity-card .text-action { align-self: flex-start; font-size: 14px; padding-inline: 0; }
+.review-activity-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 /* Team (admin): moderators list and search */
 .team-list { display: grid; gap: 8px; }

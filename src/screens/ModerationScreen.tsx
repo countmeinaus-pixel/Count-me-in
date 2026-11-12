@@ -247,7 +247,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
               ) : activitiesToReview === null ? (
                 <p className="more-settings-note">Loading activities…</p>
               ) : activitiesToReview.length ? (
-                <div className="moderation-report-list">
+                <div className="review-activity-list">
                   {activitiesToReview.map((item) => (
                     <article className="moderation-report-card review-activity-card" key={item.id}>
                       <span className="review-activity-sport">New sport: {item.suggestedSport}</span>

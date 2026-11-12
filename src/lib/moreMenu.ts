@@ -15,6 +15,7 @@ import {
   Trophy,
   UserPlus,
   UserRound,
+  UsersRound,
   UserRoundPen,
   type LucideIcon,
 } from 'lucide-react'
@@ -79,6 +80,13 @@ export const moderationGroup: MenuGroup = {
     { label: 'PRs to check', href: '/more/moderation/records', icon: Trophy },
     { label: 'Activities to review', href: '/more/moderation/activities', icon: ClipboardCheck },
   ],
+}
+
+// Admins also see Team (making members moderator).
+export function getModerationGroup(isAdmin: boolean): MenuGroup {
+  return isAdmin
+    ? { ...moderationGroup, items: [...moderationGroup.items, { label: 'Team', href: '/more/moderation/team', icon: UsersRound }] }
+    : moderationGroup
 }
 
 // Side nav: "Other" sits inside Settings to keep the list short.

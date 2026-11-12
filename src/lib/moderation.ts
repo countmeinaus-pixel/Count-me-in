@@ -189,3 +189,59 @@ export async function updateModerationReportStatus(
     .eq("id", reportId)
   if (error) throw error
 }
+
+// Team (admin only): who is moderator or admin, and changing a member's role.
+export type TeamMember = { id: string; name: string; photoUrl: string | null; role: ModerationRole }
+
+export async function getModerationTeam(): Promise<TeamMember[]> {
+  const client = requireSupabase()
+  const { data: roles, error } = await client
+    .from("user_roles")
+    .select("user_id, role")
+    .in("role", ["moderator", "admin"])
+  if (error) throw error
+  const ids = (roles ?? []).map((row) => row.user_id as string)
+  if (ids.length === 0) return []
+  const { data: profiles, error: profileError } = await client
+    .from("profiles")
+    .select("id, first_name, photo_url")
+    .in("id", ids)
+  if (profileError) throw profileError
+  const byId = new Map((profiles ?? []).map((profile) => [profile.id as string, profile]))
+  return (roles ?? [])
+    .map((row) => {
+      const profile = byId.get(row.user_id as string)
+      return {
+        id: row.user_id as string,
+        name: (profile?.first_name as string) ?? "Member",
+        photoUrl: (profile?.photo_url as string | null) ?? null,
+        role: row.role as ModerationRole,
+      }
+    })
+    .sort((a, b) => (a.role === b.role ? a.name.localeCompare(b.name) : a.role === "admin" ? -1 : 1))
+}
+
+export async function searchMembersByName(query: string): Promise<Array<{ id: string; name: string; photoUrl: string | null; suburb: string }>> {
+  const client = requireSupabase()
+  const term = query.trim()
+  if (term.length < 2) return []
+  const { data, error } = await client
+    .from("profiles")
+    .select("id, first_name, photo_url, suburb")
+    .ilike("first_name", `%${term.replace(/[%_]/g, "")}%`)
+    .order("first_name")
+    .limit(10)
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    name: (row.first_name as string) ?? "Member",
+    photoUrl: (row.photo_url as string | null) ?? null,
+    suburb: (row.suburb as string) ?? "",
+  }))
+}
+
+export async function setMemberRole(userId: string, role: "user" | "moderator") {
+  const client = requireSupabase()
+  const { error } = await client.rpc("set_member_role", { target_user_id: userId, new_role: role })
+  if (error) throw error
+}

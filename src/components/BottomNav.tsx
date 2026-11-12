@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { getCurrentModerationRole } from '../lib/moderation'
 import { getMoreOrigin, requestCloseMoreMenu } from '../lib/moreNavigation'
-import { logOut, moderationGroup, sideNavGroups, sideNavMainItems, type MenuItem } from '../lib/moreMenu'
+import { getModerationGroup, logOut, sideNavGroups, sideNavMainItems, type MenuItem } from '../lib/moreMenu'
 import { useMediaQuery } from '../lib/useMediaQuery'
 import { useViewerProfile } from '../lib/viewerProfile'
 
@@ -46,7 +46,8 @@ export function BottomNav({
   const profileError = logOutError || (viewer.status === 'ready' ? viewer.error : '')
   const isSideNav = useMediaQuery('(min-width: 980px)')
   const [isStaff, setIsStaff] = useState(false)
-  const groups = isStaff ? [...sideNavGroups, moderationGroup] : sideNavGroups
+  const [isAdmin, setIsAdmin] = useState(false)
+  const groups = isStaff ? [...sideNavGroups, getModerationGroup(isAdmin)] : sideNavGroups
   // Side nav groups: the one holding the current page starts open.
   const [openGroups, setOpenGroups] = useState<string[]>(() =>
     groups.filter((group) => group.items.some((item) => item.href === location.pathname)).map((group) => group.title),
@@ -56,7 +57,10 @@ export function BottomNav({
     let active = true
     void getCurrentModerationRole()
       .then((role) => {
-        if (active) setIsStaff(role === 'admin' || role === 'moderator')
+        if (active) {
+          setIsStaff(role === 'admin' || role === 'moderator')
+          setIsAdmin(role === 'admin')
+        }
       })
       .catch(() => undefined)
     return () => {

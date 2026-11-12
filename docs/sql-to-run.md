@@ -17,6 +17,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 9 | `supabase/migrations/20261112090000_profile_shared_location.sql` | Leden kunnen hun afgeronde locatie (~1 km) delen voor afstanden in km |
 | 10 | `supabase/migrations/20261112120000_add_freediving.sql` | Freediving als nieuwe sport (kiezen bij Edit my sports en Create activity) |
 | 11 | `supabase/migrations/20261112130000_sport_suggestions.sql` | Leden kunnen een nieuwe sport voorstellen; die activiteit wacht op een moderator. Alleen admins kunnen nog sporten toevoegen |
+| 12 | `supabase/migrations/20261112140000_manage_moderators.sql` | Admin kan leden moderator maken en weer verwijderen (More > Moderation > Team) |
 
 ## Zo doe je het (per bestand)
 
@@ -39,3 +40,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 9:** tik op Home linksboven op de locatie, vink **Also share my approximate location** aan en tik op **Use my current location**. Je krijgt geen foutmelding.
 - **Na 10:** ga naar **More** > **My sports** en tik op **Edit**. In de lijst staat **Freediving** met een schelp-icoon.
 - **Na 11:** ga naar **Create activity**. Onder de sporten staat **Can't find your sport? Suggest one**.
+- **Na 12:** ga als admin naar **Moderation** > **Team**, zoek een lid en klik op **Make moderator**. Je krijgt geen foutmelding.

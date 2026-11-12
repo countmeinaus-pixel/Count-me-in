@@ -10,7 +10,7 @@ import {
 import { getStoredLanguage } from "../lib/i18n"
 import { Skeleton } from "../components/Skeleton"
 import { getViewerProfileState } from "../lib/viewerProfile"
-import { logOut, menuGroups, moderationGroup, type MenuItem } from "../lib/moreMenu"
+import { getModerationGroup, logOut, menuGroups, type MenuItem } from "../lib/moreMenu"
 import { closeMoreMenuEvent, getMoreOrigin, moreMenuSlideMs } from "../lib/moreNavigation"
 import { getCurrentModerationRole } from "../lib/moderation"
 import { supabase } from "../lib/supabase"
@@ -54,6 +54,7 @@ export function MoreScreen() {
   const [checkinVersion, setCheckinVersion] = useState(0)
   const [language, setLanguage] = useState(getStoredLanguage())
   const [isStaff, setIsStaff] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [statusMessage, setStatusMessage] = useState(
     typeof location.state?.statusMessage === "string"
       ? location.state.statusMessage
@@ -151,7 +152,10 @@ export function MoreScreen() {
     let active = true
     void getCurrentModerationRole()
       .then((role) => {
-        if (active) setIsStaff(role === "admin" || role === "moderator")
+        if (active) {
+          setIsStaff(role === "admin" || role === "moderator")
+          setIsAdmin(role === "admin")
+        }
       })
       .catch((error: unknown) => {
         if (active)
@@ -313,7 +317,7 @@ export function MoreScreen() {
         </p>
       )}
 
-      {(isStaff ? [...menuGroups, moderationGroup] : menuGroups).map((group) => (
+      {(isStaff ? [...menuGroups, getModerationGroup(isAdmin)] : menuGroups).map((group) => (
         <section
           className="more-menu-group"
           key={group.title}

@@ -69,6 +69,7 @@ const titles = {
   activity_approved: 'Activity approved',
   activity_rejected: 'Activity not approved',
   sport_suggested: 'New sport suggested',
+  role_changed: 'Your role changed',
 } as const
 
 function formatRelativeTime(value: string) {

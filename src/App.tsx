@@ -39,6 +39,7 @@ import { MySportsScreen } from "./screens/MySportsScreen"
 import { LanguageSettingsScreen } from "./screens/LanguageSettingsScreen"
 import { LocationSettingsScreen } from "./screens/LocationSettingsScreen"
 import { AllActivitiesScreen } from "./screens/AllActivitiesScreen"
+import { TeamScreen } from "./screens/TeamScreen"
 import { PrivacySettingsScreen } from "./screens/PrivacySettingsScreen"
 import { SportProfileScreen } from "./screens/SportProfileScreen"
 import { MatesScreen } from "./screens/MatesScreen"
@@ -252,6 +253,7 @@ const router = createBrowserRouter([
       { path: "/more/moderation", element: <ModerationScreen /> },
       { path: "/more/moderation/records", element: <ModerationScreen tab="records" /> },
       { path: "/more/moderation/activities", element: <ModerationScreen tab="activities" /> },
+      { path: "/more/moderation/team", element: <TeamScreen /> },
     ],
   },
 ])

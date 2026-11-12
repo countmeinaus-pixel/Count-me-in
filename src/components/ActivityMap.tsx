@@ -1,10 +1,13 @@
-import { Bike, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, Mountain, Waves } from 'lucide-react'
+import { Bike, ChevronLeft, ChevronRight, Dumbbell, Fish, Footprints, MapPin, Mountain, Waves } from 'lucide-react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { createMapStyle } from '../lib/mapStyle'
 import type { ActivityCardData } from './ActivityCard'
+import { Avatar } from './Avatar'
+import { SportIcon } from './SportIcon'
+import { formatActivityDate, getActivitySpotsLabel } from '../data/mockData'
 
 const adelaide: [number, number] = [138.6007, -34.9285]
 // Pins closer than this on screen are grouped into one cluster.
@@ -192,13 +195,28 @@ export default function ActivityMap({ activities, onOpenActivity }: ActivityMapP
       <div ref={containerRef} className="activity-map-canvas" aria-label="Map of activities around Adelaide" />
       {selected && selection && (
         <div className="activity-map-card">
+          {/* Same content as the activity card, side by side: photo left, details right. */}
           <button type="button" className="activity-map-card-open" onClick={() => onOpenActivity(selected.id)}>
-            <span className="map-callout-header">
-              <span>{selected.sport}</span>
-              <time>{selected.startsAt.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}</time>
+            <span className="map-card-media">
+              <img src={selected.hero} alt="" />
+              <span className="map-card-pill map-card-sport"><SportIcon sport={selected.sport} />{selected.sport}</span>
+              <time className="map-card-pill map-card-time">
+                {formatActivityDate(selected.startsAt, { weekday: 'short', day: 'numeric', month: 'short' })}
+              </time>
             </span>
-            <strong>{selected.title}</strong>
-            <span className="activity-map-card-place">{selected.place}, {selected.suburb}</span>
+            <span className="map-card-body">
+              <strong>{selected.title}</strong>
+              {selected.facts && <span className="map-card-facts">{selected.facts}</span>}
+              <span className="map-card-place"><MapPin aria-hidden="true" /><span className="map-card-place-text">{selected.place}{selected.suburb && selected.place !== selected.suburb ? `, ${selected.suburb}` : ''}</span></span>
+              <span className="map-card-bottom">
+                <span className="map-card-host">
+                  <Avatar name={selected.host} photoUrl={selected.attendeePhotos?.[0]} size={24} />
+                  {selected.host}
+                </span>
+                <span className="level-pill">{selected.level}</span>
+                <span className="map-card-spots">{getActivitySpotsLabel(selected)}</span>
+              </span>
+            </span>
           </button>
           {selectedGroup.length > 1 && (
             <div className="activity-map-card-pager">

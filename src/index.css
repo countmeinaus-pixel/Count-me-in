@@ -569,16 +569,54 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .activity-map-card-open {
   display: grid;
-  gap: 2px;
+  grid-template-columns: 136px minmax(0, 1fr);
+  align-items: stretch;
   width: 100%;
-  padding: 12px 14px;
+  padding: 0;
   border: 0;
   background: transparent;
+  color: var(--text-primary);
   text-align: left;
   cursor: pointer;
 }
-.activity-map-card .map-callout-header { margin-bottom: 4px; }
-.activity-map-card strong { font-size: 17px; font-weight: 700; }
+/* Photo on the left, with the sport at the top and day and time at the bottom. */
+.map-card-media { position: relative; display: block; align-self: stretch; min-height: 132px; background: var(--surface-2); }
+.map-card-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.map-card-pill {
+  position: absolute;
+  left: 8px;
+  max-width: calc(100% - 16px);
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--scrim);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.map-card-sport {
+  top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-primary);
+  font: 500 11px var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.map-card-sport svg { flex: 0 0 auto; width: 14px; height: 14px; }
+.map-card-time { bottom: 8px; color: var(--seafoam); }
+.map-card-body { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 12px 14px; }
+.map-card-body strong { font: 700 18px/1.15 var(--font-display); }
+.map-card-facts { color: var(--text-primary); font-size: 13px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.map-card-place { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 13px; min-width: 0; white-space: nowrap; }
+.map-card-place-text { overflow: hidden; text-overflow: ellipsis; }
+.map-card-place svg { flex: 0 0 auto; width: 14px; height: 14px; color: var(--seafoam); }
+.map-card-bottom { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 6px; }
+.map-card-host { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; color: var(--text-secondary); font-size: 13px; }
+.map-card-spots { color: var(--text-muted); font-size: 12px; }
 .activity-map-card-pager {
   display: flex;
   align-items: center;
@@ -617,7 +655,6 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .activity-cluster.selected,
 .activity-cluster:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--text-primary); }
-.activity-map-card-place { color: var(--text-secondary); font-size: 14px; }
 .activity-map-note {
   position: absolute;
   top: 12px;

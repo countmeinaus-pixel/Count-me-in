@@ -1,6 +1,10 @@
-import { ChevronDown, MapPin } from 'lucide-react'
-import { useState } from 'react'
-import { parseCoordinates, parseMapPin } from '../lib/location'
+import { ChevronDown, LocateFixed, Map as MapIcon, MapPin } from 'lucide-react'
+import { lazy, Suspense, useState } from 'react'
+import { suburbCoordinates } from '../lib/distance'
+import { formatCoordinates, getPrecisePosition, parseCoordinates, parseMapPin } from '../lib/location'
+
+// The map is only loaded when someone opens the picker.
+const MapPinPicker = lazy(() => import('./MapPinPicker'))
 
 type LocationFieldsProps = {
   meetingPoint: string
@@ -24,6 +28,25 @@ export function LocationFields({
   onCoordinatesChange,
 }: LocationFieldsProps) {
   const [helpOpen, setHelpOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [locating, setLocating] = useState(false)
+  const [pinNotice, setPinNotice] = useState('')
+  const [pinError, setPinError] = useState('')
+
+  async function useCurrentLocation() {
+    setLocating(true)
+    setPinError('')
+    setPinNotice('')
+    try {
+      const position = await getPrecisePosition()
+      onCoordinatesChange(formatCoordinates(position.latitude, position.longitude))
+      setPinNotice(`Pin set to where you are now (accurate to about ${Math.max(1, Math.round(position.accuracy))} m).`)
+    } catch (error) {
+      setPinError(error instanceof Error ? error.message : 'Your location could not be found.')
+    } finally {
+      setLocating(false)
+    }
+  }
   const coordinatesUnreadable = coordinates.trim() !== '' && !parseCoordinates(coordinates)
   const coordinatesInvalid = coordinates.trim() !== '' && !parseMapPin(coordinates)
 
@@ -82,6 +105,31 @@ export function LocationFields({
             : 'Puts your activity on the map. Handy for spots without an address, like a beach or trailhead.'}
         </small>
       </label>
+
+      <div className="map-pin-actions">
+        <button type="button" className="button button-secondary button-sm" onClick={() => void useCurrentLocation()} disabled={locating}>
+          <LocateFixed aria-hidden="true" /> {locating ? 'Finding you…' : 'Use my current location'}
+        </button>
+        <button type="button" className="button button-secondary button-sm" onClick={() => { setPinError(''); setPinNotice(''); setPickerOpen(true) }}>
+          <MapIcon aria-hidden="true" /> Pick on map
+        </button>
+      </div>
+      {pinNotice && <p className="field-helper" role="status">{pinNotice}</p>}
+      {pinError && <p className="field-error" role="alert">{pinError}</p>}
+      {pickerOpen && (
+        <Suspense fallback={null}>
+          <MapPinPicker
+            initial={parseCoordinates(coordinates)}
+            start={suburbCoordinates(suburb)}
+            onPick={(point) => {
+              onCoordinatesChange(formatCoordinates(point.latitude, point.longitude))
+              setPinNotice('Pin set from the map.')
+              setPickerOpen(false)
+            }}
+            onClose={() => setPickerOpen(false)}
+          />
+        </Suspense>
+      )}
 
       <button
         type="button"

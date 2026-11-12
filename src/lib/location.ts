@@ -30,9 +30,34 @@ export function parseMapPin(value: string): Coordinates | null {
   return point && isInSouthAustralia(point) ? point : null
 }
 
+// Full precision: activity pins are never rounded.
 export function formatCoordinates(latitude: number | null, longitude: number | null) {
   if (latitude === null || longitude === null) return ''
-  return `${Number(latitude.toFixed(6))}, ${Number(longitude.toFixed(6))}`
+  return `${latitude}, ${longitude}`
+}
+
+// The device's exact position for a map pin (GPS when available), at full precision.
+// Free: the browser or phone does this itself, after the member allows it.
+export function getPrecisePosition(): Promise<Coordinates & { accuracy: number }> {
+  return new Promise((resolve, reject) => {
+    if (!('geolocation' in navigator)) {
+      reject(new Error('This device cannot share its location.'))
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      }),
+      (error) => reject(new Error(
+        error.code === error.PERMISSION_DENIED
+          ? 'Location is turned off for this app. Allow it in your browser or phone settings, or pick the spot on the map.'
+          : 'Your location could not be found. Try again or pick the spot on the map.',
+      )),
+      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 },
+    )
+  })
 }
 
 // Plain Google Maps link: free, no API key needed.

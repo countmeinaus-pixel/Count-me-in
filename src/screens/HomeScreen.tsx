@@ -401,7 +401,7 @@ export function HomeScreen() {
         <>
           <div className="section-heading">
             <h2>This week</h2>
-            {isFeedLoading ? <Skeleton width={70} height={12} /> : <span>{visible.length} callouts</span>}
+            {isFeedLoading ? <Skeleton width={70} height={12} /> : <span>{visible.length} {visible.length === 1 ? 'callout' : 'callouts'}</span>}
           </div>
 
           {isFeedLoading ? (
@@ -569,11 +569,11 @@ export function HomeScreen() {
             <div className="selected-day-panel">
               <div className="selected-day-header">
                 <h3>{selectedDateLabel}</h3>
-                <span>{selectedDayActivities.length} callouts</span>
+                <span>{selectedDayActivities.length} {selectedDayActivities.length === 1 ? 'callout' : 'callouts'}</span>
               </div>
 
               {selectedDayActivities.length > 0 ? (
-                <div className="selected-day-list">
+                <div className="card-list selected-day-list">
                   {selectedDayActivities.map((activity) => (
                     <ActivityCard
                       key={activity.id}

@@ -911,10 +911,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--seafoam);
   font-size: 12px;
 }
-.selected-day-list {
-  display: grid;
-  gap: 12px;
-}
+/* Calendar: the cards of the chosen day use the same grid as the List view (.card-list). */
 
 .activity-card {
   --card-pad: 16px;

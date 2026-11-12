@@ -3730,6 +3730,11 @@ h3 { font: 700 21px/24px var(--font-display); }
   border: 2px solid var(--seafoam);
   background: var(--seafoam-subtle);
 }
+/* Open activity: last, with a dashed outline so it reads as "not one of the sports". */
+.wizard-sport-tile.is-open-activity { border-style: dashed; border-color: var(--text-muted); background: transparent; }
+.wizard-sport-tile.is-open-activity > svg { color: var(--text-secondary); }
+.wizard-sport-tile.is-open-activity.selected { border: 2px dashed var(--seafoam); background: var(--seafoam-subtle); }
+.wizard-sport-tile.is-open-activity.selected > svg { color: var(--seafoam); }
 .wizard-sport-check {
   position: absolute;
   top: 6px;

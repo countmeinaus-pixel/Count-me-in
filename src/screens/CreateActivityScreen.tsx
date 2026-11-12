@@ -271,7 +271,9 @@ export function CreateActivityScreen() {
           icon: sport.icon,
           profileSkill: skillBySport.get(sport.id) ?? null,
         }))
+        // Your profile sports first, then A to Z; Open activity is always last.
         .sort((left, right) =>
+          Number(left.name === 'Open activity') - Number(right.name === 'Open activity') ||
           Number(right.profileSkill !== null) - Number(left.profileSkill !== null) ||
           left.name.localeCompare(right.name),
         )
@@ -649,14 +651,14 @@ export function CreateActivityScreen() {
                 <button
                   key={sport.id}
                   type="button"
-                  className={`wizard-sport-tile ${isSelected ? 'selected' : ''}`}
+                  className={`wizard-sport-tile ${isSelected ? 'selected' : ''} ${sport.name === 'Open activity' ? 'is-open-activity' : ''}`}
                   onClick={() => chooseSport(sport)}
                   aria-pressed={isSelected}
                 >
                   {isSelected && <span className="wizard-sport-check"><Check /></span>}
                   <Icon />
                   <strong>{sport.name}</strong>
-                  <small>{sport.profileSkill ? `Your level: ${sport.profileSkill}` : 'Available to choose'}</small>
+                  <small>{sport.name === 'Open activity' ? 'Anything else' : sport.profileSkill ? `Your level: ${sport.profileSkill}` : 'Available to choose'}</small>
                 </button>
               )
             })}

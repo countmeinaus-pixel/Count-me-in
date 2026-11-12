@@ -16,6 +16,7 @@ import { hasDemoJoinRequest } from '../lib/demoParticipation'
 import { getLocationPreference, type LocationPreference } from '../lib/distance'
 import { useBackToMore } from '../lib/moreNavigation'
 import { useViewerProfile } from '../lib/viewerProfile'
+import { useSportCatalog } from '../lib/useSportCatalog'
 
 // Kept while the app is open, so coming back is instant (then refreshed).
 let cachedFeed: FeedActivity[] | null = null
@@ -59,7 +60,9 @@ export function AllActivitiesScreen() {
     ...feed.map(({ viewerJoinStatus, ...activity }) => ({ ...activity, joinStatus: viewerJoinStatus ?? undefined })),
     ...demoActivities.map((activity) => ({ ...activity, joinStatus: hasDemoJoinRequest(activity.id) ? 'pending' as const : undefined })),
   ], [feed])
-  const sports = useMemo(() => [...new Set(allActivities.map((activity) => activity.sport))].sort(), [allActivities])
+  // Every sport from Edit my sports, plus any sport only used on an activity.
+  const sportCatalog = useSportCatalog()
+  const sports = useMemo(() => [...new Set([...sportCatalog, ...allActivities.map((activity) => activity.sport)])].sort(), [sportCatalog, allActivities])
   const levels = useMemo(() => [...new Set(allActivities.map((activity) => activity.level).filter(Boolean))].sort(), [allActivities])
 
   const context = { viewerSports, query, now }

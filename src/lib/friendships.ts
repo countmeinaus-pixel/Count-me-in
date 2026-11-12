@@ -127,17 +127,25 @@ export const respondToFriendRequest = (requestId: string, accept: boolean) =>
 export const removeFriend = (profileId: string) => rpc('remove_friend', { target_profile_id: profileId })
 
 // Your friendships, refreshed whenever a request is sent or answered.
+// Last result, kept while the app is open so returning to Friends shows it
+// straight away (then refreshes). Cleared when someone signs in or out.
+let cachedFriendships: { data: MyFriendships | null } | null = null
+supabase?.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') cachedFriendships = null
+})
+
 export function useMyFriendships() {
-  const [state, setState] = useState<{ data: MyFriendships | null; loaded: boolean; error: string }>({
-    data: null,
-    loaded: false,
+  const [state, setState] = useState<{ data: MyFriendships | null; loaded: boolean; error: string }>(() => ({
+    data: cachedFriendships?.data ?? null,
+    loaded: cachedFriendships !== null,
     error: '',
-  })
+  }))
   useEffect(() => {
     let active = true
     function load() {
       getMyFriendships()
         .then((data) => {
+          cachedFriendships = { data }
           if (active) setState({ data, loaded: true, error: '' })
         })
         .catch((error: unknown) => {

@@ -59,3 +59,19 @@ export function ProfileSkeleton() {
     </div>
   )
 }
+
+// Same shape as a MateCard: avatar, name, suburb, sport chips and stats.
+export function MateCardSkeleton() {
+  return (
+    <div className="mate-card skeleton-card" aria-hidden="true">
+      <Skeleton width={48} height={48} radius="50%" />
+      <Skeleton width="70%" height={18} />
+      <Skeleton width="50%" height={12} />
+      <div className="skeleton-row tight">
+        <Skeleton width={64} height={22} radius={999} />
+        <Skeleton width={56} height={22} radius={999} />
+      </div>
+      <Skeleton width="100%" height={44} radius={10} />
+    </div>
+  )
+}

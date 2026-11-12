@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronRight, Search, SlidersHorizontal, UserPlus } from "lu
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { MateCard } from "../components/MateCard"
+import { MateCardSkeleton, Skeleton } from "../components/Skeleton"
 import { getProfilePath } from "../lib/profile"
 import { getBlockedUsers } from "../lib/localPreferences"
 import { getBlockedProfiles } from "../lib/moderation"
@@ -38,7 +39,7 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [blockedUsersError, setBlockedUsersError] = useState("")
   // Signed in: real friends and requests. Signed out: the demo friends.
-  const { data: friendships, error: friendshipsError } = useMyFriendships()
+  const { data: friendships, loaded: friendshipsLoaded, error: friendshipsError } = useMyFriendships()
   const [respondingTo, setRespondingTo] = useState<string | null>(null)
   const [requestError, setRequestError] = useState("")
   const viewer = useViewerProfile()
@@ -186,7 +187,13 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
         </button>
       )}
 
-      {isRequests && incoming.length === 0 && !friendshipsError && (
+      {isRequests && !friendshipsLoaded && (
+        <div className="friend-request-cards" role="status" aria-label="Loading friend requests">
+          {[0, 1].map((item) => <Skeleton key={item} width="100%" height={420} radius={20} />)}
+        </div>
+      )}
+
+      {isRequests && friendshipsLoaded && incoming.length === 0 && !friendshipsError && (
         <div className="mate-empty-state">
           <h2>No friend requests</h2>
           <p>When someone taps Add friend on your profile, his request shows up here.</p>
@@ -231,9 +238,13 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
       <section aria-labelledby="your-friends-heading">
         <div className="mates-results-heading">
           <h2 id="your-friends-heading">Your friends</h2>
-          <span>{friends.length} friends</span>
+          {friendshipsLoaded ? <span>{friends.length} friends</span> : <Skeleton width={60} height={12} />}
         </div>
-        {friends.length > 0 ? (
+        {!friendshipsLoaded ? (
+          <div className="mate-grid" role="status" aria-label="Loading your friends">
+            {[0, 1, 2, 3].map((item) => <MateCardSkeleton key={item} />)}
+          </div>
+        ) : friends.length > 0 ? (
           <div className="mate-grid">
             {friends.map((member) => (
               <MateCard

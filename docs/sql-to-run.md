@@ -46,3 +46,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 12:** ga als admin naar **Moderation** > **Team**, zoek een lid en klik op **Make moderator**. Je krijgt geen foutmelding.
 - **Na 13:** maak een Open activity. Je ziet "Waiting for review", en hij staat bij **Moderation** > **Review activities**.
 - **Na 14:** klik bij **Review activities** op **Approve** en kies **Approve activity only**. De admin krijgt dan géén melding "New sport suggested".
+- **Na 15:** ga naar **More** > **Notification settings** en zet **Push notifications on this device** aan. Je krijgt geen melding "This needs a database update".

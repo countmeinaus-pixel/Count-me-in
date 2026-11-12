@@ -76,6 +76,9 @@ export function AuthScreen() {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
+        // The confirmation link brings you back to the address you signed up on
+        // (must be in Supabase > Authentication > URL Configuration > Redirect URLs).
+        options: { emailRedirectTo: window.location.origin },
       })
 
       setIsBusy(false)

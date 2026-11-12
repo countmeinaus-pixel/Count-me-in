@@ -2,6 +2,8 @@ export type NotificationPreferences = {
   activityInMySports: boolean
   joinRequests: boolean
   chatMessages: boolean
+  friendRequests: boolean
+  activityUpdates: boolean
   activityReminderDayBefore: boolean
   activityReminderOneHourBefore: boolean
 }
@@ -12,6 +14,8 @@ export const defaultNotificationPreferences: NotificationPreferences = {
   activityInMySports: true,
   joinRequests: true,
   chatMessages: true,
+  friendRequests: true,
+  activityUpdates: true,
   activityReminderDayBefore: true,
   activityReminderOneHourBefore: true,
 }
@@ -43,23 +47,18 @@ export function getNotificationPreferences(): NotificationPreferences {
     throw new Error('Saved notification settings are invalid.')
   }
 
+  // Unknown or missing switches fall back to on, so new switches never break old settings.
   const preferences = stored as Record<string, unknown>
-  if (
-    typeof preferences.activityInMySports !== 'boolean'
-    || typeof preferences.joinRequests !== 'boolean'
-    || typeof preferences.chatMessages !== 'boolean'
-    || typeof preferences.activityReminderDayBefore !== 'boolean'
-    || typeof preferences.activityReminderOneHourBefore !== 'boolean'
-  ) {
-    throw new Error('Saved notification settings are invalid.')
-  }
-
+  const read = (key: keyof NotificationPreferences) =>
+    typeof preferences[key] === 'boolean' ? (preferences[key] as boolean) : defaultNotificationPreferences[key]
   return {
-    activityInMySports: preferences.activityInMySports,
-    joinRequests: preferences.joinRequests,
-    chatMessages: preferences.chatMessages,
-    activityReminderDayBefore: preferences.activityReminderDayBefore,
-    activityReminderOneHourBefore: preferences.activityReminderOneHourBefore,
+    activityInMySports: read('activityInMySports'),
+    joinRequests: read('joinRequests'),
+    chatMessages: read('chatMessages'),
+    friendRequests: read('friendRequests'),
+    activityUpdates: read('activityUpdates'),
+    activityReminderDayBefore: read('activityReminderDayBefore'),
+    activityReminderOneHourBefore: read('activityReminderOneHourBefore'),
   }
 }
 

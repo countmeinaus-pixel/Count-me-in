@@ -20,6 +20,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 12 | `supabase/migrations/20261112140000_manage_moderators.sql` | Admin kan leden moderator maken en weer verwijderen (More > Moderation > Team) |
 | 13 | `supabase/migrations/20261112150000_open_activity_review.sql` | Elke Open activity wacht op een moderator; uitgelogde bezoekers zien activiteiten weer |
 | 14 | `supabase/migrations/20261112160000_review_suggest_sport.sql` | Bij goedkeuren kiezen: alleen de activiteit, of ook de sport voorstellen aan de admin |
+| 15 | `supabase/migrations/20261112170000_push_notifications.sql` | Pushmeldingen: push-adressen per toestel en meldingsinstellingen per lid |
 
 ## Zo doe je het (per bestand)
 

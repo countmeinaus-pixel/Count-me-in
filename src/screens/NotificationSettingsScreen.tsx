@@ -7,25 +7,61 @@ import {
   saveNotificationPreferences,
   type NotificationPreferences,
 } from '../lib/localPreferences'
+import {
+  disablePush,
+  enablePush,
+  getPushState,
+  loadRemotePreferences,
+  saveRemotePreferences,
+  type PushState,
+} from '../lib/push'
 
-const notificationOptions: Array<{ key: keyof NotificationPreferences; label: string }> = [
-  { key: 'activityInMySports', label: 'New activities in my sports' },
-  { key: 'joinRequests', label: 'Join requests' },
+// "soon": saved already, but not sent yet (needs a schedule on the server).
+const notificationOptions: Array<{ key: keyof NotificationPreferences; label: string; soon?: boolean }> = [
   { key: 'chatMessages', label: 'Chat messages' },
-  { key: 'activityReminderDayBefore', label: 'Activity reminder · day before' },
-  { key: 'activityReminderOneHourBefore', label: 'Activity reminder · 1 hour before' },
+  { key: 'joinRequests', label: 'Join requests for my activities' },
+  { key: 'activityUpdates', label: 'Activity updates (invites, approvals, cancellations)' },
+  { key: 'friendRequests', label: 'Friend requests' },
+  { key: 'activityInMySports', label: 'New activities in my sports', soon: true },
+  { key: 'activityReminderDayBefore', label: 'Activity reminder · day before', soon: true },
+  { key: 'activityReminderOneHourBefore', label: 'Activity reminder · 1 hour before', soon: true },
 ]
+
+const pushStateText: Record<PushState, string> = {
+  on: 'On for this device. You get alerts even when the app is closed.',
+  off: 'Off for this device.',
+  blocked: 'Blocked. Allow notifications for this site in your browser or phone settings, then come back here.',
+  'needs-install': 'On iPhone and iPad, add Count Me In to your home screen first (Share > Add to Home Screen), then open it from there.',
+  unsupported: 'This browser cannot show push notifications. Try Chrome, Edge, Firefox or Safari on a Mac.',
+}
 
 export function NotificationSettingsScreen() {
   const backToMore = useBackToMore()
   const [preferences, setPreferences] = useState(defaultNotificationPreferences)
+  const [pushState, setPushState] = useState<PushState | null>(null)
+  const [pushBusy, setPushBusy] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    let active = true
     try {
       setPreferences(getNotificationPreferences())
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load notification settings.')
+    }
+    // The saved settings in Supabase win, so they are the same on every device.
+    loadRemotePreferences()
+      .then((remote) => {
+        if (active && remote) setPreferences((current) => ({ ...current, ...remote }))
+      })
+      .catch(() => undefined)
+    getPushState().then((state) => {
+      if (active) setPushState(state)
+    }).catch(() => {
+      if (active) setPushState('unsupported')
+    })
+    return () => {
+      active = false
     }
   }, [])
 
@@ -38,16 +74,61 @@ export function NotificationSettingsScreen() {
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save notification settings.')
     }
+    saveRemotePreferences(next).catch((saveError: unknown) => {
+      setError(saveError instanceof Error ? saveError.message : 'Unable to save notification settings.')
+    })
   }
+
+  async function togglePush() {
+    setPushBusy(true)
+    setError('')
+    try {
+      if (pushState === 'on') await disablePush()
+      else {
+        await enablePush()
+        await saveRemotePreferences(preferences).catch(() => undefined)
+      }
+      setPushState(await getPushState())
+    } catch (pushError) {
+      setError(pushError instanceof Error ? pushError.message : 'Unable to change push notifications.')
+      setPushState(await getPushState().catch(() => 'unsupported' as const))
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
+  const canToggle = pushState === 'on' || pushState === 'off'
 
   return (
     <main className="screen more-settings-page">
       <MorePageHeader title="Notification settings" onBack={backToMore} />
-      <p className="more-settings-intro">Choose which updates you’d like to receive.</p>
+
+      <h3 className="more-settings-subtitle">Push notifications</h3>
       <div className="more-setting-list">
-        {notificationOptions.map(({ key, label }) => (
+        <label className="more-setting-row">
+          <span>
+            Alerts on this device
+            <small className="more-setting-hint">{pushState ? pushStateText[pushState] : 'Checking…'}</small>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={pushState === 'on'}
+            disabled={!canToggle || pushBusy}
+            onChange={() => void togglePush()}
+            aria-label="Push notifications on this device"
+          />
+        </label>
+      </div>
+
+      <h3 className="more-settings-subtitle">What you get notified about</h3>
+      <div className="more-setting-list">
+        {notificationOptions.map(({ key, label, soon }) => (
           <label className="more-setting-row" key={key}>
-            <span>{label}</span>
+            <span>
+              {label}
+              {soon && <small className="more-setting-hint">Coming soon</small>}
+            </span>
             <input
               type="checkbox"
               role="switch"
@@ -58,7 +139,9 @@ export function NotificationSettingsScreen() {
           </label>
         ))}
       </div>
-      <p className="more-settings-note">These preferences are saved on this device. Notification delivery will be connected when the app’s chat and activity alerts are ready.</p>
+      <p className="more-settings-note">
+        These switches apply to push alerts and are saved to your account. You always see everything under the bell in the app.
+      </p>
       {error && <p className="more-status-message error" role="alert">{error}</p>}
     </main>
   )

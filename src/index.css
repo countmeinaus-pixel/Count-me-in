@@ -556,10 +556,13 @@ h3 { font: 700 21px/24px var(--font-display); }
 .activity-marker.selected .activity-marker-pin,
 .activity-marker:focus-visible .activity-marker-pin { box-shadow: 0 0 0 3px var(--text-primary); }
 .activity-map-card {
+  /* As wide as its content, centred, never wider than the map minus 12px each side. */
   position: absolute;
-  right: 12px;
   bottom: 40px;
-  left: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(560px, calc(100% - 24px));
   z-index: 2;
   display: grid;
   border: 1px solid var(--border-strong);
@@ -615,7 +618,7 @@ h3 { font: 700 21px/24px var(--font-display); }
 .map-card-place-text { overflow: hidden; text-overflow: ellipsis; }
 .map-card-place svg { flex: 0 0 auto; width: 14px; height: 14px; color: var(--seafoam); }
 .map-card-bottom { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 6px; }
-.map-card-host { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; color: var(--text-secondary); font-size: 13px; }
+.map-card-host { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; color: var(--text-secondary); font-size: 13px; }
 .map-card-spots { color: var(--text-muted); font-size: 12px; }
 .activity-map-card-pager {
   display: flex;

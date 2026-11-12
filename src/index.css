@@ -5335,7 +5335,7 @@ h1 .skeleton { margin: 4px 0; }
   .mate-card-head {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas: "photo name" "photo place" "sports sports";
+    grid-template-areas: "photo name" "photo place" "note note" "sports sports";
     column-gap: 10px;
     row-gap: 6px;
   }
@@ -5343,6 +5343,7 @@ h1 .skeleton { margin: 4px 0; }
   .mate-card-photo { grid-area: photo; width: 64px; }
   .mate-card-name { grid-area: name; align-self: end; }
   .mate-card-location { grid-area: place; align-self: start; }
+  .mate-card-note { grid-area: note; }
   .mate-card-identity .mate-card-sports { grid-area: sports; margin-top: 4px; }
 }
 
@@ -5371,3 +5372,24 @@ h1 .skeleton { margin: 4px 0; }
 .patches-page > .mates-header,
 .edit-profile-page > .mates-header,
 .more-settings-page > .mates-header { padding-bottom: 0; }
+
+/* Profile card: optional extra line (next plan on Home). */
+.mate-card-note { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 12px; }
+.mate-card-note.has-plan { color: var(--seafoam); }
+
+/* Home > Your friends: Invite a mate as a card, same height as the friend cards. */
+.mate-card-invite {
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 160px;
+  border-style: dashed;
+  background: transparent;
+  text-align: center;
+}
+.mate-card-invite strong { font-size: 15px; }
+.mate-card-invite small { color: var(--text-secondary); font-size: 13px; }
+/* Phones: 5 friends + Invite (3 rows of 2); wider screens show up to 7. */
+@container app (max-width: 759px) {
+  .crew-friend-grid .beyond-phone { display: none; }
+}

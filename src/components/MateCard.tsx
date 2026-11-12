@@ -12,16 +12,22 @@ function initials(name: string) {
 export function MateCard({
   member,
   onClick,
+  note,
+  noteHighlighted = false,
+  className = '',
 }: {
   member: CommunityMember
   onClick: () => void
   horizontal?: boolean // older prop, the layout is the same everywhere now
+  note?: string // extra line under the location, e.g. their next plan on Home
+  noteHighlighted?: boolean
+  className?: string
 }) {
   const firstSport = member.sports[0]?.name
   const isWater = firstSport ? waterSportNames.includes(firstSport) : false
 
   return (
-    <button type="button" className="mate-card" onClick={onClick} aria-label={`View ${member.name}'s profile`}>
+    <button type="button" className={`mate-card ${className}`.trim()} onClick={onClick} aria-label={`View ${member.name}'s profile${note ? `, ${note}` : ''}`}>
       <span className="mate-card-head">
         <span className={`mate-card-photo ${isWater ? 'tint-water' : ''}`}>
           {member.photoUrl
@@ -34,6 +40,12 @@ export function MateCard({
             {member.name}, {member.age}
           </span>
           <span className="mate-card-location"><MapPin aria-hidden="true" />{member.suburb}</span>
+          {note && (
+            <span className={`mate-card-note ${noteHighlighted ? 'has-plan' : ''}`}>
+              {noteHighlighted && <span className="friend-tile-dot" aria-hidden="true" />}
+              {note}
+            </span>
+          )}
           <span className="mate-card-sports">
             {member.sports.slice(0, 3).map((sport) => <span className="mate-sport" key={sport.name}>{sport.name}</span>)}
             {member.sports.length > 3 && <span className="mate-sport-more">+{member.sports.length - 3}</span>}

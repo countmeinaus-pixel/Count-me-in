@@ -1,6 +1,7 @@
 import { CalendarDays, Check, MapPin, Sparkles, UserPlus, Users } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { InvitePanel } from './InvitePanel'
+import { MateCard } from './MateCard'
 import { sportVerbs, waterSportNames } from '../data/sports'
 import type { ActivityCardData } from './ActivityCard'
 import { Avatar } from './Avatar'
@@ -60,36 +61,23 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
       {(
         <div className="crew-friends">
           <h3>Your friends</h3>
-          <div className="friend-tile-row friend-tile-grid">
-            {friends.map((member, index) => {
+          {/* The same cards as the Friends page, plus Invite a mate. */}
+          <div className="mate-grid crew-friend-grid">
+            {friends.slice(0, 7).map((member, index) => {
               const next = nextActivityFor(member.name, activities)
               const isToday = next ? next.startsAt.toDateString() === new Date().toDateString() : false
-              const tileSport = next?.sport ?? member.sports[0]?.name ?? 'Open activity'
               return (
-                <button
-                  type="button"
+                <MateCard
                   key={member.id ?? member.name}
-                  className={`friend-tile ${isToday ? 'is-today' : ''} ${waterSports.includes(tileSport) ? 'tint-water' : 'tint-land'} ${index >= 5 ? 'beyond-grid' : ''}`}
+                  member={member}
                   onClick={() => onOpenProfile(member)}
-                  aria-label={`${member.name}${next ? `, ${next.sport} ${isToday ? 'today' : dayLabel(next.startsAt)}` : ''}. View profile`}
-                >
-                  <span className="friend-tile-photo">
-                    {member.photoUrl
-                      ? <img src={member.photoUrl} alt="" loading="lazy" />
-                      : <span className="friend-tile-initials">{initials(member.name)}</span>}
-                    <SportIcon sport={tileSport} className="friend-tile-sport" />
-                  </span>
-                  <span className="friend-tile-info">
-                    <strong>{member.name}</strong>
-                    <small className={next ? 'has-plan' : ''}>
-                      {next && <span className="friend-tile-dot" aria-hidden="true" />}
-                      {next ? `${next.sport} ${isToday ? 'today' : dayLabel(next.startsAt)}` : 'No plans yet'}
-                    </small>
-                  </span>
-                </button>
+                  note={next ? `${next.sport} ${isToday ? 'today' : dayLabel(next.startsAt)}` : 'No plans yet'}
+                  noteHighlighted={Boolean(next)}
+                  className={index >= 5 ? 'beyond-phone' : ''}
+                />
               )
             })}
-            <button type="button" className="friend-tile friend-tile-invite" onClick={() => setInviteOpen(true)}>
+            <button type="button" className="mate-card mate-card-invite" onClick={() => setInviteOpen(true)}>
               <span className="friend-tile-invite-icon"><UserPlus aria-hidden="true" /></span>
               <strong>Invite a mate</strong>
               <small>Bring your crew along</small>

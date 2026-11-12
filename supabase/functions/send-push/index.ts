@@ -8,7 +8,7 @@
 // devices that no longer accept pushes.
 //
 // Secrets (Edge Functions > Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY.
-// SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
+// SUPABASE_URL and the service keys are provided by Supabase itself.
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import webpush from 'npm:web-push@3.6.7'
@@ -22,7 +22,22 @@ type Preferences = {
 type PreferenceKey = keyof Preferences
 type Push = { title: string; body: string; url: string }
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+// Supabase has two kinds of server keys: the older service_role key (a JWT)
+// and the newer secret keys (sb_secret_...). Accept both.
+function secretKeys(): string[] {
+  const keys: string[] = []
+  const legacy = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (legacy) keys.push(legacy)
+  try {
+    const modern = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') ?? '{}') as Record<string, string>
+    keys.push(...Object.values(modern))
+  } catch {
+    // No new-style keys on this project.
+  }
+  return keys
+}
+
+const supabase = createClient(Deno.env.get('SUPABASE_URL')!, secretKeys()[0]!)
 webpush.setVapidDetails(
   'https://count-me-in-nine.vercel.app',
   Deno.env.get('VAPID_PUBLIC_KEY')!,
@@ -61,9 +76,13 @@ function shorten(text: string, length = 140) {
   return text.length > length ? `${text.slice(0, length - 1)}…` : text
 }
 
-// Only Supabase itself (the webhooks, with the service role key) may call this.
+// Only Supabase itself (the webhooks, with a server key) may call this,
+// never a member's browser.
 function isServiceRole(request: Request) {
-  const token = (request.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+  const header = request.headers.get('Authorization') ?? request.headers.get('apikey') ?? ''
+  const token = header.replace(/^Bearer\s+/i, '').trim()
+  if (!token) return false
+  if (secretKeys().includes(token)) return true
   try {
     const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
     return payload.role === 'service_role'

@@ -93,7 +93,7 @@ export function PersonalRecordsScreen() {
       {isLoading ? (
         <p className="pr-empty" role="status">Loading your records…</p>
       ) : records.length > 0 ? (
-        <div className="pr-list">
+        <div className="pr-grid">
           {records.map((record) => (
             <PersonalRecordCard key={record.id} record={record} onChanged={() => setVersion((value) => value + 1)} />
           ))}

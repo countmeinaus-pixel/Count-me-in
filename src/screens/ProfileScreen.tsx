@@ -686,7 +686,7 @@ export function ProfileScreen() {
             <p className="edit-form-error" role="alert">{personalRecordsError}</p>
           ) : personalRecords && personalRecords.length > 0 ? (
             <>
-              <div className={showAllRecords ? "pr-list" : "pr-grid"}>
+              <div className="pr-grid">
                 {(showAllRecords ? personalRecords : personalRecords.slice(0, recordsPreviewCount)).map((record) => (
                   <PersonalRecordCard
                     key={record.id}

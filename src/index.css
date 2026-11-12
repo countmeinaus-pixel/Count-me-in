@@ -4185,7 +4185,7 @@ span.user-avatar {
 .pr-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .pr-section-heading .button { width: auto; padding-inline: 16px; }
 .pr-list { display: grid; gap: 10px; }
-/* Profile preview: 2 by 2 on phones, 5 in a row on wider screens. */
+/* PR cards on the profile and Personal records: 2 a row on phones, 5 on wider screens. */
 .pr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @container app (min-width: 768px) {
   .pr-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }

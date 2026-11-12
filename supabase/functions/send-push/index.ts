@@ -24,20 +24,26 @@ type Push = { title: string; body: string; url: string }
 
 // Supabase has two kinds of server keys: the older service_role key (a JWT)
 // and the newer secret keys (sb_secret_...). Accept both.
+// The new keys come first: on projects that switched to them, the old key may no
+// longer be accepted, and the database then quietly returns nothing.
 function secretKeys(): string[] {
   const keys: string[] = []
-  const legacy = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  if (legacy) keys.push(legacy)
   try {
     const modern = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') ?? '{}') as Record<string, string>
-    keys.push(...Object.values(modern))
+    keys.push(...Object.values(modern).filter((key) => typeof key === 'string' && key.length > 0))
   } catch {
     // No new-style keys on this project.
   }
+  const legacy = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (legacy) keys.push(legacy)
   return keys
 }
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL')!, secretKeys()[0]!)
+const serverKey = secretKeys()[0]
+console.log(`Database key: ${serverKey?.startsWith('sb_secret_') ? 'new secret key' : serverKey ? 'service_role key' : 'MISSING'}`)
+const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serverKey!, {
+  auth: { persistSession: false, autoRefreshToken: false },
+})
 webpush.setVapidDetails(
   'https://count-me-in-nine.vercel.app',
   Deno.env.get('VAPID_PUBLIC_KEY')!,
@@ -100,10 +106,11 @@ async function sendTo(userIds: string[], preference: PreferenceKey | null, push:
   if (userIds.length === 0) return 0
   let recipients = userIds
   if (preference) {
-    const { data: prefs } = await supabase
+    const { data: prefs, error: prefsError } = await supabase
       .from('notification_preferences')
       .select(`user_id, ${preference}`)
       .in('user_id', userIds)
+    if (prefsError) console.error('Could not read notification_preferences', prefsError.message)
     const optedOut = new Set((prefs ?? []).filter((row) => row[preference] === false).map((row) => row.user_id))
     recipients = userIds.filter((id) => !optedOut.has(id))
   }
@@ -166,10 +173,12 @@ Deno.serve(async (request) => {
       })
     }
   } else if (table === 'activity_chat_messages' && record.message_type === 'message') {
-    const [{ data: thread }, { data: members }] = await Promise.all([
+    const [{ data: thread, error: threadError }, { data: members, error: membersError }] = await Promise.all([
       supabase.from('activity_chat_threads').select('title').eq('id', record.thread_id).maybeSingle(),
       supabase.from('activity_chat_members').select('user_id').eq('thread_id', record.thread_id).eq('status', 'accepted'),
     ])
+    if (threadError) console.error('Could not read the chat', threadError.message)
+    if (membersError) console.error('Could not read chat members', membersError.message)
     const name = await firstName(record.sender_id)
     const others = (members ?? []).map((member) => member.user_id as string).filter((id) => id !== record.sender_id)
     console.log(`Chat members: ${members?.length ?? 0}, others than the sender: ${others.length}`)

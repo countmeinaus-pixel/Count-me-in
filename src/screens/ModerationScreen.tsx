@@ -224,7 +224,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
               aria-pressed={tab === "records"}
               onClick={() => setTab("records")}
             >
-              PRs to check
+              Check PRs
             </button>
             <button
               type="button"
@@ -232,7 +232,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
               aria-pressed={tab === "activities"}
               onClick={() => setTab("activities")}
             >
-              Activities to review
+              Review activities
             </button>
           </div>
           {tab === "activities" ? (

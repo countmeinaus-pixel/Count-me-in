@@ -77,8 +77,8 @@ export const moderationGroup: MenuGroup = {
   title: 'Moderation',
   items: [
     { label: 'Reports', href: '/more/moderation', icon: Flag },
-    { label: 'PRs to check', href: '/more/moderation/records', icon: Trophy },
-    { label: 'Activities to review', href: '/more/moderation/activities', icon: ClipboardCheck },
+    { label: 'Check PRs', href: '/more/moderation/records', icon: Trophy },
+    { label: 'Review activities', href: '/more/moderation/activities', icon: ClipboardCheck },
   ],
 }
 

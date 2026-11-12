@@ -1644,6 +1644,11 @@ h3 { font: 700 21px/24px var(--font-display); }
 .segment-bar button {
   flex: 1;
   height: 38px;
+  /* Tab labels stay on one line; shorten the label if it does not fit. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline: 8px;
   border: 0;
   background: transparent;
   color: var(--text-muted);
@@ -5236,3 +5241,7 @@ h1 .skeleton { margin: 4px 0; }
 .team-row small { color: var(--text-secondary); font-size: 13px; }
 .team-row .button { width: auto; padding-inline: 14px; }
 .team-badge { color: var(--text-muted); }
+
+/* Moderation tabs: width follows the label, so "Review activities" fits on phones too. */
+.moderation-page .segment-bar { display: flex; max-width: 520px; }
+.moderation-page .segment-bar button { flex: 1 1 auto; }

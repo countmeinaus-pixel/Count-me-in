@@ -102,7 +102,7 @@ export type CommunityMember = {
   sharedLocation?: { latitude: number; longitude: number } | null
 }
 
-// Placeholder portraits from Unsplash (free to use), cropped small around the face.
+// Placeholder portraits from Unsplash (free to use), outdoor and sport shots, cropped small around the face.
 function memberPhoto(photoId: string) {
   return `https://images.unsplash.com/photo-${photoId}?w=192&h=192&fit=crop&crop=faces&q=70`
 }
@@ -110,51 +110,88 @@ function memberPhoto(photoId: string) {
 export const communityMembers: CommunityMember[] = [
   {
     name: 'Matt', age: 34, suburb: 'Brighton', verified: true,
-    photoUrl: memberPhoto('1500648767791-00dcc994a43e'),
+    photoUrl: memberPhoto('1603560797930-1a94e3b84fd8'),
     sports: [{ name: 'Spearfishing', level: 'Intermediate', meetups: 4 }, { name: 'Running', level: 'Beginner', meetups: 4 }, { name: 'Gym', level: 'Experienced', meetups: 4 }],
     stats: { meetups: 12, hosted: 3, sports: 3 },
   },
   {
     name: 'Luca', age: 29, suburb: 'Glenelg', verified: true,
-    photoUrl: memberPhoto('1506794778202-cad84cf45f1d'),
+    photoUrl: memberPhoto('1591984305541-db1d173da328'),
     sports: [{ name: 'Kitesurfing', level: 'Intermediate', meetups: 3 }, { name: 'Surfing', level: 'Experienced', meetups: 2 }, { name: 'Swimming', level: 'Beginner', meetups: 2 }],
     stats: { meetups: 7, hosted: 1, sports: 3 },
   },
   {
     name: 'Sam', age: 41, suburb: 'Aldinga', verified: true,
-    photoUrl: memberPhoto('1570295999919-56ceb5ecca61'),
+    photoUrl: memberPhoto('1545575439-3261931f52f1'),
     sports: [{ name: 'Running', level: 'Intermediate', meetups: 5 }, { name: 'Hiking', level: 'Intermediate', meetups: 4 }, { name: 'Road cycling', level: 'Experienced', meetups: 5 }],
     stats: { meetups: 14, hosted: 4, sports: 3 },
   },
   {
     name: 'Hamish', age: 36, suburb: 'Stirling', verified: true,
-    photoUrl: memberPhoto('1507003211169-0a1dd7228f2d'),
+    photoUrl: memberPhoto('1558223299-4de4134f3bcd'),
     sports: [{ name: 'Hiking', level: 'Experienced', meetups: 3 }, { name: 'Running', level: 'Intermediate', meetups: 3 }, { name: 'Mountain biking', level: 'Beginner', meetups: 3 }],
     stats: { meetups: 9, hosted: 2, sports: 3 },
   },
   {
     name: 'Raj', age: 32, suburb: 'Mawson Lakes', verified: true,
-    photoUrl: memberPhoto('1492562080023-ab3db95bfbce'),
+    photoUrl: memberPhoto('1598966739654-5e9a252d8c32'),
     sports: [{ name: 'Road cycling', level: 'Intermediate', meetups: 2 }, { name: 'Gym', level: 'Experienced', meetups: 2 }, { name: 'Hiking', level: 'Beginner', meetups: 2 }],
     stats: { meetups: 6, hosted: 1, sports: 3 },
   },
   {
     name: 'Ben', age: 45, suburb: 'Seaford', verified: true,
-    photoUrl: memberPhoto('1472099645785-5658abf4ff4e'),
+    photoUrl: memberPhoto('1669151030267-7e7f82c3b2a2'),
     sports: [{ name: 'Hiking', level: 'Intermediate', meetups: 9 }, { name: 'Spearfishing', level: 'Experienced', meetups: 8 }, { name: 'Swimming', level: 'Beginner', meetups: 8 }],
     stats: { meetups: 25, hosted: 5, sports: 3 },
   },
   {
     name: 'Tom', age: 27, suburb: 'Norwood', verified: true,
-    photoUrl: memberPhoto('1527980965255-d3b416303d12'),
+    photoUrl: memberPhoto('1741731854418-602cb8d3c497'),
     sports: [{ name: 'Running', level: 'Beginner', meetups: 1 }, { name: 'Gym', level: 'Intermediate', meetups: 0 }, { name: 'Climbing / bouldering', level: 'Beginner', meetups: 0 }],
     stats: { meetups: 1, hosted: 0, sports: 3 },
   },
   {
     name: 'Dave', age: 39, suburb: 'Semaphore', verified: true,
-    photoUrl: memberPhoto('1522075469751-3a6694fb2f61'),
+    photoUrl: memberPhoto('1629733613868-a37c4cf8bdf3'),
     sports: [{ name: 'Spearfishing', level: 'Intermediate', meetups: 6 }, { name: 'Kitesurfing', level: 'Intermediate', meetups: 6 }, { name: 'SUP / kayak', level: 'Experienced', meetups: 6 }],
     stats: { meetups: 18, hosted: 3, sports: 3 },
+  },
+  // Extra placeholders so the suggestions row is full while there are few real members.
+  {
+    name: 'Kwame', age: 44, suburb: 'Christies Beach', verified: true,
+    photoUrl: memberPhoto('1600492110240-63958f19b8b8'),
+    sports: [{ name: 'Road cycling', level: 'Experienced', meetups: 6 }, { name: 'Running', level: 'Intermediate', meetups: 3 }],
+    stats: { meetups: 9, hosted: 2, sports: 2 },
+  },
+  {
+    name: 'Josh', age: 33, suburb: 'Hallett Cove', verified: true,
+    photoUrl: memberPhoto('1586022045315-1cdd6493045c'),
+    sports: [{ name: 'Hiking', level: 'Experienced', meetups: 5 }, { name: 'Spearfishing', level: 'Beginner', meetups: 1 }],
+    stats: { meetups: 6, hosted: 1, sports: 2 },
+  },
+  {
+    name: 'Liam', age: 30, suburb: 'Moana', verified: false,
+    photoUrl: memberPhoto('1604928106847-96c6f306b722'),
+    sports: [{ name: 'Hiking', level: 'Intermediate', meetups: 2 }, { name: 'Surfing', level: 'Intermediate', meetups: 2 }],
+    stats: { meetups: 4, hosted: 0, sports: 2 },
+  },
+  {
+    name: 'Nico', age: 26, suburb: 'Port Noarlunga', verified: true,
+    photoUrl: memberPhoto('1607429289259-456053385f53'),
+    sports: [{ name: 'Surfing', level: 'Experienced', meetups: 4 }, { name: 'Kitesurfing', level: 'Beginner', meetups: 1 }],
+    stats: { meetups: 5, hosted: 1, sports: 2 },
+  },
+  {
+    name: 'Dan', age: 35, suburb: 'Maslin Beach', verified: true,
+    photoUrl: memberPhoto('1528629297340-d1d466945dc5'),
+    sports: [{ name: 'Road cycling', level: 'Intermediate', meetups: 3 }, { name: 'Swimming', level: 'Intermediate', meetups: 2 }],
+    stats: { meetups: 5, hosted: 0, sports: 2 },
+  },
+  {
+    name: 'Callum', age: 41, suburb: 'Sellicks Beach', verified: true,
+    photoUrl: memberPhoto('1486036413660-59d02a64e549'),
+    sports: [{ name: 'Spearfishing', level: 'Experienced', meetups: 7 }, { name: 'SUP / kayak', level: 'Intermediate', meetups: 3 }],
+    stats: { meetups: 10, hosted: 3, sports: 2 },
   },
 ]
 

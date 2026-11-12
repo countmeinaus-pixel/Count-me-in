@@ -7,8 +7,9 @@ import {
   type PersonalRecord,
 } from "../lib/personalRecords"
 import { PersonalRecordCard } from "../components/PersonalRecordCard"
-import { Link, useNavigate } from "react-router-dom"
-import { getActivitiesToReview, reviewActivity, type ActivityToReview } from "../lib/activityReview"
+import { useLocation, useNavigate } from "react-router-dom"
+import { ActivityCard } from "../components/ActivityCard"
+import { getActivitiesWaitingForReview, type FeedActivity } from "../lib/activityParticipation"
 import {
   getCurrentModerationRole,
   getModerationReports,
@@ -60,11 +61,10 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [updatingReportId, setUpdatingReportId] = useState<string | null>(null)
-  const [activitiesToReview, setActivitiesToReview] = useState<ActivityToReview[] | null>(null)
+  const [activitiesToReview, setActivitiesToReview] = useState<FeedActivity[] | null>(null)
   const [activitiesError, setActivitiesError] = useState("")
-  const [reviewingId, setReviewingId] = useState<string | null>(null)
-  // The card that shows the "Approve activity only / + suggest as sport" choice.
-  const [choosingId, setChoosingId] = useState<string | null>(null)
+  const location = useLocation()
+  const reviewNotice = typeof location.state?.reviewNotice === "string" ? location.state.reviewNotice : ""
   const [recordsToCheck, setRecordsToCheck] = useState<PersonalRecord[] | null>(null)
   const [recordsError, setRecordsError] = useState("")
   const [recordsVersion, setRecordsVersion] = useState(0)
@@ -73,7 +73,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
     if (!role || tab !== "activities") return
     let active = true
     setActivitiesError("")
-    getActivitiesToReview()
+    getActivitiesWaitingForReview()
       .then((items) => {
         if (active) setActivitiesToReview(items)
       })
@@ -87,26 +87,6 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
       active = false
     }
   }, [role, tab])
-
-  async function answerActivity(item: ActivityToReview, approve: boolean, suggestAsSport = false) {
-    let message = ""
-    if (!approve) {
-      const reason = window.prompt(`Why is "${item.title}" not approved? ${item.hostName} sees this message. You can leave it empty.`, "")
-      if (reason === null) return
-      message = reason.trim()
-    }
-    setReviewingId(item.id)
-    setActivitiesError("")
-    try {
-      await reviewActivity(item.id, approve, message, suggestAsSport)
-      setChoosingId(null)
-      setActivitiesToReview((current) => current?.filter((entry) => entry.id !== item.id) ?? null)
-    } catch (reviewError) {
-      setActivitiesError(reviewError instanceof Error ? reviewError.message : "Unable to review this activity.")
-    } finally {
-      setReviewingId(null)
-    }
-  }
 
   useEffect(() => {
     if (!role || tab !== "records") return
@@ -241,71 +221,27 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
           {tab === "activities" ? (
             <>
               <p className="more-settings-intro">
-                Open activities wait here before others can see them. Approve to
-                put one live; you can also suggest its sport for the sport list,
-                which notifies the admins. Reject to keep it hidden.
+                Open activities wait here before others can see them. Tap Review
+                to see the whole activity; approve or reject it at the bottom.
               </p>
+              {reviewNotice && <p className="activity-share-feedback" role="status">{reviewNotice}</p>}
               {activitiesError ? (
                 <p className="edit-form-error" role="alert">{activitiesError}</p>
               ) : activitiesToReview === null ? (
                 <p className="more-settings-note">Loading activities…</p>
               ) : activitiesToReview.length ? (
                 <div className="review-activity-list">
-                  {activitiesToReview.map((item) => (
-                    <article className="moderation-report-card review-activity-card" key={item.id}>
-                      <span className="review-activity-sport">New sport: {item.suggestedSport}</span>
-                      <h2>{item.title}</h2>
-                      <p>
-                        By {item.hostName} ·{" "}
-                        {new Date(item.startsAt).toLocaleString("en-AU", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
-                      </p>
-                      <p>{[item.meetingPoint, item.suburb].filter(Boolean).join(", ")}</p>
-                      {item.notes && <p className="review-activity-notes">{item.notes}</p>}
-                      <Link className="text-action" to={`/activity/${item.id}`}>Open activity</Link>
-                      {choosingId === item.id ? (
-                        <div className="review-activity-choice">
-                          <p>Should {item.suggestedSport} also be considered for the sport list?</p>
-                          <button
-                            type="button"
-                            className="button button-secondary button-md"
-                            disabled={reviewingId !== null}
-                            onClick={() => void answerActivity(item, true, false)}
-                          >
-                            Approve activity only
-                          </button>
-                          <button
-                            type="button"
-                            className="button button-primary button-md"
-                            disabled={reviewingId !== null}
-                            onClick={() => void answerActivity(item, true, true)}
-                          >
-                            {reviewingId === item.id ? "Saving…" : "Approve + suggest as sport"}
-                          </button>
-                          <button type="button" className="text-action" disabled={reviewingId !== null} onClick={() => setChoosingId(null)}>
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="review-activity-actions">
-                          <button
-                            type="button"
-                            className="button button-secondary button-md"
-                            disabled={reviewingId !== null}
-                            onClick={() => void answerActivity(item, false)}
-                          >
-                            Reject
-                          </button>
-                          <button
-                            type="button"
-                            className="button button-primary button-md"
-                            disabled={reviewingId !== null}
-                            onClick={() => setChoosingId(item.id)}
-                          >
-                            Approve
-                          </button>
-                        </div>
-                      )}
-                    </article>
+                  {activitiesToReview.map((activity) => (
+                    <div className="review-activity-item" key={activity.id}>
+                      <ActivityCard activity={activity} onClick={() => navigate(`/activity/${activity.id}`)} />
+                      <button
+                        type="button"
+                        className="button button-primary button-md"
+                        onClick={() => navigate(`/activity/${activity.id}`)}
+                      >
+                        Review
+                      </button>
+                    </div>
                   ))}
                 </div>
               ) : (

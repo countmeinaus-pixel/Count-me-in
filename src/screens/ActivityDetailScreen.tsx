@@ -38,6 +38,7 @@ import {
   saveDemoJoinRequest,
 } from "../lib/demoParticipation"
 import { getSavedActivity, type SavedActivityDetails } from "../lib/activities"
+import { reviewActivity } from "../lib/activityReview"
 import {
   confirmSavedActivityMeetup,
   getSavedActivityCheckinCode,
@@ -102,6 +103,10 @@ export function ActivityDetailScreen() {
     mockActivity ? hasDemoJoinRequest(mockActivity.id) : false,
   )
   const [joinFeedback, setJoinFeedback] = useState("")
+  // Review by a moderator or admin (Open activities wait for this).
+  const [reviewBusy, setReviewBusy] = useState(false)
+  const [reviewError, setReviewError] = useState("")
+  const [showApproveChoice, setShowApproveChoice] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [leaveOpen, setLeaveOpen] = useState(false)
   const [leaveMessage, setLeaveMessage] = useState("")
@@ -675,6 +680,34 @@ export function ActivityDetailScreen() {
   const isHost =
     savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
   const canEditActivity = savedDetails?.viewerCanEdit ?? false
+  const isWaitingForReview = savedDetails?.reviewStatus === "pending"
+  const canReview = isWaitingForReview && (savedDetails?.viewerIsStaff ?? false)
+
+  async function submitReview(approve: boolean, suggestAsSport = false) {
+    if (!savedDetails) return
+    let message = ""
+    if (!approve) {
+      const reason = window.prompt(`Why is "${savedDetails.title}" not approved? ${savedDetails.host} sees this message. You can leave it empty.`, "")
+      if (reason === null) return
+      message = reason.trim()
+    }
+    setReviewBusy(true)
+    setReviewError("")
+    try {
+      await reviewActivity(savedDetails.id, approve, message, suggestAsSport)
+      navigate("/more/moderation/activities", {
+        replace: true,
+        state: {
+          reviewNotice: approve
+            ? `"${savedDetails.title}" is approved and live${suggestAsSport ? ", and suggested as a sport" : ""}.`
+            : `"${savedDetails.title}" was not approved.`,
+        },
+      })
+    } catch (error) {
+      setReviewError(error instanceof Error ? error.message : "Unable to review this activity.")
+      setReviewBusy(false)
+    }
+  }
   const isJoined =
     isHost ||
     (savedDetails
@@ -906,9 +939,43 @@ export function ActivityDetailScreen() {
             {joinFeedback}
           </p>
         )}
+
+        {canReview && savedDetails && (
+          <section className="detail-review" aria-labelledby="detail-review-title">
+            <h2 id="detail-review-title">Review this activity</h2>
+            <p>
+              Open activity{savedDetails.suggestedSport ? `: ${savedDetails.suggestedSport}` : ""}. Only the host and the
+              moderation team can see it until it is approved.
+            </p>
+            {showApproveChoice ? (
+              <div className="detail-review-actions">
+                <p>Should {savedDetails.suggestedSport ?? "this sport"} also be considered for the sport list?</p>
+                <Button variant="secondary" disabled={reviewBusy} onClick={() => void submitReview(true, false)}>
+                  Approve activity only
+                </Button>
+                <Button disabled={reviewBusy} onClick={() => void submitReview(true, true)}>
+                  {reviewBusy ? "Saving…" : "Approve + suggest as sport"}
+                </Button>
+                <button type="button" className="text-action" disabled={reviewBusy} onClick={() => setShowApproveChoice(false)}>
+                  Back
+                </button>
+              </div>
+            ) : (
+              <div className="detail-review-actions two">
+                <Button variant="secondary" disabled={reviewBusy} onClick={() => void submitReview(false)}>
+                  Reject
+                </Button>
+                <Button disabled={reviewBusy} onClick={() => setShowApproveChoice(true)}>
+                  Approve
+                </Button>
+              </div>
+            )}
+            {reviewError && <p className="activity-join-error" role="alert">{reviewError}</p>}
+          </section>
+        )}
       </section>
 
-      {!(isHost && savedDetails && !isActivityDay) && (
+      {!isWaitingForReview && !(isHost && savedDetails && !isActivityDay) && (
       <div className="sticky-action">
         <div className="sticky-action-group" data-tour="activity-join">
           {isHost ? (

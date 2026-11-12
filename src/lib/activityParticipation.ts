@@ -142,7 +142,34 @@ export async function getSavedActivityFeed(): Promise<FeedActivity[]> {
     .order("starts_at", { ascending: true })
   if (activitiesError) throw activitiesError
 
-  return toFeedActivities(client, activityRows ?? [], viewerId)
+  // Moderators and admins can also read activities waiting for review: keep
+  // those out of the feed (your own stay visible to you). Separate query, so the
+  // feed still works before the review_status column exists.
+  const rows = activityRows ?? []
+  const reviewResult = rows.length
+    ? await client.from("activities").select("id, review_status").in("id", rows.map((row) => row.id))
+    : { data: [], error: null }
+  const notLive = new Set(
+    (reviewResult.error ? [] : reviewResult.data ?? [])
+      .filter((row) => row.review_status !== "approved")
+      .map((row) => row.id as string),
+  )
+  const visibleRows = rows.filter((row) => !notLive.has(row.id) || row.host_id === viewerId)
+
+  return toFeedActivities(client, visibleRows, viewerId)
+}
+
+// Activities waiting for a moderator, as the same cards as on Home (staff only, via RLS).
+export async function getActivitiesWaitingForReview(): Promise<FeedActivity[]> {
+  const client = requireSupabase()
+  const { data: sessionData } = await client.auth.getSession()
+  const { data, error } = await client
+    .from("activities")
+    .select(feedActivityColumns)
+    .eq("review_status", "pending")
+    .order("created_at", { ascending: true })
+  if (error) throw error
+  return toFeedActivities(client, (data ?? []) as ActivityFeedRow[], sessionData.session?.user.id ?? null)
 }
 
 type ActivityFeedRow = {

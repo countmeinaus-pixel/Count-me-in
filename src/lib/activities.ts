@@ -6,6 +6,7 @@ export type SavedActivityDetails = {
   id: string
   // New-sport activities wait for a moderator ('pending') before others can see them.
   reviewStatus: 'pending' | 'approved' | 'rejected'
+  viewerIsStaff: boolean
   suggestedSport: string | null
   sport: string
   title: string
@@ -115,6 +116,7 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
     hostPhoto: hostResult.data.photo_url,
     hostVerified: hostResult.data.selfie_verified,
     viewerIsHost: viewerId === activity.host_id,
+    viewerIsStaff: viewerRoleResult.data?.role === 'admin' || viewerRoleResult.data?.role === 'moderator',
     viewerCanEdit:
       viewerId === activity.host_id || viewerRoleResult.data?.role === 'admin',
   }

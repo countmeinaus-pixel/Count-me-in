@@ -5213,28 +5213,11 @@ h1 .skeleton { margin: 4px 0; }
 .wizard-suggest-box p { color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
 .wizard-suggest-box .text-action { justify-self: start; }
 
-/* Moderation: activities with a new sport, waiting for review */
 .review-activity-list { display: grid; gap: 12px; }
 /* Desktop: 3 a row, equal height, buttons lined up at the bottom. */
 @container app (min-width: 900px) {
   .review-activity-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-.review-activity-card { display: flex; flex-direction: column; gap: 6px; height: 100%; }
-.review-activity-card .review-activity-actions { margin-top: auto; padding-top: 8px; }
-.review-activity-card h2 { font: 700 18px/1.2 var(--font-display); }
-.review-activity-card p { color: var(--text-secondary); font-size: 14px; }
-.review-activity-sport {
-  align-self: flex-start;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--seafoam-subtle);
-  color: var(--seafoam);
-  font-size: 12px;
-  font-weight: 600;
-}
-.review-activity-notes { color: var(--text-primary); }
-.review-activity-card .text-action { align-self: flex-start; font-size: 14px; padding-inline: 0; }
-.review-activity-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 /* Team (admin): moderators list and search */
 .team-list { display: grid; gap: 8px; }
@@ -5256,7 +5239,21 @@ h1 .skeleton { margin: 4px 0; }
 /* Moderation tabs: width follows the label, so "Review activities" fits on phones too. */
 .moderation-page .segment-bar { display: flex; max-width: 520px; }
 .moderation-page .segment-bar button { flex: 1 1 auto; }
-/* Review: choice after Approve */
-.review-activity-choice { display: grid; gap: 8px; margin-top: auto; padding-top: 8px; }
-.review-activity-choice p { color: var(--text-primary); font-size: 14px; }
-.review-activity-choice .text-action { justify-self: center; }
+
+/* Review: Home-style cards with a Review button, and the review box on the activity page */
+.review-activity-item { display: grid; gap: 8px; align-content: start; }
+.detail-review {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--seafoam);
+  border-radius: var(--radius-lg);
+  background: var(--seafoam-subtle);
+}
+.detail-review h2 { font: 700 20px/1.2 var(--font-display); }
+.detail-review p { color: var(--text-secondary); font-size: 14px; line-height: 1.45; }
+.detail-review-actions { display: grid; gap: 8px; }
+.detail-review-actions.two { grid-template-columns: 1fr 1fr; }
+.detail-review-actions p { color: var(--text-primary); }
+.detail-review-actions .text-action { justify-self: center; }

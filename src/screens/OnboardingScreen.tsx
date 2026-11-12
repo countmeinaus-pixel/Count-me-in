@@ -15,22 +15,9 @@ import {
 } from '../lib/profile'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 import { refreshViewerProfile } from '../lib/viewerProfile'
+import { sportNames } from '../data/sports'
 
-const sportOptions = [
-  'Running',
-  'Hiking',
-  'Spearfishing',
-  'Freediving',
-  'Kitesurfing',
-  'Surfing',
-  'Swimming',
-  'Gym',
-  'Mountain biking',
-  'Road cycling',
-  'SUP / kayak',
-  'Scuba diving',
-  'Climbing / bouldering',
-]
+const sportOptions: string[] = sportNames
 const availabilityOptions = ['Weekday mornings', 'Weekday evenings', 'Saturdays', 'Sundays', 'Flexible']
 const skillOptions: SkillLevel[] = ['Beginner', 'Intermediate', 'Experienced']
 

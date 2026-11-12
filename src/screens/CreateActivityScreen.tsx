@@ -1,4 +1,7 @@
 import { activityLevels } from '../lib/activityFilters'
+import { ensureSportsInDatabase } from '../lib/sportCatalog'
+import { openActivity, type SportName } from '../data/sports'
+import { sportIconsByKey } from '../components/sportIcons'
 import {
   Anchor,
   Shell,
@@ -51,7 +54,8 @@ type PresetField = {
 
 const steps = ['Sport', 'Details', 'Level', 'Add people', 'Review']
 const levels = activityLevels
-const presetFields: Record<string, PresetField[]> = {
+// Every sport in data/sports.ts must have its fields here, or the build fails.
+const presetFields: Record<SportName | typeof openActivity.name, PresetField[]> = {
   Spearfishing: [
     { key: 'spot', label: 'Spot', placeholder: 'For example, Port Noarlunga reef' },
     { key: 'target_depth', label: 'Depth', options: ['0 to 5 m', '5 to 10 m', '10 to 15 m', '15 m+'] },
@@ -128,20 +132,7 @@ const presetFields: Record<string, PresetField[]> = {
   ],
 }
 
-const sportIcons: Record<string, ComponentType<{ className?: string }>> = {
-  footprints: Footprints,
-  mountain: Mountain,
-  fish: Fish,
-  wind: Wind,
-  waves: Waves,
-  dumbbell: Dumbbell,
-  bike: Bike,
-  sailboat: Sailboat,
-  anchor: Anchor,
-  shell: Shell,
-  'mountain-snow': MountainSnow,
-  plus: Plus,
-}
+const sportIcons: Record<string, ComponentType<{ className?: string }>> = sportIconsByKey
 
 function getLocalDateMinimum() {
   const date = new Date()
@@ -237,6 +228,7 @@ export function CreateActivityScreen() {
       }
 
       const user = userData.user
+      await ensureSportsInDatabase()
       const [profileResult, profileSportsResult, inviteesResult, catalogResult] = await Promise.all([
         client.from('profiles').select('suburb').eq('id', user.id).maybeSingle(),
         client.from('profile_sports').select('sport_id, skill').eq('profile_id', user.id),
@@ -579,7 +571,7 @@ export function CreateActivityScreen() {
     )
   }
 
-  const preset = selectedSport ? presetFields[selectedSport.name] ?? [] : []
+  const preset = selectedSport ? presetFields[selectedSport.name as SportName] ?? [] : []
   const hasPresetDuration = preset.some((field) => field.key === 'duration_hours' || field.key === 'duration_minutes')
   const SelectedSportIcon = selectedSport ? sportIcons[selectedSport.icon ?? ''] ?? Plus : Plus
 

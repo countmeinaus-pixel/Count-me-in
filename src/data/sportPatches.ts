@@ -129,7 +129,7 @@ function sharedPatches(f: SportFlavour): SpecialPatch[] {
   ]
 }
 
-const flavours: SportFlavour[] = [
+const flavours = [
   {
     sport: 'Running', icon: 'footprints', title: 'Run', session: 'run', sessions: 'runs',
     special: [
@@ -260,7 +260,12 @@ const flavours: SportFlavour[] = [
       { key: 'wall-collector', name: 'Wall collector', description: 'Ten venues, ten sets of problems.', rule: 'Climb at 10 different venues.', target: 10, progressLabel: 'venues', sportRule: { measure: { distinct: 'venue' } } },
     ],
   },
-]
+] satisfies SportFlavour[]
+
+// Every sport in data/sports.ts needs a block above. If one is missing, this line
+// fails the build and names the sport.
+const everySportHasPatches: Exclude<SportName, (typeof flavours)[number]['sport']> extends never ? true : Exclude<SportName, (typeof flavours)[number]['sport']> = true
+void everySportHasPatches
 
 function slug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')

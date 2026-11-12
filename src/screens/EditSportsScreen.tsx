@@ -5,6 +5,7 @@ import { SportIcon } from '../components/SportIcon'
 import { getCurrentProfile, saveProfileSports, type ProfileSport, type SkillLevel } from '../lib/profile'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 import { refreshViewerProfile } from '../lib/viewerProfile'
+import { ensureSportsInDatabase } from '../lib/sportCatalog'
 import { useUnsavedChangesWarning } from '../lib/useUnsavedChangesWarning'
 import { getMoreOrigin } from '../lib/moreNavigation'
 
@@ -52,6 +53,7 @@ export function EditSportsScreen() {
           return
         }
 
+        await ensureSportsInDatabase()
         const [profile, catalogResult] = await Promise.all([
           getCurrentProfile(userData.user.id),
           supabase.from('sports').select('id, name, icon').order('name'),

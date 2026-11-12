@@ -35,3 +35,4 @@ Jai is a UX/UI designer, not a developer. He does not write code himself.
 - Every Supabase table has Row Level Security enabled with explicit policies.
 - Make small, working steps. After each step: run the app, check there are no errors, then commit with a clear message.
 - Do not add features that are not in app-spec.md or the current phase without asking.
+- Sports live in one list: `src/data/sports.ts`. To add a sport, add it there; the build (`npm run build` runs `tsc`) then fails until it also has Create activity fields, patches and PR types. The Supabase `sports` table is filled automatically from that list.

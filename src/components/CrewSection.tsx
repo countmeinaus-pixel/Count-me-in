@@ -1,6 +1,7 @@
 import { CalendarDays, Check, MapPin, ShieldCheck, Sparkles, UserPlus, Users } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { InvitePanel } from './InvitePanel'
+import { sportVerbs, waterSportNames } from '../data/sports'
 import type { ActivityCardData } from './ActivityCard'
 import { Avatar } from './Avatar'
 import { SportIcon } from './SportIcon'
@@ -10,28 +11,13 @@ import type { CrewSuggestion } from '../lib/friends'
 // "Find your crew" on Home: friends as pills with their next plan, and the
 // suggestions as a bento: one top match plus two smaller cards.
 
-const sportVerbs: Record<string, string> = {
-  Running: 'run',
-  Hiking: 'hike',
-  Spearfishing: 'spearfish',
-  Freediving: 'freedive',
-  Kitesurfing: 'kitesurf',
-  Surfing: 'surf',
-  Swimming: 'swim',
-  Gym: 'lift',
-  'Mountain biking': 'ride MTB',
-  'Road cycling': 'ride the road',
-  'SUP / kayak': 'paddle',
-  'Scuba diving': 'dive',
-  'Climbing / bouldering': 'climb',
-}
 
 function joinWords(words: string[]) {
   if (words.length <= 1) return words.join('')
   return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
 }
 
-const waterSports = ['Spearfishing', 'Freediving', 'Kitesurfing', 'Surfing', 'Swimming', 'SUP / kayak', 'Scuba diving']
+const waterSports = waterSportNames
 
 function initials(name: string) {
   const letters = name.replace(/[^A-Za-z ]/g, '').trim()

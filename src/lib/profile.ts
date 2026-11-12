@@ -1,4 +1,5 @@
 import type { CommunityMember } from '../data/mockData'
+import { ensureSportsInDatabase } from './sportCatalog'
 import { supabase } from './supabase'
 
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Experienced'
@@ -138,6 +139,7 @@ export async function saveProfile(input: SaveProfileInput) {
 
   if (profileError) throw profileError
 
+  await ensureSportsInDatabase()
   const sportNames = input.sports.map((item) => item.sport)
   const { data: sportCatalog, error: sportCatalogError } = sportNames.length
     ? await supabase.from('sports').select('id, name').in('name', sportNames)
@@ -220,6 +222,7 @@ export async function saveProfileSports(userId: string, sports: Array<{ name: st
   if (!supabase) throw new Error('Supabase is not configured yet.')
   if (sports.length === 0) throw new Error('Choose at least one sport.')
 
+  await ensureSportsInDatabase()
   const { data: catalog, error: catalogError } = await supabase
     .from('sports')
     .select('id, name')

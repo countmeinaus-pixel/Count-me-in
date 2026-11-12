@@ -1,37 +1,9 @@
-import {
-  Anchor,
-  Bike,
-  Dumbbell,
-  Fish,
-  Footprints,
-  Mountain,
-  MountainSnow,
-  Plus,
-  Sailboat,
-  Shell,
-  Waves,
-  Wind,
-  type LucideIcon,
-} from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { getSportIconKey } from '../data/sports'
+import { sportIconsByKey } from './sportIcons'
 
-const icons: Record<string, LucideIcon> = {
-  Running: Footprints,
-  Hiking: Mountain,
-  Spearfishing: Fish,
-  Freediving: Shell,
-  Kitesurfing: Wind,
-  Surfing: Waves,
-  Swimming: Waves,
-  Gym: Dumbbell,
-  'Mountain biking': Bike,
-  'Road cycling': Bike,
-  'SUP / kayak': Sailboat,
-  'Scuba diving': Anchor,
-  'Climbing / bouldering': MountainSnow,
-  'Open activity': Plus,
-}
-
+// The icon for a sport, from the one sports list in data/sports.ts.
 export function SportIcon({ sport, className }: { sport: string; className?: string }) {
-  const Icon = icons[sport] ?? Plus
+  const Icon = sportIconsByKey[getSportIconKey(sport)] ?? Plus
   return <Icon className={className} aria-hidden="true" />
 }

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { sportNames } from '../data/sports'
 
-// The same sports as on Edit my sports (the sports table in Supabase).
-// Until it loads, or when offline, the built-in list is used.
-export const builtInSports = [
-  'Running', 'Hiking', 'Spearfishing', 'Freediving', 'Kitesurfing', 'Surfing', 'Swimming', 'Gym',
-  'Mountain biking', 'Road cycling', 'SUP / kayak', 'Scuba diving', 'Climbing / bouldering',
-]
+// The same sports as on Edit my sports (the sports table in Supabase) plus data/sports.ts.
+// Until it loads, or when offline, the list from data/sports.ts is used.
+export const builtInSports: string[] = sportNames
 
 let cachedCatalog: string[] | null = null
 
@@ -18,7 +16,8 @@ export function useSportCatalog() {
     supabase.from('sports').select('name').order('name')
       .then(({ data, error }) => {
         if (error || !data?.length) return
-        cachedCatalog = data.map((row: { name: string }) => row.name)
+        // Database sports plus any sport added in code but not synced yet.
+        cachedCatalog = [...new Set([...data.map((row: { name: string }) => row.name), ...sportNames])]
         if (active) setSports(cachedCatalog)
       })
     return () => {

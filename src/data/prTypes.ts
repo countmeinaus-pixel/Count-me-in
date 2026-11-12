@@ -1,6 +1,8 @@
 // Fixed personal record (PR) types per sport, so records are comparable.
 // Time records are stored in seconds; lower is better for those.
 
+import type { SportName } from './sports'
+
 export type PrFormat = 'number' | 'time'
 
 export type PrType = {
@@ -12,7 +14,7 @@ export type PrType = {
   better: 'higher' | 'lower'
 }
 
-const types: Array<Omit<PrType, 'better'> & { better?: PrType['better'] }> = [
+const types = [
   { sport: 'Spearfishing', key: 'spear-depth', label: 'Deepest dive', format: 'number', unit: 'm' },
   { sport: 'Spearfishing', key: 'spear-breath-hold', label: 'Longest breath-hold', format: 'time', unit: '' },
   { sport: 'Freediving', key: 'free-depth', label: 'Deepest dive', format: 'number', unit: 'm' },
@@ -45,9 +47,14 @@ const types: Array<Omit<PrType, 'better'> & { better?: PrType['better'] }> = [
   { sport: 'Scuba diving', key: 'scuba-longest', label: 'Longest dive', format: 'time', unit: '' },
   { sport: 'Climbing / bouldering', key: 'climb-boulder', label: 'Hardest boulder', format: 'number', unit: 'V-grade' },
   { sport: 'Climbing / bouldering', key: 'climb-route', label: 'Hardest route', format: 'number', unit: 'Ewbank grade' },
-]
+] satisfies Array<Omit<PrType, 'better' | 'sport'> & { sport: SportName; better?: PrType['better'] }>
 
-export const prTypes: PrType[] = types.map((type) => ({ better: 'higher', ...type }))
+// Every sport in data/sports.ts needs at least one PR type above. If one is
+// missing, this line fails the build and names the sport.
+const everySportHasRecords: Exclude<SportName, (typeof types)[number]['sport']> extends never ? true : Exclude<SportName, (typeof types)[number]['sport']> = true
+void everySportHasRecords
+
+export const prTypes: PrType[] = types.map((type) => ({ better: 'higher' as const, ...type }))
 
 export const prSports = [...new Set(prTypes.map((type) => type.sport))]
 

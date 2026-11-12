@@ -1,4 +1,5 @@
 import { activities, demoConfirmedMeetups } from '../data/mockData'
+import { waterSportNames } from '../data/sports'
 import { patchDefinitions, type PatchDefinition, type SportPatchRule } from '../data/patches'
 import { getConfirmedPrDates } from './personalRecords'
 import { supabase } from './supabase'
@@ -377,7 +378,7 @@ export function getPatchMetricProgress(
     }
     case 'saltWater': {
       const qualifyingEntries = entries.filter((entry) => (
-        ['Spearfishing', 'Freediving', 'Surfing', 'Kitesurfing', 'SUP / kayak', 'Scuba diving'].includes(entry.sport)
+        waterSportNames.includes(entry.sport)
         || (entry.sport === 'Swimming' && entry.oceanActivity)
       ))
       return { progress: qualifyingEntries.length, qualifyingEntries }

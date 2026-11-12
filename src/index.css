@@ -4924,11 +4924,11 @@ h1 .skeleton { margin: 4px 0; }
   .crew-bento { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .crew-top-extra { display: block; }
   .crew-more-row .friend-tile.top-on-desktop { display: none; }
-  /* The small suggestion tiles share one row and stretch to the full width. */
+  /* The small suggestion tiles: one row of 6 equal columns across the full width.
+     Fixed column count, so a few tiles keep their size instead of stretching. */
   .friend-tile-row.crew-more-row {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     overflow: visible;
     margin: 12px 0 0;
     padding: 0;
@@ -4936,6 +4936,8 @@ h1 .skeleton { margin: 4px 0; }
   .crew-more-row .friend-tile { grid-template-rows: auto auto; }
   .crew-more-row .friend-tile-photo { aspect-ratio: 1 / 1; }
   .crew-more-row .friend-tile.beyond-grid { display: grid; }
+  /* The first 2 tiles are already shown as top matches; show the next 6. */
+  .crew-more-row .friend-tile:nth-child(n + 9) { display: none; }
 }
 
 /* Friends page: link row to Find new crew, also used for Invite a mate. */

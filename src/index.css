@@ -1676,6 +1676,10 @@ h3 { font: 700 21px/24px var(--font-display); }
   display: grid;
   gap: 12px;
 }
+/* Going, Hosting and Requested each span the full width; their cards use the
+   same grid as Home (3 a row on wide screens, see .card-list). */
+.my-activities-sections { display: grid; gap: 18px; margin-top: 18px; }
+.my-activities-section > .card-list { margin: 0; }
 
 .status-line { margin: 0; gap: 8px; }
 .status-line span {

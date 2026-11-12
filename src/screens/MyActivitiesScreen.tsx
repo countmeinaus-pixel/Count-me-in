@@ -250,7 +250,7 @@ export function MyActivitiesScreen() {
           Loading your activities…
         </p>
       ) : segment === "upcoming" ? (
-        <div className="my-activities-grid">
+        <div className="my-activities-sections">
           {(["going", "hosting", "requested"] as const).map((status) => {
             const items = displayedActivities.filter(
               (item) => item.status === status,
@@ -273,13 +273,15 @@ export function MyActivitiesScreen() {
                         : "Your upcoming plans"}
                   </p>
                 </div>
-                {items.map(({ activity }) => (
-                  <ActivityCard
-                    key={activity.id}
-                    activity={activity}
-                    onClick={() => navigate(`/activity/${activity.id}`)}
-                  />
-                ))}
+                <div className="card-list">
+                  {items.map(({ activity }) => (
+                    <ActivityCard
+                      key={activity.id}
+                      activity={activity}
+                      onClick={() => navigate(`/activity/${activity.id}`)}
+                    />
+                  ))}
+                </div>
               </section>
             )
           })}

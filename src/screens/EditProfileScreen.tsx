@@ -263,7 +263,7 @@ export function EditProfileScreen() {
 
       <div className="edit-profile-fields">
         <label className="edit-field">
-          <span>First name</span>
+          <span>Username</span>
           <input
             value={form.firstName}
             maxLength={50}

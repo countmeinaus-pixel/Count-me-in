@@ -4442,6 +4442,9 @@ span.user-avatar {
 .flow-fit .flow-showcase:not(.flow-showcase-cards) { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3); }
 .flow-fit .flow-footer { position: static; }
 .flow-field { display: grid; gap: 8px; color: var(--text-secondary); font-size: 14px; }
+.flow-field input[type='date'] { color-scheme: dark; }
+.flow-locate { gap: 8px; width: 100%; }
+.flow-locate svg { width: 18px; height: 18px; }
 .flow-field input,
 .flow-field textarea {
   width: 100%;
@@ -4638,7 +4641,7 @@ span.user-avatar {
 }
 .onboarding-photo img { width: 100%; height: 100%; object-fit: cover; }
 .onboarding-photo svg { width: 32px; height: 32px; }
-.flow-bullets { display: grid; gap: 10px; }
+.flow-bullets { display: grid; gap: 16px; }
 .flow-bullet { display: flex; gap: 12px; align-items: flex-start; color: var(--text-secondary); line-height: 1.45; }
 .flow-bullet svg { flex: 0 0 auto; width: 22px; height: 22px; color: var(--seafoam); margin-top: 1px; }
 .flow-bullet strong { color: var(--text-primary); }

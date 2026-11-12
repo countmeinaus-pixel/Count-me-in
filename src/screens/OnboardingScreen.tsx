@@ -1,5 +1,5 @@
 import { SuburbInput } from '../components/SuburbInput'
-import { CalendarDays, Camera, Check, QrCode, ShieldCheck, Trophy } from 'lucide-react'
+import { CalendarDays, Camera, Check, LocateFixed, QrCode, ShieldCheck, Trophy } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ClaimPrDialog } from '../components/ClaimPrDialog'
@@ -16,6 +16,8 @@ import {
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 import { refreshViewerProfile } from '../lib/viewerProfile'
 import { sportNames } from '../data/sports'
+import { getDeviceLocation, nearestSuburb } from '../lib/distance'
+import { loadLocalities } from '../lib/localities'
 
 const sportOptions: string[] = sportNames
 const availabilityOptions = ['Weekday mornings', 'Weekday evenings', 'Saturdays', 'Sundays', 'Flexible']
@@ -25,6 +27,61 @@ const skillOptions: SkillLevel[] = ['Beginner', 'Intermediate', 'Experienced']
 // rest can be skipped and filled in later from the profile.
 type Step = 'name' | 'birthday' | 'suburb' | 'sports' | 'levels' | 'availability' | 'patches' | 'record'
 const steps: Step[] = ['name', 'birthday', 'suburb', 'sports', 'levels', 'availability', 'patches', 'record']
+
+// Answers are kept on this device while you go, so closing the app or browser
+// halfway does not lose them: you continue at the step where you left off.
+type Draft = {
+  stepIndex: number
+  firstName: string
+  bio: string
+  dateOfBirth: string
+  suburb: string
+  selectedSports: string[]
+  sportSkills: Record<string, SkillLevel>
+  selectedAvailability: string[]
+  photoDataUrl: string | null
+}
+const draftKey = (userId: string) => `count-me-in-onboarding-draft-v1:${userId}`
+
+function readDraft(userId: string): Draft | null {
+  try {
+    const value = window.localStorage.getItem(draftKey(userId))
+    return value ? (JSON.parse(value) as Draft) : null
+  } catch {
+    return null
+  }
+}
+
+function writeDraft(userId: string, draft: Draft) {
+  try {
+    window.localStorage.setItem(draftKey(userId), JSON.stringify(draft))
+  } catch {
+    // Storage full or blocked: the photo is the big part, so try again without it.
+    try {
+      window.localStorage.setItem(draftKey(userId), JSON.stringify({ ...draft, photoDataUrl: null }))
+    } catch {
+      // Storage blocked: answers last until the page closes.
+    }
+  }
+}
+
+function clearDraft(userId: string | null) {
+  if (!userId) return
+  try {
+    window.localStorage.removeItem(draftKey(userId))
+  } catch {
+    // Nothing to clear.
+  }
+}
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
 
 export function OnboardingScreen() {
   const navigate = useNavigate()
@@ -47,6 +104,9 @@ export function OnboardingScreen() {
   const [profileSaved, setProfileSaved] = useState(false)
   const [claimOpen, setClaimOpen] = useState(false)
   const [prClaimed, setPrClaimed] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
+  const [isLocating, setIsLocating] = useState(false)
   const age = useMemo(() => calculateAgeFromDateOfBirth(dateOfBirth), [dateOfBirth])
   const step = steps[stepIndex]
 
@@ -75,9 +135,34 @@ export function OnboardingScreen() {
         return
       }
       if (profile?.onboarding_complete) {
+        clearDraft(sessionData.user.id)
         navigate('/', { replace: true })
         return
       }
+      // Pick up where you left off on this device.
+      const draft = readDraft(sessionData.user.id)
+      if (draft) {
+        setFirstName(draft.firstName ?? '')
+        setBio(draft.bio ?? '')
+        setDateOfBirth(draft.dateOfBirth ?? '')
+        setSuburb(draft.suburb ?? '')
+        setSelectedSports(draft.selectedSports ?? [])
+        setSportSkills(draft.sportSkills ?? {})
+        setSelectedAvailability(draft.selectedAvailability ?? [])
+        setStepIndex(Math.max(0, Math.min(steps.indexOf('availability'), draft.stepIndex ?? 0)))
+        if (draft.photoDataUrl) {
+          try {
+            const blob = await (await fetch(draft.photoDataUrl)).blob()
+            if (!active) return
+            setPhotoFile(new File([blob], 'profile.jpg', { type: blob.type || 'image/jpeg' }))
+            setPhotoPreview(URL.createObjectURL(blob))
+            setPhotoDataUrl(draft.photoDataUrl)
+          } catch {
+            // Photo could not be restored; it is optional.
+          }
+        }
+      }
+      setUserId(sessionData.user.id)
       setIsChecking(false)
     }
     void ensureSession()
@@ -89,6 +174,21 @@ export function OnboardingScreen() {
   useEffect(() => () => {
     if (photoPreview) URL.revokeObjectURL(photoPreview)
   }, [photoPreview])
+
+  useEffect(() => {
+    if (!userId || profileSaved) return
+    writeDraft(userId, {
+      stepIndex,
+      firstName,
+      bio,
+      dateOfBirth,
+      suburb,
+      selectedSports,
+      sportSkills,
+      selectedAvailability,
+      photoDataUrl,
+    })
+  }, [userId, profileSaved, stepIndex, firstName, bio, dateOfBirth, suburb, selectedSports, sportSkills, selectedAvailability, photoDataUrl])
 
   if (isChecking || checkError) {
     return (
@@ -142,8 +242,23 @@ export function OnboardingScreen() {
       const compressed = await compressProfilePhoto(file)
       setPhotoFile(compressed)
       setPhotoPreview(URL.createObjectURL(compressed))
+      setPhotoDataUrl(await fileToDataUrl(compressed).catch(() => null))
     } catch (photoError) {
       setError(photoError instanceof Error ? photoError.message : 'Unable to use this photo.')
+    }
+  }
+
+  // Fills in the nearest suburb or town. Only the place name is saved, never the exact spot.
+  async function useCurrentLocation() {
+    setIsLocating(true)
+    setError('')
+    try {
+      const [point] = await Promise.all([getDeviceLocation(), loadLocalities()])
+      setSuburb(nearestSuburb(point))
+    } catch (locateError) {
+      setError(locateError instanceof Error ? locateError.message : 'Your location could not be found. Type your suburb instead.')
+    } finally {
+      setIsLocating(false)
     }
   }
 
@@ -180,6 +295,7 @@ export function OnboardingScreen() {
         availability: selectedAvailability,
       })
       setProfileSaved(true)
+      clearDraft(userData.user.id)
       if (skipRest) finish()
       else goTo(steps.indexOf('patches'))
     } catch (saveError) {
@@ -206,7 +322,7 @@ export function OnboardingScreen() {
         progress={progress}
         align="start"
         title={<>Welcome! <em>What should the crew call you?</em></>}
-        subtitle="Your first name and photo show on your profile and your activities."
+        subtitle="Your username and photo show on your profile and your activities."
         primaryLabel="Continue"
         primaryDisabled={!firstName.trim()}
         onPrimary={() => goTo(nextIndexAfter(stepIndex))}
@@ -217,8 +333,8 @@ export function OnboardingScreen() {
         <input ref={photoInputRef} className="sr-only" type="file" accept="image/*" onChange={handlePhotoSelect} aria-label="Choose a profile photo" />
         <p className="flow-hint" style={{ textAlign: 'center' }}>Profile photo (optional)</p>
         <label className="flow-field">
-          <span>First name</span>
-          <input value={firstName} maxLength={40} autoComplete="given-name" onChange={(event) => setFirstName(event.target.value)} placeholder="For example, Matt" />
+          <span>Username</span>
+          <input value={firstName} maxLength={40} autoComplete="nickname" onChange={(event) => setFirstName(event.target.value)} placeholder="For example, Matt" />
         </label>
         <label className="flow-field">
           <span>Short bio (optional)</span>
@@ -259,15 +375,18 @@ export function OnboardingScreen() {
         progress={progress}
         align="start"
         title={<>Where are you <em>based</em>?</>}
-        subtitle="We use your suburb to show activities and people nearby."
+        subtitle="We use your location to show activities and people nearby. Only your suburb or town is shown, never your exact spot."
         onBack={onBack}
         primaryLabel="Continue"
         primaryDisabled={!suburb.trim()}
         onPrimary={() => goTo(nextIndexAfter(stepIndex))}
       >
+        <button type="button" className="button button-secondary button-md flow-locate" onClick={() => void useCurrentLocation()} disabled={isLocating}>
+          <LocateFixed aria-hidden="true" /> {isLocating ? 'Finding you…' : 'Use my current location'}
+        </button>
         <label className="flow-field">
-          <span>Suburb</span>
-          <SuburbInput value={suburb} onChange={setSuburb} ariaLabel="Suburb or town" />
+          <span>Your location</span>
+          <SuburbInput value={suburb} onChange={setSuburb} placeholder="Suburb or town, for example Bondi Beach" ariaLabel="Your location: suburb or town" />
         </label>
         {errorBox}
       </FlowLayout>

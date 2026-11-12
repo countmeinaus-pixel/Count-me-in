@@ -1,0 +1,16 @@
+# Link previews are allowed, so shared links show the Count Me In card.
+User-agent: LinkedInBot
+User-agent: facebookexternalhit
+User-agent: Facebot
+User-agent: WhatsApp
+User-agent: Twitterbot
+User-agent: Slackbot
+User-agent: Slackbot-LinkExpanding
+User-agent: TelegramBot
+User-agent: Discordbot
+User-agent: Applebot
+Allow: /
+
+# Members-only app: keep it out of search engines.
+User-agent: *
+Disallow: /

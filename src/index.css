@@ -5330,7 +5330,9 @@ h1 .skeleton { margin: 4px 0; }
 
 /* Profile card: on narrow cards (two a row on phones) the sports move under the
    photo, full width, so they are not squeezed next to it. */
-.mate-card { container-type: inline-size; }
+/* width: 100% matters: with inline-size containment a button no longer sizes to its
+   content, so without it the card collapses where its parent does not set a width. */
+.mate-card { container-type: inline-size; width: 100%; }
 @container (max-width: 190px) {
   /* Narrow cards (two a row on phones): photo on top, edge to edge and square,
      like the suggestion tiles; name, place, plan, sports and stats below. */
@@ -5400,3 +5402,9 @@ h1 .skeleton { margin: 4px 0; }
 @container app (max-width: 759px) {
   .crew-friend-grid .beyond-phone { display: none; }
 }
+
+/* Sport chips on one line, then "+N" (see FitChips.tsx). */
+.fit-chips { position: relative; display: flex; flex-wrap: nowrap; gap: 4px; min-width: 0; overflow: hidden; }
+.fit-chips > .mate-sport { flex: 0 1 auto; min-width: 0; }
+.fit-chips > .mate-sport-more { flex: 0 0 auto; }
+.fit-chips-measure { position: absolute; visibility: hidden; pointer-events: none; display: flex; gap: 4px; white-space: nowrap; }

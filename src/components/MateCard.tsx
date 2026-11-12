@@ -2,6 +2,7 @@ import { MapPin } from 'lucide-react'
 import type { CommunityMember } from '../data/mockData'
 import { waterSportNames } from '../data/sports'
 import { SportIcon } from './SportIcon'
+import { FitChips } from './FitChips'
 
 function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
@@ -46,10 +47,7 @@ export function MateCard({
               {note}
             </span>
           )}
-          <span className="mate-card-sports">
-            {member.sports.slice(0, 3).map((sport) => <span className="mate-sport" key={sport.name}>{sport.name}</span>)}
-            {member.sports.length > 3 && <span className="mate-sport-more">+{member.sports.length - 3}</span>}
-          </span>
+          <FitChips className="mate-card-sports" items={member.sports.map((sport) => sport.name)} />
         </span>
       </span>
       <span className="mate-card-stats">

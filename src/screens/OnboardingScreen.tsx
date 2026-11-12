@@ -20,6 +20,7 @@ const sportOptions = [
   'Running',
   'Hiking',
   'Spearfishing',
+  'Freediving',
   'Kitesurfing',
   'Surfing',
   'Swimming',

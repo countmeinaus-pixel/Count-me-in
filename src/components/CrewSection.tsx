@@ -14,6 +14,7 @@ const sportVerbs: Record<string, string> = {
   Running: 'run',
   Hiking: 'hike',
   Spearfishing: 'spearfish',
+  Freediving: 'freedive',
   Kitesurfing: 'kitesurf',
   Surfing: 'surf',
   Swimming: 'swim',
@@ -30,7 +31,7 @@ function joinWords(words: string[]) {
   return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
 }
 
-const waterSports = ['Spearfishing', 'Kitesurfing', 'Surfing', 'Swimming', 'SUP / kayak', 'Scuba diving']
+const waterSports = ['Spearfishing', 'Freediving', 'Kitesurfing', 'Surfing', 'Swimming', 'SUP / kayak', 'Scuba diving']
 
 function initials(name: string) {
   const letters = name.replace(/[^A-Za-z ]/g, '').trim()

@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Sunrise,
   Users,
+  Shell,
   Waves,
   type LucideIcon,
 } from 'lucide-react'
@@ -30,6 +31,7 @@ const icons: Record<string, LucideIcon> = {
   gavel: Gavel,
   'mountain-snow': MountainSnow,
   sailboat: Sailboat,
+  shell: Shell,
   wind: Wind,
   medal: Medal,
   mountain: Mountain,

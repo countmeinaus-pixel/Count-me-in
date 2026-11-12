@@ -377,7 +377,7 @@ export function getPatchMetricProgress(
     }
     case 'saltWater': {
       const qualifyingEntries = entries.filter((entry) => (
-        ['Spearfishing', 'Surfing', 'Kitesurfing', 'SUP / kayak', 'Scuba diving'].includes(entry.sport)
+        ['Spearfishing', 'Freediving', 'Surfing', 'Kitesurfing', 'SUP / kayak', 'Scuba diving'].includes(entry.sport)
         || (entry.sport === 'Swimming' && entry.oceanActivity)
       ))
       return { progress: qualifyingEntries.length, qualifyingEntries }

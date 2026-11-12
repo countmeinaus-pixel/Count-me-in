@@ -15,6 +15,8 @@ export type PrType = {
 const types: Array<Omit<PrType, 'better'> & { better?: PrType['better'] }> = [
   { sport: 'Spearfishing', key: 'spear-depth', label: 'Deepest dive', format: 'number', unit: 'm' },
   { sport: 'Spearfishing', key: 'spear-breath-hold', label: 'Longest breath-hold', format: 'time', unit: '' },
+  { sport: 'Freediving', key: 'free-depth', label: 'Deepest dive', format: 'number', unit: 'm' },
+  { sport: 'Freediving', key: 'free-breath-hold', label: 'Longest breath-hold', format: 'time', unit: '' },
   { sport: 'Spearfishing', key: 'spear-fish', label: 'Biggest fish', format: 'number', unit: 'kg' },
   { sport: 'Running', key: 'run-5k', label: '5 km time', format: 'time', unit: '', better: 'lower' },
   { sport: 'Running', key: 'run-10k', label: '10 km time', format: 'time', unit: '', better: 'lower' },

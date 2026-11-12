@@ -26,7 +26,7 @@ const demoNotifications: Notification[] = [
   {
     id: 'request-accepted',
     title: 'Your request was accepted',
-    message: 'Matt accepted your request for Spearfishing at Port Noarlunga reef.',
+    message: 'Matt accepted your request for Freediving at Port Noarlunga reef.',
     time: '10 min ago',
     href: '/activity/1',
     unread: true,

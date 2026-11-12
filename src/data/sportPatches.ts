@@ -161,6 +161,16 @@ const flavours: SportFlavour[] = [
     ],
   },
   {
+    sport: 'Freediving', icon: 'shell', title: 'Breath', session: 'dive', sessions: 'dives',
+    special: [
+      { key: 'ten-metres', name: 'Ten metres', description: 'One breath, ten metres, a buddy on top.', rule: 'Complete 3 dives at 10 m or deeper.', target: 3, progressLabel: 'deep dives', sportRule: { detail: { key: 'target_depth', values: ['10 to 15 m', '15 m+'] } } },
+      { key: 'into-the-blue', name: 'Into the blue', description: 'Calm, slow and deep.', rule: 'Complete 3 dives at 15 m or deeper.', target: 3, progressLabel: 'deep dives', sportRule: { detail: { key: 'target_depth', values: ['15 m+'] } } },
+      { key: 'boat-day', name: 'Boat day', description: 'Out past the reef with your buddies.', rule: 'Complete 3 boat dives.', target: 3, progressLabel: 'boat dives', sportRule: { detail: { key: 'entry', values: ['Boat dive'] } } },
+      { key: 'reef-hopper', name: 'Reef hopper', description: 'You know more than one good reef.', rule: 'Dive 5 different spots.', target: 5, progressLabel: 'spots', sportRule: { measure: { distinct: 'spot' } } },
+      { key: 'gulf-explorer', name: 'Gulf explorer', description: 'The whole coast is your pool.', rule: 'Dive 10 different spots.', target: 10, progressLabel: 'spots', sportRule: { measure: { distinct: 'spot' } } },
+    ],
+  },
+  {
     sport: 'Kitesurfing', icon: 'wind', title: 'Kite', session: 'kite session', sessions: 'kite sessions',
     special: [
       { key: 'foil-flyer', name: 'Foil flyer', description: 'Silent, smooth and a little bit addictive.', rule: 'Complete 3 foil sessions.', target: 3, progressLabel: 'foil sessions', sportRule: { detail: { key: 'discipline', values: ['Foil'] } } },

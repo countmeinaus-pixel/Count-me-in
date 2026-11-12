@@ -15,6 +15,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 7 | `supabase/migrations/20261111110000_activity_location.sql` | Adres en kaartpin bij een activiteit, zodat hij op de kaart op Home staat |
 | 8 | `supabase/migrations/20261111120000_friend_requests.sql` | Vriendschapsverzoeken: Add friend, Accept/Decline, echte vriendenlijst |
 | 9 | `supabase/migrations/20261112090000_profile_shared_location.sql` | Leden kunnen hun afgeronde locatie (~1 km) delen voor afstanden in km |
+| 10 | `supabase/migrations/20261112120000_add_freediving.sql` | Freediving als nieuwe sport (kiezen bij Edit my sports en Create activity) |
 
 ## Zo doe je het (per bestand)
 
@@ -35,3 +36,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 7:** maak een activiteit en plak bij **Map pin** bijvoorbeeld `-34.9799, 138.5144` (Glenelg). Open daarna Home > **Map**: je activiteit staat als oranje pin op de kaart.
 - **Na 8:** open het profiel van een ander lid. Onder zijn naam staat **Add friend**.
 - **Na 9:** tik op Home linksboven op de locatie, vink **Also share my approximate location** aan en tik op **Use my current location**. Je krijgt geen foutmelding.
+- **Na 10:** ga naar **More** > **My sports** en tik op **Edit**. In de lijst staat **Freediving** met een schelp-icoon.

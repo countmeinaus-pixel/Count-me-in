@@ -152,7 +152,7 @@ Build these once and reuse them. Each lists its variants and states.
 **ActivityCard** (most important component)
 - bg `--surface-1`, radius `--radius-lg`, padding 16px.
 - Top row: sport icon + sport name (`label`, `--text-secondary`) on the left, date and time (`small`, `--seafoam`) on the right.
-- Title in `h3` (for example "Spearfishing at Port Noarlunga reef").
+- Title in `h3` (for example "Freediving at Port Noarlunga reef").
 - Two or three key preset facts as a row of small text with dot separators (for example "5 to 10 m · 2 hrs · Shore dive").
 - Meeting point with a map-pin icon in `small` `--text-secondary`.
 - Bottom row: host Avatar (32px) + first name + verified tick, SpotsIndicator, and LevelPill. In the feed the whole card is tappable; the "Count me in" button only appears on the detail screen.

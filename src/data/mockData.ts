@@ -76,7 +76,7 @@ function getDemoMeetupDate(monthsAgo: number, day: number, hour: number) {
 }
 
 export const demoConfirmedMeetups = [
-  { user: 'Jai', partner: 'Matt', sport: 'Spearfishing', activityId: -1, activityTitle: 'Port Noarlunga reef dive', activityDate: getDemoMeetupDate(5, 6, 6), startsAt: getDemoMeetupDate(5, 6, 6), confirmedAt: getDemoMeetupDate(5, 6, 11), hosted: true },
+  { user: 'Jai', partner: 'Matt', sport: 'Freediving', activityId: -1, activityTitle: 'Port Noarlunga reef dive', activityDate: getDemoMeetupDate(5, 6, 6), startsAt: getDemoMeetupDate(5, 6, 6), confirmedAt: getDemoMeetupDate(5, 6, 11), hosted: true },
   { user: 'Jai', partner: 'Luca', sport: 'Spearfishing', activityId: -2, activityTitle: 'South reef spearfishing', activityDate: getDemoMeetupDate(4, 12, 8), startsAt: getDemoMeetupDate(4, 12, 8), confirmedAt: getDemoMeetupDate(4, 12, 12), hosted: false },
   { user: 'Jai', partner: 'Dave', sport: 'Spearfishing', activityId: -3, activityTitle: 'Coastal spearfishing session', activityDate: getDemoMeetupDate(3, 18, 7), startsAt: getDemoMeetupDate(3, 18, 7), confirmedAt: getDemoMeetupDate(3, 18, 11), hosted: false },
   { user: 'Jai', partner: 'Hamish', sport: 'Hiking', activityId: -4, activityTitle: 'Hills trail walk', activityDate: getDemoMeetupDate(2, 9, 8), startsAt: getDemoMeetupDate(2, 9, 8), confirmedAt: getDemoMeetupDate(2, 9, 13), hosted: true },
@@ -243,8 +243,8 @@ demoConfirmedMeetups.push(
 export const activities: Activity[] = [
   {
     id: 1,
-    sport: 'Spearfishing',
-    title: 'Spearfishing at Port Noarlunga reef',
+    sport: 'Freediving',
+    title: 'Freediving at Port Noarlunga reef',
     startsAt: getDemoStart(2, 7),
     facts: '5 to 10 m · Shore dive · 2 hrs',
     place: 'Port Noarlunga jetty car park',
@@ -255,11 +255,11 @@ export const activities: Activity[] = [
     spotsTotal: 4,
     spotsTaken: 2,
     level: 'Intermediate',
-    icon: 'fish',
+    icon: 'waves',
     hero:
       'https://images.unsplash.com/photo-1516691195066-3f22714f08fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=85&w=1080',
     hostMeta: '12 confirmed meetups',
-    notes: 'Viz is looking decent. Meet by the southern end of the car park and we will walk down together.',
+    notes: 'Viz is looking decent. Freediving and snorkelling only here, no spearfishing (it is an aquatic reserve). Meet by the southern end of the car park and we will walk down together.',
     attendees: ['Matt', 'Jai', 'Luca'],
     details: { Depth: '5 to 10 m', Entry: 'Shore dive', Duration: '2 hours' },
   },

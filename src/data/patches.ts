@@ -4,7 +4,7 @@ export type PatchCategory = 'Getting started' | 'Consistency' | 'Sports' | 'Soci
 export type PatchMetric = 'meetups' | 'earlyBird' | 'saltWater' | 'trailhead' | 'hosted' | 'sports' | 'sport' | 'prConfirms'
 
 export type SportName =
-  | 'Running' | 'Hiking' | 'Spearfishing' | 'Kitesurfing' | 'Surfing' | 'Swimming' | 'Gym'
+  | 'Running' | 'Hiking' | 'Spearfishing' | 'Freediving' | 'Kitesurfing' | 'Surfing' | 'Swimming' | 'Gym'
   | 'Mountain biking' | 'Road cycling' | 'SUP / kayak' | 'Scuba diving' | 'Climbing / bouldering'
 
 // Counts confirmed sessions in one sport, optionally only those with a
@@ -163,6 +163,6 @@ export const patchDefinitions: PatchDefinition[] = [...basePatches, ...buildSpor
 
 export const patchCategories: PatchCategory[] = [
   'Getting started', 'Consistency', 'Sports', 'Social',
-  'Running', 'Hiking', 'Spearfishing', 'Kitesurfing', 'Surfing', 'Swimming', 'Gym',
+  'Running', 'Hiking', 'Spearfishing', 'Freediving', 'Kitesurfing', 'Surfing', 'Swimming', 'Gym',
   'Mountain biking', 'Road cycling', 'SUP / kayak', 'Scuba diving', 'Climbing / bouldering',
 ]

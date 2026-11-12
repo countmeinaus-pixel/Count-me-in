@@ -1,6 +1,7 @@
 import { activityLevels } from '../lib/activityFilters'
 import {
   Anchor,
+  Shell,
   ArrowLeft,
   Bike,
   Check,
@@ -57,6 +58,12 @@ const presetFields: Record<string, PresetField[]> = {
     { key: 'entry', label: 'Entry', options: ['Shore dive', 'Boat dive'] },
     { key: 'duration_hours', label: 'Duration (hours)', type: 'number', min: 0.25, max: 24, step: 0.25 },
     { key: 'own_gear', label: 'Own gear needed', options: ['Yes', 'No'] },
+  ],
+  Freediving: [
+    { key: 'spot', label: 'Spot', placeholder: 'For example, Port Noarlunga reef' },
+    { key: 'target_depth', label: 'Depth', options: ['0 to 5 m', '5 to 10 m', '10 to 15 m', '15 m+'] },
+    { key: 'entry', label: 'Entry', options: ['Shore dive', 'Boat dive'] },
+    { key: 'duration_hours', label: 'Duration (hours)', type: 'number', min: 0.25, max: 24, step: 0.25 },
   ],
   Kitesurfing: [
     { key: 'spot', label: 'Spot', placeholder: 'For example, Brighton' },
@@ -131,6 +138,7 @@ const sportIcons: Record<string, ComponentType<{ className?: string }>> = {
   bike: Bike,
   sailboat: Sailboat,
   anchor: Anchor,
+  shell: Shell,
   'mountain-snow': MountainSnow,
   plus: Plus,
 }

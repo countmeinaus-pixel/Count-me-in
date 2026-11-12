@@ -4,7 +4,7 @@ import { supabase } from './supabase'
 // The same sports as on Edit my sports (the sports table in Supabase).
 // Until it loads, or when offline, the built-in list is used.
 export const builtInSports = [
-  'Running', 'Hiking', 'Spearfishing', 'Kitesurfing', 'Surfing', 'Swimming', 'Gym',
+  'Running', 'Hiking', 'Spearfishing', 'Freediving', 'Kitesurfing', 'Surfing', 'Swimming', 'Gym',
   'Mountain biking', 'Road cycling', 'SUP / kayak', 'Scuba diving', 'Climbing / bouldering',
 ]
 

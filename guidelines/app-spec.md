@@ -193,7 +193,7 @@ Create `data/` with:
 - **Current user**: Jai, 37, Port Noarlunga, verified, sports: Spearfishing (Intermediate), Kitesurfing (Beginner), Hiking (Intermediate), Running (Intermediate), Gym (Experienced). 7 confirmed meetups, 2 hosted. Patches earned: First meetup, Regular, Salt water.
 - **Other users** (8): Matt 34 Brighton, Luca 29 Glenelg, Sam 41 Aldinga, Hamish 36 Stirling, Raj 32 Mawson Lakes, Ben 45 Seaford, Tom 27 Norwood, Dave 39 Semaphore. All verified, with 2 to 4 sports each and confirmed meetups between 1 and 25.
 - **Activities** (10), spread over the next 14 days:
-  - Spearfishing, Port Noarlunga reef, 5 to 10 m, shore dive, 2 hrs, host Matt, 2 of 4 spots
+  - Freediving, Port Noarlunga reef (no spearfishing: aquatic reserve), 5 to 10 m, shore dive, 2 hrs, host Matt, 2 of 4 spots
   - Hiking, Waterfall Gully to Mount Lofty summit, 8 km, steep, 3 hrs, host Hamish, small group 3 of 6
   - Kitesurfing, Brighton jetty, freeride, 2 hrs, host Luca, 1 buddy wanted
   - Running, Onkaparinga River trail, 12 km, steady, trail, host Sam, 1 of 3

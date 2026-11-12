@@ -5332,19 +5332,26 @@ h1 .skeleton { margin: 4px 0; }
    photo, full width, so they are not squeezed next to it. */
 .mate-card { container-type: inline-size; }
 @container (max-width: 190px) {
+  /* Narrow cards (two a row on phones): photo on top, edge to edge and square,
+     like the suggestion tiles; name, place, plan, sports and stats below. */
   .mate-card-head {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas: "photo name" "photo place" "note note" "sports sports";
-    column-gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "photo" "name" "place" "note" "sports";
     row-gap: 6px;
   }
   .mate-card-identity { display: contents; }
-  .mate-card-photo { grid-area: photo; width: 64px; }
-  .mate-card-name { grid-area: name; align-self: end; }
-  .mate-card-location { grid-area: place; align-self: start; }
+  .mate-card-photo {
+    grid-area: photo;
+    width: calc(100% + 24px);
+    margin: -12px -12px 4px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .mate-card-photo .mate-card-sport-icon { top: 10px; left: 10px; width: 28px; height: 28px; padding: 6px; }
+  .mate-card-name { grid-area: name; }
+  .mate-card-location { grid-area: place; }
   .mate-card-note { grid-area: note; }
-  .mate-card-identity .mate-card-sports { grid-area: sports; margin-top: 4px; }
+  .mate-card-identity .mate-card-sports { grid-area: sports; margin-top: 2px; }
 }
 
 /* Patches page: same compact tile as on the profile (.earned-patch-card).

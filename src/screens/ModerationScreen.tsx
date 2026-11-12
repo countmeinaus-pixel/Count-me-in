@@ -7,6 +7,8 @@ import {
   type PersonalRecord,
 } from "../lib/personalRecords"
 import { PersonalRecordCard } from "../components/PersonalRecordCard"
+import { Link, useNavigate } from "react-router-dom"
+import { getActivitiesToReview, reviewActivity, type ActivityToReview } from "../lib/activityReview"
 import {
   getCurrentModerationRole,
   getModerationReports,
@@ -41,17 +43,67 @@ function getEvidenceTitle(report: ModerationReport) {
     : "Reported activity"
 }
 
-export function ModerationScreen() {
+type ModerationTab = "reports" | "records" | "activities"
+const tabPaths: Record<ModerationTab, string> = {
+  reports: "/more/moderation",
+  records: "/more/moderation/records",
+  activities: "/more/moderation/activities",
+}
+
+// Each tab has its own address, so it can be its own item in the menu.
+export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
+  const navigate = useNavigate()
+  const setTab = (next: ModerationTab) => navigate(tabPaths[next], { replace: true })
   const backToMore = useBackToMore()
   const [role, setRole] = useState<"moderator" | "admin" | null>(null)
   const [reports, setReports] = useState<ModerationReport[]>([])
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [updatingReportId, setUpdatingReportId] = useState<string | null>(null)
-  const [tab, setTab] = useState<"reports" | "records">("reports")
+  const [activitiesToReview, setActivitiesToReview] = useState<ActivityToReview[] | null>(null)
+  const [activitiesError, setActivitiesError] = useState("")
+  const [reviewingId, setReviewingId] = useState<string | null>(null)
   const [recordsToCheck, setRecordsToCheck] = useState<PersonalRecord[] | null>(null)
   const [recordsError, setRecordsError] = useState("")
   const [recordsVersion, setRecordsVersion] = useState(0)
+
+  useEffect(() => {
+    if (!role || tab !== "activities") return
+    let active = true
+    setActivitiesError("")
+    getActivitiesToReview()
+      .then((items) => {
+        if (active) setActivitiesToReview(items)
+      })
+      .catch((loadError: unknown) => {
+        if (active)
+          setActivitiesError(
+            loadError instanceof Error ? loadError.message : "Unable to load activities to review.",
+          )
+      })
+    return () => {
+      active = false
+    }
+  }, [role, tab])
+
+  async function answerActivity(item: ActivityToReview, approve: boolean) {
+    let message = ""
+    if (!approve) {
+      const reason = window.prompt(`Why is "${item.title}" not approved? ${item.hostName} sees this message. You can leave it empty.`, "")
+      if (reason === null) return
+      message = reason.trim()
+    }
+    setReviewingId(item.id)
+    setActivitiesError("")
+    try {
+      await reviewActivity(item.id, approve, message)
+      setActivitiesToReview((current) => current?.filter((entry) => entry.id !== item.id) ?? null)
+    } catch (reviewError) {
+      setActivitiesError(reviewError instanceof Error ? reviewError.message : "Unable to review this activity.")
+    } finally {
+      setReviewingId(null)
+    }
+  }
 
   useEffect(() => {
     if (!role || tab !== "records") return
@@ -174,8 +226,65 @@ export function ModerationScreen() {
             >
               PRs to check
             </button>
+            <button
+              type="button"
+              className={tab === "activities" ? "active" : ""}
+              aria-pressed={tab === "activities"}
+              onClick={() => setTab("activities")}
+            >
+              Activities to review
+            </button>
           </div>
-          {tab === "records" ? (
+          {tab === "activities" ? (
+            <>
+              <p className="more-settings-intro">
+                Activities with a sport that is not in the list yet. Approve to
+                put it live for everyone; admins then get a notification to
+                consider adding the sport. Reject to keep it hidden.
+              </p>
+              {activitiesError ? (
+                <p className="edit-form-error" role="alert">{activitiesError}</p>
+              ) : activitiesToReview === null ? (
+                <p className="more-settings-note">Loading activities…</p>
+              ) : activitiesToReview.length ? (
+                <div className="moderation-report-list">
+                  {activitiesToReview.map((item) => (
+                    <article className="moderation-report-card review-activity-card" key={item.id}>
+                      <span className="review-activity-sport">New sport: {item.suggestedSport}</span>
+                      <h2>{item.title}</h2>
+                      <p>
+                        By {item.hostName} ·{" "}
+                        {new Date(item.startsAt).toLocaleString("en-AU", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+                      </p>
+                      <p>{[item.meetingPoint, item.suburb].filter(Boolean).join(", ")}</p>
+                      {item.notes && <p className="review-activity-notes">{item.notes}</p>}
+                      <Link className="text-action" to={`/activity/${item.id}`}>Open activity</Link>
+                      <div className="review-activity-actions">
+                        <button
+                          type="button"
+                          className="button button-secondary button-md"
+                          disabled={reviewingId !== null}
+                          onClick={() => void answerActivity(item, false)}
+                        >
+                          Reject
+                        </button>
+                        <button
+                          type="button"
+                          className="button button-primary button-md"
+                          disabled={reviewingId !== null}
+                          onClick={() => void answerActivity(item, true)}
+                        >
+                          {reviewingId === item.id ? "Saving…" : "Approve"}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="more-settings-note">No activities waiting for a review.</p>
+              )}
+            </>
+          ) : tab === "records" ? (
             <>
               <p className="more-settings-intro">
                 Personal records that are not verified yet, flagged ones first.

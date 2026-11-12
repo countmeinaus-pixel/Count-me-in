@@ -250,6 +250,8 @@ const router = createBrowserRouter([
       { path: "/more/about", element: <MoreAboutScreen /> },
       { path: "/more/help", element: <MoreHelpScreen /> },
       { path: "/more/moderation", element: <ModerationScreen /> },
+      { path: "/more/moderation/records", element: <ModerationScreen tab="records" /> },
+      { path: "/more/moderation/activities", element: <ModerationScreen tab="activities" /> },
     ],
   },
 ])

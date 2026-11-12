@@ -1,5 +1,6 @@
 import {
   Award,
+  ClipboardCheck,
   Compass,
   Bell,
   Dumbbell,
@@ -73,7 +74,11 @@ export const menuGroups: MenuGroup[] = [
 // Only for admins and moderators.
 export const moderationGroup: MenuGroup = {
   title: 'Moderation',
-  items: [{ label: 'Reports', href: '/more/moderation', icon: Flag }],
+  items: [
+    { label: 'Reports', href: '/more/moderation', icon: Flag },
+    { label: 'PRs to check', href: '/more/moderation/records', icon: Trophy },
+    { label: 'Activities to review', href: '/more/moderation/activities', icon: ClipboardCheck },
+  ],
 }
 
 // Side nav: "Other" sits inside Settings to keep the list short.

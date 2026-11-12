@@ -66,6 +66,9 @@ const titles = {
   pr_verified: 'PR verified',
   friend_request: 'Friend request',
   friend_accepted: 'New friend',
+  activity_approved: 'Activity approved',
+  activity_rejected: 'Activity not approved',
+  sport_suggested: 'New sport suggested',
 } as const
 
 function formatRelativeTime(value: string) {

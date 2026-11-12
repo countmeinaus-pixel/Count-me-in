@@ -28,6 +28,11 @@ export function LocationFields({
   onAddressChange,
   onCoordinatesChange,
 }: LocationFieldsProps) {
+  // Opens Google Maps at the suburb you typed, or at all of Australia.
+  const suburbPoint = suburbCoordinates(suburb)
+  const googleMapsLink = suburbPoint
+    ? `https://www.google.com/maps/@${suburbPoint.latitude},${suburbPoint.longitude},14z`
+    : 'https://www.google.com/maps/@-25.6,134.4,4z'
   const [helpOpen, setHelpOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [locating, setLocating] = useState(false)
@@ -140,7 +145,7 @@ export function LocationFields({
         <ol className="location-help">
           <li>
             Open{' '}
-            <a href="https://www.google.com/maps/@-34.9285,138.6007,11z" target="_blank" rel="noreferrer">Google Maps</a>
+            <a href={googleMapsLink} target="_blank" rel="noreferrer">Google Maps</a>
             {' '}and find your spot.
           </li>
           <li>On a computer, right-click the spot. On a phone, press and hold it.</li>

@@ -459,7 +459,7 @@ export function HomeScreen() {
       {view === 'map' && (
         <div className="map-panel">
           <Suspense fallback={<div className="activity-map activity-map-loading" role="status">Loading map…</div>}>
-            <ActivityMap activities={visible} onOpenActivity={(id) => navigate(`/activity/${id}`)} />
+            <ActivityMap activities={visible} home={locationPreference} onOpenActivity={(id) => navigate(`/activity/${id}`)} />
           </Suspense>
 
           <div className="map-callouts">

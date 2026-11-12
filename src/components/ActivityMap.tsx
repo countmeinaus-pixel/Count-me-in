@@ -9,7 +9,7 @@ import { Avatar } from './Avatar'
 import { SportIcon } from './SportIcon'
 import { formatActivityDate, getActivitySpotsLabel } from '../data/mockData'
 
-// Without pins the map shows the whole of Australia; with pins it zooms to them.
+// Without pins the map shows your chosen place (or all of Australia); with pins it zooms to them.
 const australia: [number, number] = [134.5, -27.5]
 // Pins closer than this on screen are grouped into one cluster.
 const clusterRadiusPx = 44
@@ -30,12 +30,15 @@ const markerIcons = {
 type ActivityMapProps = {
   activities: ActivityCardData[]
   onOpenActivity: (id: ActivityCardData['id']) => void
+  // The chosen location filter: without pins the map starts there instead of all of Australia.
+  home?: { latitude: number; longitude: number } | null
 }
 
-export default function ActivityMap({ activities, onOpenActivity }: ActivityMapProps) {
+export default function ActivityMap({ activities, onOpenActivity, home = null }: ActivityMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   // The activities shown in the card: one pin, or every activity at one spot.
+  const [mapUnavailable, setMapUnavailable] = useState(false)
   const [selection, setSelection] = useState<{ ids: Array<ActivityCardData['id']>; index: number } | null>(null)
   const pinned = activities.filter((activity) => activity.latitude != null && activity.longitude != null)
   const selectedGroup = selection
@@ -45,15 +48,22 @@ export default function ActivityMap({ activities, onOpenActivity }: ActivityMapP
 
   useEffect(() => {
     if (!containerRef.current) return
-    const map = new maplibregl.Map({
+    let map: maplibregl.Map
+    try {
+      map = new maplibregl.Map({
       container: containerRef.current,
       style: createMapStyle(),
-      center: australia,
-      zoom: 3.2,
+      center: home ? [home.longitude, home.latitude] : australia,
+      zoom: home ? 9.5 : 3.2,
       attributionControl: { compact: true },
       dragRotate: false,
       pitchWithRotate: false,
-    })
+      })
+    } catch {
+      // Some browsers cannot draw maps (WebGL off): show a message instead of crashing the app.
+      setMapUnavailable(true)
+      return
+    }
     map.touchZoomRotate.disableRotation()
     // Current location: uses the browser's own location, free and only after the viewer allows it.
     map.addControl(
@@ -190,6 +200,14 @@ export default function ActivityMap({ activities, onOpenActivity }: ActivityMapP
   }, [selectionKey])
 
   const withoutPin = activities.length - pinned.length
+
+  if (mapUnavailable) {
+    return (
+      <div className="activity-map activity-map-loading" role="status">
+        The map can’t be shown in this browser. Use List or Calendar instead.
+      </div>
+    )
+  }
 
   return (
     <div className="activity-map">

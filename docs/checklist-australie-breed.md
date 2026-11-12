@@ -6,7 +6,7 @@ Status: ✅ klaar · ❌ nog niet gedaan · ⚠️ werkt, maar moet anders
 
 ## 0. Eerst: staat het werk uit VS Code op GitHub?
 
-- [ ] ❌ **Nog niet.** Op GitHub staat nog geen werk over meerdere steden of tijdzones. Wat je gisteren in VS Code hebt gedaan, staat waarschijnlijk alleen op je laptop.
+- [x] ✅ **Ja** (13 nov). Op GitHub staat nog geen werk over meerdere steden of tijdzones. Wat je gisteren in VS Code hebt gedaan, staat waarschijnlijk alleen op je laptop.
 
 Zo zet je het op GitHub:
 1. Open VS Code met het project **Count-me-in**.
@@ -29,30 +29,30 @@ Afspraak: tijden worden in de database in UTC opgeslagen. Een activiteit wordt g
 
 ## 2. Locatie en steden
 
-- [ ] ❌ Lijst met steden of staten (bijvoorbeeld Adelaide, Melbourne, Sydney, Brisbane, Perth, Hobart, Canberra, Darwin, Gold Coast).
-- [ ] ⚠️ Suburbs: alleen 65 Adelaide-suburbs (`src/data/adelaideSuburbs.ts`). Gebruikt bij onboarding, Edit profile, locatiekeuze en afstanden.
-- [ ] ❌ Profiel heeft een stad of staat naast de suburb.
-- [ ] ⚠️ Kaartpin mag alleen in Zuid-Australië liggen (`isInSouthAustralia` in `src/lib/location.ts`). Moet heel Australië worden.
-- [ ] ⚠️ Kaarten starten altijd boven Adelaide (`src/components/ActivityMap.tsx`, `src/components/MapPinPicker.tsx`). Moet starten bij jouw stad.
-- [ ] ⚠️ Voorbeeld-coördinaten en Google Maps-link wijzen naar Adelaide (`src/components/LocationFields.tsx`).
+- [x] ✅ Lijst met steden of staten (bijvoorbeeld Adelaide, Melbourne, Sydney, Brisbane, Perth, Hobart, Canberra, Darwin, Gold Coast).
+- [x] ✅ Suburbs: alle 17.000+ plaatsen in Australië (`public/au-localities.json`); voorheen alleen 65 Adelaide-suburbs (`src/data/adelaideSuburbs.ts`). Gebruikt bij onboarding, Edit profile, locatiekeuze en afstanden.
+- [x] ✅ Profiel heeft een stad of staat naast de suburb.
+- [x] ✅ Kaartpin mag overal in Australië (`isInAustralia`); voorheen alleen in Zuid-Australië liggen (`isInSouthAustralia` in `src/lib/location.ts`). Moet heel Australië worden.
+- [x] ✅ Kaart op Home start boven je gekozen plek, de pinkiezer bij je suburb; voorheen altijd boven Adelaide (`src/components/ActivityMap.tsx`, `src/components/MapPinPicker.tsx`). Moet starten bij jouw stad.
+- [x] ✅ Google Maps-link opent bij de ingevulde suburb (het voorbeeld-getal mag Adelaide blijven); voorheen altijd Adelaide (`src/components/LocationFields.tsx`).
 - [x] ✅ Home en Friends starten (eerste keer op een toestel, ingelogd) rond de suburb uit je profiel, 25 km. Kies je zelf iets anders of "Anywhere", dan blijft die keuze staan.
 
 ## 3. Patches
 
-- [ ] ⚠️ Places patches gebruiken zes Adelaide-regio's (`src/lib/regions.ts`). Moet per stad of staat.
+- [x] ✅ Places patches per staat (Interstate, State hopper, All of Australia); voorheen zes Adelaide-regio's (`src/lib/regions.ts`). Moet per stad of staat.
 
 ## 4. Teksten
 
-- [ ] ⚠️ "All of Adelaide": `LocationControls.tsx`, `HomeScreen.tsx`, `AllActivitiesScreen.tsx`
-- [ ] ⚠️ Knop linksboven op Home toont standaard "Adelaide": `HomeScreen.tsx`
-- [ ] ⚠️ "New around Adelaide" / "New mates around Adelaide": `CrewSection.tsx`, `MatesScreen.tsx`
-- [ ] ⚠️ Standaardtitel "Sport at Adelaide": `CreateActivityScreen.tsx`
+- [x] ✅ "All of Adelaide" is weg: `LocationControls.tsx`, `HomeScreen.tsx`, `AllActivitiesScreen.tsx`
+- [x] ✅ Knop linksboven op Home toont je plek of "Anywhere"; voorheen standaard "Adelaide": `HomeScreen.tsx`
+- [x] ✅ "New around Adelaide" is weg / "New mates around Adelaide": `CrewSection.tsx`, `MatesScreen.tsx`
+- [x] ✅ Standaardtitel gebruikt de gekozen plek; voorheen "Sport at Adelaide": `CreateActivityScreen.tsx`
 - [x] ✅ Welkomstslides: beschrijving van de foto zegt niet meer "Adelaide Hills"
-- [ ] ⚠️ "Made in Adelaide" op About (mag blijven, dat is waar je het maakt)
+- [x] ✅ "Made in Adelaide" op About (mag blijven, dat is waar je het maakt)
 
 ## 5. Projectregels
 
-- [ ] ❌ `CLAUDE.md` en `guidelines/app-spec.md` zeggen nog "for Adelaide". Aanpassen naar heel Australië, zodat Claude niet terug bouwt naar alleen Adelaide.
+- [x] ✅ `CLAUDE.md` en `guidelines/app-spec.md` zeggen nog "for Adelaide". Aanpassen naar heel Australië, zodat Claude niet terug bouwt naar alleen Adelaide.
 
 ## 6. Testen op je telefoon (als alles hierboven ✅ is)
 

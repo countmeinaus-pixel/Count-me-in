@@ -547,8 +547,10 @@ h3 { font: 700 21px/24px var(--font-display); }
 .activity-map-loading {
   display: grid;
   place-items: center;
+  padding: 24px;
   color: var(--text-muted);
   font-size: 14px;
+  text-align: center;
 }
 .activity-map .activity-map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .activity-marker {

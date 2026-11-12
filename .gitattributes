@@ -148,4 +148,4 @@
 # ---------------------------------------------------------------------------
 # Exceptions: small images the website serves directly (Vercel needs the real file)
 # ---------------------------------------------------------------------------
-public/og-image.jpg  -filter -diff -merge binary
+public/og-image-v2.jpg  -filter -diff -merge binary

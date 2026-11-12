@@ -198,16 +198,17 @@ export function HomeScreen() {
     }))
     return [...savedCards, ...demoCards]
   }, [savedActivities])
-  // Sport filter, then the chosen distance. Your own activities and places we cannot locate stay visible.
+  // Sport filter, then the chosen distance (also for your own activities; they are
+  // always under My activities). Places we cannot locate stay visible.
   const visible = useMemo(() => {
     const bySport = filter === 'My sports' ? allActivities : allActivities.filter((item) => item.sport === filter)
-    return bySport.filter((item) => item.host === firstName || isWithinRadius(
+    return bySport.filter((item) => isWithinRadius(
       locationPreference,
       item.latitude != null && item.longitude != null
         ? { latitude: item.latitude, longitude: item.longitude }
         : suburbCoordinates(item.suburb),
     ))
-  }, [allActivities, filter, locationPreference, firstName])
+  }, [allActivities, filter, locationPreference])
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 60_000)
@@ -413,9 +414,16 @@ export function HomeScreen() {
           ) : visible.length === 0 ? (
             <div className="empty-state-card">
               <div className="empty-state-icon">⌁</div>
-              <h3>{locationPreference?.radiusKm != null ? `Nothing on within ${locationPreference.radiusKm} km yet` : 'Nothing on for this sport yet'}</h3>
-              <p>{locationPreference?.radiusKm != null ? 'Be the first, or choose a bigger distance.' : 'Be the first. Post a callout.'}</p>
+              <h3>
+                {locationPreference?.radiusKm != null
+                  ? `Nothing on within ${locationPreference.radiusKm} km of ${locationPreference.label.replace(/^Near /, '')} yet`
+                  : 'Nothing on for this sport yet'}
+              </h3>
+              <p>{locationPreference?.radiusKm != null ? 'Be the first to post a callout here, or look in a bigger area.' : 'Be the first. Post a callout.'}</p>
               <Button onClick={() => navigate('/create')}>Create activity</Button>
+              {locationPreference?.radiusKm != null && (
+                <Button variant="secondary" onClick={() => setLocationOpen(true)}>Change location</Button>
+              )}
             </div>
           ) : (
             <>

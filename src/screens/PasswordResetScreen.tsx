@@ -1,4 +1,5 @@
-import { ArrowRight, LockKeyhole, ShieldCheck } from 'lucide-react'
+import { ArrowRight, LockKeyhole } from 'lucide-react'
+import { BrandMark } from '../components/BrandMark'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getStoredLanguage, getTranslations, setStoredLanguage, type Language } from '../lib/i18n'
@@ -117,9 +118,7 @@ export function PasswordResetScreen() {
       <div className="mx-auto max-w-md">
         <div className="mb-8 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--seafoam-subtle)] text-[var(--seafoam)]">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
+            <BrandMark className="brand-mark-lg" />
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--seafoam)]">Count Me In</p>
               <h1 className="text-2xl font-bold text-white">{copy.resetPasswordTitle}</h1>

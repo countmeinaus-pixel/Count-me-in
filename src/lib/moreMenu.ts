@@ -11,7 +11,6 @@ import {
   MapPin,
   MessageCircleQuestion,
   Search,
-  ShieldCheck,
   Trophy,
   UserPlus,
   UserRound,
@@ -20,6 +19,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { supabase } from './supabase'
+import { BrandMarkIcon } from '../components/BrandMark'
 
 // The More menu: a page on phones, groups in the side nav on desktop.
 
@@ -64,8 +64,7 @@ export const menuGroups: MenuGroup[] = [
   {
     title: 'Other',
     items: [
-      // The shield is the Count Me In logo.
-      { label: 'About Count Me In', href: '/more/about', icon: ShieldCheck },
+      { label: 'About Count Me In', href: '/more/about', icon: BrandMarkIcon },
       { label: 'Help and feedback', href: '/more/help', icon: MessageCircleQuestion },
       { label: 'Log out', icon: LogOut, action: 'logout' },
     ],

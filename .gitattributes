@@ -153,3 +153,6 @@ public/icon-192.png  -filter -diff -merge binary
 public/icon-512.png  -filter -diff -merge binary
 public/apple-touch-icon.png  -filter -diff -merge binary
 public/badge-96.png  -filter -diff -merge binary
+public/icon-512-maskable.png  -filter -diff -merge binary
+public/favicon-32x32.png  -filter -diff -merge binary
+public/favicon.ico  -filter -diff -merge binary

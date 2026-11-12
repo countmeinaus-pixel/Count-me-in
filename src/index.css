@@ -1264,10 +1264,10 @@ h3 { font: 700 21px/24px var(--font-display); }
     height: 40px;
     place-items: center;
     border-radius: var(--radius-lg);
-    background: var(--seafoam-subtle);
-    color: var(--seafoam);
+    overflow: hidden;
   }
-  .side-nav-logo svg { width: 22px; height: 22px; }
+  /* The "Unbroken" knot logo on its navy tile (public/favicon.svg). */
+  .side-nav-logo img { width: 40px; height: 40px; display: block; }
   .side-nav-wordmark {
     font: 700 22px/1 var(--font-display);
     color: var(--text-primary);

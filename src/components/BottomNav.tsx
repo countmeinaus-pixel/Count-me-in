@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Home, MessageCircle, Plus, ShieldCheck, UsersRound } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Home, MessageCircle, Plus, UsersRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
@@ -94,7 +94,7 @@ export function BottomNav({
   return (
     <nav className={`bottom-nav${collapsed ? ' collapsed' : ''}`} aria-label="Main navigation">
       <div className="side-nav-brand">
-        <span className="side-nav-logo"><ShieldCheck aria-hidden="true" /></span>
+        <span className="side-nav-logo"><img src="/favicon.svg" alt="" /></span>
         <span className="side-nav-wordmark">Count Me In</span>
       </div>
       {onToggleCollapsed && (

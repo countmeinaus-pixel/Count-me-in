@@ -20,6 +20,15 @@ let all: Locality[] = []
 let byName = new Map<string, Locality[]>()
 let loading: Promise<void> | null = null
 
+// Business, delivery and mail centres and post offices (Bc, Dc, Mc, Msc, Gpo, Po, Lpo).
+const postalOnly = / (Bc|Dc|Mc|Msc|Gpo|Po|Lpo)$/
+
+// When a name exists in more than one state, the capital comes first ("Perth" -> Perth, WA).
+const capitals: Record<string, AustralianState> = {
+  adelaide: 'SA', sydney: 'NSW', melbourne: 'VIC', brisbane: 'QLD',
+  perth: 'WA', hobart: 'TAS', darwin: 'NT', canberra: 'ACT',
+}
+
 export function localitiesLoaded() {
   return all.length > 0
 }
@@ -28,7 +37,10 @@ export function loadLocalities() {
   loading ??= fetch('/au-localities.json')
     .then((response) => (response.ok ? response.json() : []))
     .then((rows: Row[]) => {
-      all = rows.map(([name, state, latitude, longitude, postcode]) => ({ name, state, latitude, longitude, postcode }))
+      all = rows
+        // Leave out postal-only entries such as "Perth Bc" or "Adelaide Dc": nobody lives there.
+        .filter(([name]) => !postalOnly.test(name))
+        .map(([name, state, latitude, longitude, postcode]) => ({ name, state, latitude, longitude, postcode }))
       byName = new Map()
       for (const place of all) {
         const key = place.name.toLowerCase()
@@ -74,7 +86,12 @@ export function searchLocalities(query: string, limit = 8): Locality[] {
     else if (contains.length < limit && name.includes(text)) contains.push(place)
   }
   // Shortest names first, so "rich" shows Richmond before Rich Avon East.
-  starts.sort((a, b) => a.name.length - b.name.length || a.name.localeCompare(b.name) || a.state.localeCompare(b.state))
+  const isCapital = (place: Locality) => capitals[place.name.toLowerCase()] === place.state
+  starts.sort((a, b) =>
+    a.name.length - b.name.length ||
+    a.name.localeCompare(b.name) ||
+    Number(isCapital(b)) - Number(isCapital(a)) ||
+    a.state.localeCompare(b.state))
   return [...starts, ...contains].slice(0, limit)
 }
 

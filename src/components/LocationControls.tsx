@@ -5,9 +5,9 @@ import {
   defaultRadiusKm,
   getDeviceLocation,
   nearestSuburb,
-  suburbCoordinates,
   type LocationPreference,
 } from '../lib/distance'
+import { formatLocality } from '../lib/localities'
 import { saveSharedLocation } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 
@@ -35,6 +35,7 @@ export function LocationControls({
     setNotice('')
     try {
       const point = await getDeviceLocation()
+      setSuburbText('')
       onChange({
         mode: 'current',
         label: `Near ${nearestSuburb(point)}`,
@@ -67,19 +68,26 @@ export function LocationControls({
       </label>
 
       <label className="location-field">
-        <span>Or pick a suburb or town</span>
+        <span>Or look somewhere else</span>
         <SuburbInput
+          variant="search"
           value={suburbText}
-          ariaLabel="Suburb or town"
-          placeholder="Anywhere in Australia"
+          ariaLabel="Suburb, town or city"
+          placeholder="Search a suburb, town or city"
           onChange={(text) => {
             setSuburbText(text)
-            if (!text.trim()) {
-              onChange(null)
-              return
-            }
-            const point = suburbCoordinates(text)
-            if (point) onChange({ mode: 'suburb', label: text.trim(), ...point, radiusKm: value?.radiusKm ?? defaultRadiusKm })
+            if (!text.trim()) onChange(null)
+          }}
+          // Only a place picked from the list is used, so "Perth" never quietly becomes Perth, TAS.
+          onSelect={(place) => {
+            setError('')
+            onChange({
+              mode: 'suburb',
+              label: formatLocality(place),
+              latitude: place.latitude,
+              longitude: place.longitude,
+              radiusKm: value?.radiusKm ?? defaultRadiusKm,
+            })
           }}
         />
       </label>

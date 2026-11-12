@@ -4,6 +4,14 @@ import type { Coordinates } from './location'
 
 // Filters for the Activities page (all upcoming activities, any distance).
 
+// The levels from Create activity ("Who is this for?"), shared with Edit activity and the filters.
+export const activityLevels = ['Beginner friendly', 'Intermediate', 'Experienced']
+
+// Older activities say "Beginner"; treat that as Beginner friendly.
+export function normalizeActivityLevel(level: string) {
+  return level === 'Beginner' ? 'Beginner friendly' : level
+}
+
 export type ActivitySort = 'soonest' | 'closest' | 'spots'
 export type ActivityWhen = 'any' | 'today' | 'week' | 'weekend' | 'month'
 
@@ -62,7 +70,7 @@ export function applyActivityFilters(
     if (!matchesWhen(activity.startsAt, filters.when, context.now)) return false
     if (filters.sports.length && !filters.sports.includes(activity.sport)) return false
     if (filters.mySportsOnly && !context.viewerSports.includes(activity.sport)) return false
-    if (filters.levels.length && !filters.levels.includes(activity.level)) return false
+    if (filters.levels.length && !filters.levels.includes(normalizeActivityLevel(activity.level))) return false
     if (filters.spotsLeftOnly && activity.spotsTaken >= activity.spotsTotal) return false
     return isWithinRadius(context.location, activityCoordinates(activity))
   })

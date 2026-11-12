@@ -7,6 +7,7 @@ import { ActivityCardSkeleton, Skeleton } from '../components/Skeleton'
 import { activities as demoActivities } from '../data/mockData'
 import { getSavedActivityFeed, type FeedActivity } from '../lib/activityParticipation'
 import {
+  activityLevels,
   applyActivityFilters,
   countActiveActivityFilters,
   defaultActivityFilters,
@@ -63,7 +64,6 @@ export function AllActivitiesScreen() {
   // Every sport from Edit my sports, plus any sport only used on an activity.
   const sportCatalog = useSportCatalog()
   const sports = useMemo(() => [...new Set([...sportCatalog, ...allActivities.map((activity) => activity.sport)])].sort(), [sportCatalog, allActivities])
-  const levels = useMemo(() => [...new Set(allActivities.map((activity) => activity.level).filter(Boolean))].sort(), [allActivities])
 
   const context = { viewerSports, query, now }
   const results = applyActivityFilters(allActivities, filters, { ...context, location: searchLocation })
@@ -152,7 +152,7 @@ export function AllActivitiesScreen() {
           filters={filters}
           location={searchLocation}
           sports={sports}
-          levels={levels}
+          levels={activityLevels}
           countFor={(draft, draftLocation) => applyActivityFilters(allActivities, draft, { ...context, location: draftLocation }).length}
           onApply={(next, nextLocation) => {
             setFilters(next)

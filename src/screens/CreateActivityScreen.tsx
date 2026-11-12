@@ -1,3 +1,4 @@
+import { activityLevels } from '../lib/activityFilters'
 import {
   Anchor,
   ArrowLeft,
@@ -48,7 +49,7 @@ type PresetField = {
 }
 
 const steps = ['Sport', 'Details', 'Level', 'Add people', 'Review']
-const levels = ['Beginner friendly', 'Intermediate', 'Experienced']
+const levels = activityLevels
 const presetFields: Record<string, PresetField[]> = {
   Spearfishing: [
     { key: 'spot', label: 'Spot', placeholder: 'For example, Port Noarlunga reef' },

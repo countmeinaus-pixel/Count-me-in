@@ -1,3 +1,4 @@
+import { activityLevels } from '../lib/activityFilters'
 import { ArrowLeft, ImagePlus } from 'lucide-react'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -15,7 +16,7 @@ import { cancelActivity } from '../lib/activityParticipation'
 import { formatCoordinates, isMissingLocationColumns, locationNotSavedMessage, parseCoordinates } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
-const levels = ['Beginner friendly', 'Intermediate', 'Experienced']
+const levels = activityLevels
 const defaultCancelMessage = 'Sorry lads, something came up and I can’t make it anymore. Hope to catch you next time.'
 
 function getLocalDateTime(isoString: string) {

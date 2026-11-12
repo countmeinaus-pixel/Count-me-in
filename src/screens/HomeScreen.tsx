@@ -27,6 +27,7 @@ import { hasFinishedTour } from '../lib/onboardingFlags'
 import { PersonalRecordCard } from '../components/PersonalRecordCard'
 import { getRecordsToConfirm, type PersonalRecord } from '../lib/personalRecords'
 import { getUnreadNotificationCount } from '../lib/notifications'
+import { placeTimeZone } from '../lib/timeZones'
 
 // Loaded only when the Map tab opens, so Home stays fast.
 const ActivityMap = lazy(() => import('../components/ActivityMap'))
@@ -461,7 +462,7 @@ export function HomeScreen() {
               <button key={activity.id} type="button" className="map-callout" onClick={() => navigate(`/activity/${activity.id}`)}>
                 <div className="map-callout-header">
                   <span>{activity.sport}</span>
-                  <time>{activity.startsAt.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}</time>
+                  <time>{activity.startsAt.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: placeTimeZone(activity.suburb) })}</time>
                 </div>
                 <strong>{activity.title}</strong>
                 <p>{activity.place}</p>

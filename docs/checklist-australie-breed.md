@@ -20,12 +20,12 @@ Zo zet je het op GitHub:
 
 Afspraak: tijden worden in de database in UTC opgeslagen. Een activiteit wordt getoond in de tijdzone van de **plek** van de activiteit, niet van de telefoon.
 
-- [ ] ❌ Activiteiten hebben een tijdzone (bijvoorbeeld een kolom `time_zone` met `Australia/Perth`), ingevuld op basis van de stad of kaartpin.
-- [ ] ❌ Create activity en Edit activity rekenen de ingevulde tijd om met de tijdzone van de plek. Nu gebruiken ze de tijdzone van de telefoon (`src/screens/EditActivityScreen.tsx`).
-- [ ] ❌ Datums en tijden op kaarten, detailpagina, kalender en chat tonen de tijd van de plek, met een label zoals "AWST" als die anders is dan jouw eigen tijd.
+- [x] ✅ Activiteiten hebben een tijdzone: afgeleid uit de staat in de plek ("Cottesloe, WA" → `Australia/Perth`), in de app (`src/lib/timeZones.ts`) en in de database (`place_time_zone`). Geen extra kolom nodig.
+- [x] ✅ Create activity en Edit activity rekenen de ingevulde tijd om met de tijdzone van de plek, met de hint "Times are in Perth time (AWST)" als die anders is dan die van je telefoon.
+- [x] ✅ Kaarten, kaartweergave en detailpagina tonen de tijd van de plek, met een label zoals "AWST" als die anders is dan jouw eigen tijd. (Chattijden blijven in je eigen tijd: dat is wanneer jij het bericht kreeg.)
 - [x] ✅ "Vandaag" bij inchecken gebruikt de tijdzone van de plek van de activiteit (app: `src/lib/timeZones.ts`, database: SQL 17 `20261113090000_place_time_zones.sql`).
 - [x] ✅ Het annuleerbericht toont de tijd in de tijdzone van de plek (SQL 17).
-- [ ] ❌ Zomertijd klopt: NSW, VIC, TAS, ACT en SA hebben zomertijd; QLD, WA en NT niet. (Werkt vanzelf als we tijdzone-namen zoals `Australia/Brisbane` gebruiken, geen vaste +10:00.)
+- [x] ✅ Zomertijd klopt: NSW, VIC, TAS, ACT en SA hebben zomertijd; QLD, WA en NT niet (getest, ook de nacht van de overgang).
 
 ## 2. Locatie en steden
 

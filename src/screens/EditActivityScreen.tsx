@@ -15,15 +15,10 @@ import {
 import { cancelActivity } from '../lib/activityParticipation'
 import { formatCoordinates, isMissingLocationColumns, locationNotSavedMessage, parseCoordinates, parseMapPin } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
+import { dateToZonedInput, differsFromDevice, placeTimeZone, timeZoneAbbreviation, timeZoneCity, zonedTimeToDate } from '../lib/timeZones'
 
 const levels = activityLevels
 const defaultCancelMessage = 'Sorry lads, something came up and I can’t make it anymore. Hope to catch you next time.'
-
-function getLocalDateTime(isoString: string) {
-  const date = new Date(isoString)
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset())
-  return date.toISOString().slice(0, 16)
-}
 
 function getErrorMessage(error: unknown) {
   if (typeof error !== 'object' || error === null) {
@@ -97,7 +92,8 @@ export function EditActivityScreen() {
         setActivity(saved)
         setUserId(userData.user.id)
         setTitle(saved.title)
-        setStartsAt(getLocalDateTime(saved.startsAt))
+        // Shown in the time zone of the activity's place, like on the cards.
+        setStartsAt(dateToZonedInput(saved.startsAt, placeTimeZone(saved.suburb)))
         setDurationHours(String(saved.durationMinutes / 60))
         setMeetingPoint(saved.meetingPoint)
         setSuburb(saved.suburb)
@@ -144,9 +140,17 @@ export function EditActivityScreen() {
     setFeedback('')
   }
 
+  // Date and time are in the time zone of the activity's place (Perth time for Perth).
+  const editTimeZone = placeTimeZone(suburb)
+  const timeZoneHint =
+    suburb.trim() && differsFromDevice(new Date(), editTimeZone)
+      ? `Times are in ${timeZoneCity(editTimeZone)} time (${timeZoneAbbreviation(new Date(), editTimeZone)}), where the activity is.`
+      : ''
+
   async function saveActivity() {
     if (!supabase || !activity || !userId) return
-    const start = new Date(startsAt)
+    const [startDay, startTime] = startsAt.split('T')
+    const start = startDay && startTime ? zonedTimeToDate(startDay, startTime, placeTimeZone(suburb)) : new Date(Number.NaN)
     const durationMinutes = Math.round(Number(durationHours) * 60)
     if (
       !title.trim() ||
@@ -347,6 +351,7 @@ export function EditActivityScreen() {
               <input type="number" min="0.25" max="24" step="0.25" value={durationHours} onChange={(event) => setDurationHours(event.target.value)} />
             </label>
           </div>
+          {timeZoneHint && <small className="field-helper">{timeZoneHint}</small>}
           <LocationFields
             meetingPoint={meetingPoint}
             suburb={suburb}

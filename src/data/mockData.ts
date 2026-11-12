@@ -1,3 +1,5 @@
+import { dateToZonedInput, differsFromDevice, placeTimeZone, timeZoneAbbreviation, zonedTimeToDate } from '../lib/timeZones'
+
 export type ActivityIcon = 'fish' | 'mountain' | 'run' | 'waves' | 'bike' | 'gym'
 
 export type Activity = {
@@ -23,22 +25,28 @@ export type Activity = {
   longitude?: number | null
 }
 
+// Demo activities are in Adelaide, so their times are Adelaide time on every phone.
 function getDemoStart(daysFromToday: number, hour: number, minute = 0) {
-  const date = new Date()
-  date.setDate(date.getDate() + daysFromToday)
-  date.setHours(hour, minute, 0, 0)
-  return date
+  const day = new Date(Date.now() + daysFromToday * 86_400_000)
+  const [date] = dateToZonedInput(day, 'Australia/Adelaide').split('T')
+  return zonedTimeToDate(date, `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`, 'Australia/Adelaide')
 }
 
-export function formatActivityDate(date: Date, options: Intl.DateTimeFormatOptions = {}) {
-  return date.toLocaleString('en-AU', {
+// Shown in the time zone of the activity's place ("Name, STATE"). When that differs
+// from the device's time zone and a time is shown, the zone is added: "Fri 20 Nov, 6:00 pm AWST".
+export function formatActivityDate(date: Date, options: Intl.DateTimeFormatOptions = {}, place?: string | null) {
+  const timeZone = placeTimeZone(place)
+  const merged: Intl.DateTimeFormatOptions = {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
     minute: '2-digit',
     ...options,
-  })
+  }
+  const text = date.toLocaleString('en-AU', { ...merged, timeZone })
+  const showsTime = merged.hour !== undefined
+  return showsTime && differsFromDevice(date, timeZone) ? `${text} ${timeZoneAbbreviation(date, timeZone)}` : text
 }
 
 export function getActivitySpotsLabel(activity: Pick<Activity, 'spotsTotal' | 'spotsTaken'>) {

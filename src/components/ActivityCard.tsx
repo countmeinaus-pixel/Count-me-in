@@ -27,7 +27,7 @@ export function ActivityCard({ activity, onClick }: { activity: ActivityCardData
         <img src={activity.hero} alt="" loading="lazy" />
         <div className="card-top card-media-top">
           <span><Icon />{activity.sport}</span>
-          <time>{formatActivityDate(activity.startsAt, { weekday: 'short', day: 'numeric', month: 'short' })}</time>
+          <time>{formatActivityDate(activity.startsAt, { weekday: 'short', day: 'numeric', month: 'short' }, activity.suburb)}</time>
         </div>
       </div>
 

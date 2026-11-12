@@ -623,9 +623,9 @@ export function ActivityDetailScreen() {
         month: "short",
         hour: "numeric",
         minute: "2-digit",
-      })
+      }, savedDetails.suburb)
     : mockActivity
-      ? formatActivityDate(mockActivity.startsAt)
+      ? formatActivityDate(mockActivity.startsAt, {}, mockActivity.suburb)
       : ""
   const hostName = savedDetails?.host ?? mockActivity?.host ?? ""
   const hostAge =

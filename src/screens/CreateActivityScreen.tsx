@@ -27,11 +27,12 @@ import { Button } from '../components/Button'
 import { Avatar } from '../components/Avatar'
 import { KiteSizePicker } from '../components/KiteSizePicker'
 import { LocationFields } from '../components/LocationFields'
-import { activities, getDefaultActivityHero } from '../data/mockData'
+import { activities, formatActivityDate, getDefaultActivityHero } from '../data/mockData'
 import { compressActivityCover, deleteActivityCover, uploadActivityCover } from '../lib/activityImages'
 import { getMetMates } from '../lib/friends'
 import { isMissingLocationColumns, locationNotSavedMessage, parseCoordinates, parseMapPin } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
+import { differsFromDevice, placeTimeZone, timeZoneAbbreviation, timeZoneCity, zonedTimeToDate } from '../lib/timeZones'
 
 type SportOption = {
   id: number
@@ -316,7 +317,14 @@ export function CreateActivityScreen() {
   const selectedInvitees = inviteSuggestions.filter((person) => selectedInvites.includes(person.id))
   const sportImage = selectedSport ? getDefaultActivityHero(selectedSport.name) : activities[0].hero
   const activityCoverImage = coverPreviewUrl ?? sportImage
-  const dateTimeValue = date && time ? new Date(`${date}T${time}`).getTime() : Number.NaN
+  // Date and time are typed in the time zone of the activity's place (Perth time for Perth).
+  const activityTimeZone = placeTimeZone(suburb)
+  const startDate = date && time ? zonedTimeToDate(date, time, activityTimeZone) : null
+  const dateTimeValue = startDate ? startDate.getTime() : Number.NaN
+  const timeZoneHint =
+    suburb.trim() && differsFromDevice(startDate ?? new Date(), activityTimeZone)
+      ? `Times are in ${timeZoneCity(activityTimeZone)} time (${timeZoneAbbreviation(startDate ?? new Date(), activityTimeZone)}), where the activity is.`
+      : ''
   const suggestionValid = suggestedSport.trim().length >= 2 && suggestedSport.trim().length <= 40
   const validDetails =
     title.trim().length > 0 &&
@@ -453,7 +461,7 @@ export function CreateActivityScreen() {
     let activityCreated = false
 
     try {
-      const start = new Date(`${date}T${time}`)
+      const start = zonedTimeToDate(date, time, activityTimeZone)
       const durationMinutes = Math.round(Number(durationHours) * 60)
       let coverImageUrl = getDefaultActivityHero(selectedSport.name)
       if (coverFile) {
@@ -754,6 +762,7 @@ export function CreateActivityScreen() {
                 <input type="time" value={time} onChange={(event) => setTime(event.target.value)} />
               </label>
             </div>
+            {timeZoneHint && <small className="field-helper">{timeZoneHint}</small>}
 
             <LocationFields
               meetingPoint={meetingPoint}
@@ -954,7 +963,7 @@ export function CreateActivityScreen() {
                 <button type="button" onClick={() => goToStep(2)}>Edit</button>
               </div>
               <strong className="wizard-review-title">{title}</strong>
-              <p>{date && time ? new Date(`${date}T${time}`).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'Date and time not set'}</p>
+              <p>{startDate ? formatActivityDate(startDate, { weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }, suburb) : 'Date and time not set'}</p>
               <p>{formatDuration(Math.round(Number(durationHours || 0) * 60))} · {spotsTotal === 1 ? '1 buddy wanted' : `${spotsTotal} spots`}</p>
               <p><MapPin />{[meetingPoint, address.trim(), suburb].filter(Boolean).join(', ')}</p>
               {parseMapPin(coordinates) && <p>Map pin added</p>}

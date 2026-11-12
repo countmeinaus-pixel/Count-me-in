@@ -202,7 +202,7 @@ export default function ActivityMap({ activities, onOpenActivity }: ActivityMapP
               <img src={selected.hero} alt="" />
               <span className="map-card-pill map-card-sport"><SportIcon sport={selected.sport} />{selected.sport}</span>
               <time className="map-card-pill map-card-time">
-                {formatActivityDate(selected.startsAt, { weekday: 'short', day: 'numeric', month: 'short' })}
+                {formatActivityDate(selected.startsAt, { weekday: 'short', day: 'numeric', month: 'short' }, selected.suburb)}
               </time>
             </span>
             <span className="map-card-body">

@@ -16,6 +16,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 8 | `supabase/migrations/20261111120000_friend_requests.sql` | Vriendschapsverzoeken: Add friend, Accept/Decline, echte vriendenlijst |
 | 9 | `supabase/migrations/20261112090000_profile_shared_location.sql` | Leden kunnen hun afgeronde locatie (~1 km) delen voor afstanden in km |
 | 10 | `supabase/migrations/20261112120000_add_freediving.sql` | Freediving als nieuwe sport (kiezen bij Edit my sports en Create activity) |
+| 11 | `supabase/migrations/20261112130000_sport_suggestions.sql` | Leden kunnen een nieuwe sport voorstellen; die activiteit wacht op een moderator. Alleen admins kunnen nog sporten toevoegen |
 
 ## Zo doe je het (per bestand)
 
@@ -37,3 +38,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 8:** open het profiel van een ander lid. Onder zijn naam staat **Add friend**.
 - **Na 9:** tik op Home linksboven op de locatie, vink **Also share my approximate location** aan en tik op **Use my current location**. Je krijgt geen foutmelding.
 - **Na 10:** ga naar **More** > **My sports** en tik op **Edit**. In de lijst staat **Freediving** met een schelp-icoon.
+- **Na 11:** ga naar **Create activity**. Onder de sporten staat **Can't find your sport? Suggest one**.

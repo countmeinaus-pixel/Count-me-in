@@ -5188,3 +5188,17 @@ h1 .skeleton { margin: 4px 0; }
   color: var(--seafoam);
 }
 .invite-option-icon svg { width: 20px; height: 20px; }
+
+/* Create activity: Suggest a sport */
+.wizard-suggest-link { justify-self: start; margin-top: 12px; }
+.wizard-suggest-box {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--seafoam);
+  border-radius: var(--radius-lg);
+  background: var(--seafoam-subtle);
+}
+.wizard-suggest-box p { color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
+.wizard-suggest-box .text-action { justify-self: start; }

@@ -190,6 +190,10 @@ export function CreateActivityScreen() {
   const [notes, setNotes] = useState('')
   const [autoAccept, setAutoAccept] = useState(false)
   const [sportDetails, setSportDetails] = useState<Record<string, string>>({})
+  // A sport that is not in the list yet: posted as Open activity and checked by a moderator first.
+  const [canSuggestSport, setCanSuggestSport] = useState(false)
+  const [isSuggesting, setIsSuggesting] = useState(false)
+  const [suggestedSport, setSuggestedSport] = useState('')
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null)
   const [inviteSearch, setInviteSearch] = useState('')
@@ -273,6 +277,9 @@ export function CreateActivityScreen() {
         )
 
       setSports(availableSports)
+      // Only offer Suggest a sport once the review step exists in the database.
+      const reviewCheck = await client.from('activities').select('review_status').limit(1)
+      if (active) setCanSuggestSport(!reviewCheck.error)
       const initialSport = availableSports.find((sport) => sport.name === preselectedSport)
       if (initialSport) {
         setSelectedSport(initialSport)
@@ -307,6 +314,7 @@ export function CreateActivityScreen() {
   const sportImage = selectedSport ? getDefaultActivityHero(selectedSport.name) : activities[0].hero
   const activityCoverImage = coverPreviewUrl ?? sportImage
   const dateTimeValue = date && time ? new Date(`${date}T${time}`).getTime() : Number.NaN
+  const suggestionValid = suggestedSport.trim().length >= 2 && suggestedSport.trim().length <= 40
   const validDetails =
     title.trim().length > 0 &&
     title.trim().length <= 120 &&
@@ -347,6 +355,8 @@ export function CreateActivityScreen() {
   }
 
   function chooseSport(sport: SportOption) {
+    setIsSuggesting(false)
+    setSuggestedSport('')
     if (selectedSport && selectedSport.id !== sport.id) {
       const hadSportDetails = Object.values(sportDetails).some((value) => value.trim() !== '')
       setSportChangeNotice(
@@ -361,6 +371,13 @@ export function CreateActivityScreen() {
     setTitleEdited(false)
     setTitle(sport.name === 'Open activity' ? '' : getSuggestedTitle(sport.name, suburb))
     setDurationHours(sport.name === 'Gym' ? '1' : '2')
+  }
+
+  function startSuggesting() {
+    const openActivityOption = sports.find((sport) => sport.name === 'Open activity')
+    if (!openActivityOption) return
+    chooseSport(openActivityOption)
+    setIsSuggesting(true)
   }
 
   function updateSportDetail(key: string, value: string) {
@@ -384,7 +401,7 @@ export function CreateActivityScreen() {
   }
 
   function canContinue() {
-    if (step === 1) return selectedSport !== null
+    if (step === 1) return selectedSport !== null && (!isSuggesting || suggestionValid)
     if (step === 2) return validDetails
     return true
   }
@@ -464,7 +481,10 @@ export function CreateActivityScreen() {
         notes: notes.trim(),
         auto_accept: autoAccept,
         sport_details: selectedSport.name === 'Open activity'
-          ? Object.fromEntries(Object.entries(sportDetails).filter(([key]) => key !== 'activity_name'))
+          ? {
+              ...Object.fromEntries(Object.entries(sportDetails).filter(([key]) => key !== 'activity_name')),
+              ...(isSuggesting && suggestionValid ? { suggested_sport: suggestedSport.trim() } : {}),
+            }
           : sportDetails,
         cover_image_url: coverImageUrl,
       }
@@ -520,7 +540,9 @@ export function CreateActivityScreen() {
       }
 
       navigate(`/activity/${createdActivity.id}`, {
-        state: locationSkipped && (address.trim() || pin) ? { statusMessage: locationNotSavedMessage } : undefined,
+        state: isSuggesting
+          ? { statusMessage: `Waiting for review. A moderator checks new sports like ${suggestedSport.trim()} first. You get a notification when your activity is live.` }
+          : locationSkipped && (address.trim() || pin) ? { statusMessage: locationNotSavedMessage } : undefined,
       })
     } catch (postError) {
       const message = getErrorMessage(postError, 'Unable to post this activity.')
@@ -639,6 +661,29 @@ export function CreateActivityScreen() {
               )
             })}
           </div>
+          {canSuggestSport && !isSuggesting && (
+            <button type="button" className="text-action wizard-suggest-link" onClick={startSuggesting}>
+              Can't find your sport? Suggest one
+            </button>
+          )}
+          {isSuggesting && (
+            <div className="wizard-suggest-box">
+              <label className="field">
+                <span>Which sport?</span>
+                <input
+                  value={suggestedSport}
+                  maxLength={40}
+                  onChange={(event) => setSuggestedSport(event.target.value)}
+                  placeholder="For example, Wingfoiling"
+                  autoFocus
+                />
+              </label>
+              <p>Your activity is posted as an Open activity with this sport. A moderator checks new sports first, so it only shows to others once it is approved.</p>
+              <button type="button" className="text-action" onClick={() => { setIsSuggesting(false); setSuggestedSport('') }}>
+                Cancel
+              </button>
+            </div>
+          )}
         </section>
       )}
 
@@ -912,7 +957,7 @@ export function CreateActivityScreen() {
                 <h3>Sport</h3>
                 <button type="button" onClick={() => goToStep(1)}>Edit</button>
               </div>
-              <p>{selectedSport.name}</p>
+              <p>{isSuggesting ? `${suggestedSport.trim()} (new sport, waiting for a moderator)` : selectedSport.name}</p>
             </div>
             <div className="wizard-review-content">
               <div className="wizard-review-heading">

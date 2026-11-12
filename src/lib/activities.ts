@@ -4,6 +4,9 @@ import { supabase } from './supabase'
 
 export type SavedActivityDetails = {
   id: string
+  // New-sport activities wait for a moderator ('pending') before others can see them.
+  reviewStatus: 'pending' | 'approved' | 'rejected'
+  suggestedSport: string | null
   sport: string
   title: string
   startsAt: string
@@ -43,12 +46,17 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
   if (activityError) throw activityError
   if (!activity) return null
 
-  const [sportResult, hostResult, locationResult] = await Promise.all([
+  const [sportResult, hostResult, locationResult, reviewResult] = await Promise.all([
     supabase.from('sports').select('name').eq('id', activity.sport_id).single(),
     supabase.from('profiles').select('first_name, age, photo_url, selfie_verified').eq('id', activity.host_id).single(),
     // Separate query so the screen still works before the location columns exist.
     supabase.from('activities').select('address, latitude, longitude').eq('id', id).maybeSingle(),
+    // Separate too: works before the sport suggestions update is run.
+    supabase.from('activities').select('review_status').eq('id', id).maybeSingle(),
   ])
+  const reviewValue = reviewResult.error ? 'approved' : reviewResult.data?.review_status
+  const reviewStatus: SavedActivityDetails['reviewStatus'] =
+    reviewValue === 'pending' || reviewValue === 'rejected' ? reviewValue : 'approved'
 
   if (sportResult.error) throw sportResult.error
   if (hostResult.error) throw hostResult.error
@@ -83,6 +91,8 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
 
   return {
     id: activity.id,
+    reviewStatus,
+    suggestedSport: typeof sportDetails.suggested_sport === 'string' ? sportDetails.suggested_sport : null,
     sport: sportResult.data.name,
     title: activity.title,
     startsAt: activity.starts_at,

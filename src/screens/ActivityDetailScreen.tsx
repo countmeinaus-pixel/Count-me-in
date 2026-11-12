@@ -722,6 +722,16 @@ export function ActivityDetailScreen() {
         <p className="eyebrow">{activity.sport}</p>
         <h1>{activity.title}</h1>
         <p className="date">{displayDate}</p>
+        {savedActivity?.reviewStatus === "pending" && !location.state?.statusMessage && (
+          <p className="activity-share-feedback" role="status">
+            Waiting for review. A moderator checks new sports{savedActivity.suggestedSport ? ` like ${savedActivity.suggestedSport}` : ""} first. Only you can see this activity until it is approved.
+          </p>
+        )}
+        {savedActivity?.reviewStatus === "rejected" && (
+          <p className="activity-share-feedback error" role="status">
+            This activity was not approved, so others cannot see it.
+          </p>
+        )}
         {typeof location.state?.statusMessage === "string" && (
           <p className="activity-share-feedback" role="status">
             {location.state.statusMessage}

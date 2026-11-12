@@ -2,7 +2,7 @@ import {
   databaseUpdateNeededMessage,
   isMissingDatabaseFeature,
 } from "./notifications"
-import { isMissingLocationColumns } from "./location"
+import { fixAustralianLatitude, isMissingLocationColumns } from "./location"
 import { supabase } from "./supabase"
 import {
   getDefaultActivityHero,
@@ -281,7 +281,7 @@ async function toFeedActivities(
         details: {},
         place: activity.meeting_point,
         suburb: activity.suburb,
-        latitude: pinsById.get(activity.id)?.latitude ?? null,
+        latitude: fixAustralianLatitude(pinsById.get(activity.id)?.latitude ?? null, pinsById.get(activity.id)?.longitude ?? null),
         longitude: pinsById.get(activity.id)?.longitude ?? null,
         host,
         spotsTotal: activity.spots_total,

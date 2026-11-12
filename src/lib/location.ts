@@ -4,10 +4,30 @@ export type Coordinates = { latitude: number; longitude: number }
 export function parseCoordinates(value: string): Coordinates | null {
   const match = value.trim().match(/^\(?\s*(-?\d{1,3}(?:\.\d+)?)\s*[,\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*\)?$/)
   if (!match) return null
-  const latitude = Number(match[1])
+  let latitude = Number(match[1])
   const longitude = Number(match[2])
   if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null
+  // Australia is south of the equator: a positive latitude with an Australian
+  // longitude is a missing minus sign (35.16, 138.47 means -35.16, 138.47).
+  if (latitude > 0 && longitude >= 112 && longitude <= 154) latitude = -latitude
   return { latitude, longitude }
+}
+
+// Pins saved before the check above may miss the minus: fix them when reading.
+export function fixAustralianLatitude(latitude: number | null, longitude: number | null) {
+  if (latitude == null || longitude == null) return latitude
+  return latitude > 0 && longitude >= 112 && longitude <= 154 ? -latitude : latitude
+}
+
+// Roughly South Australia. Pins outside it are almost always a typo.
+export function isInSouthAustralia(point: Coordinates) {
+  return point.latitude >= -38.6 && point.latitude <= -25.9 && point.longitude >= 128.9 && point.longitude <= 141.1
+}
+
+// A map pin that is usable for an activity: valid numbers, inside South Australia.
+export function parseMapPin(value: string): Coordinates | null {
+  const point = parseCoordinates(value)
+  return point && isInSouthAustralia(point) ? point : null
 }
 
 export function formatCoordinates(latitude: number | null, longitude: number | null) {

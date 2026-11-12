@@ -13,7 +13,7 @@ import {
   uploadActivityCover,
 } from '../lib/activityImages'
 import { cancelActivity } from '../lib/activityParticipation'
-import { formatCoordinates, isMissingLocationColumns, locationNotSavedMessage, parseCoordinates } from '../lib/location'
+import { formatCoordinates, isMissingLocationColumns, locationNotSavedMessage, parseCoordinates, parseMapPin } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 const levels = activityLevels
@@ -157,7 +157,7 @@ export function EditActivityScreen() {
       durationMinutes > 1440 ||
       !meetingPoint.trim() ||
       !suburb.trim() ||
-      (coordinates.trim() !== '' && !parseCoordinates(coordinates)) ||
+      (coordinates.trim() !== '' && !parseMapPin(coordinates)) ||
       notes.length > 300
     ) {
       setError('Check the title, future date and time, duration, location, map pin and notes.')
@@ -194,7 +194,7 @@ export function EditActivityScreen() {
         cover_image_url: coverImageUrl,
         updated_at: new Date().toISOString(),
       }
-      const pin = parseCoordinates(coordinates)
+      const pin = parseMapPin(coordinates)
       let { error: updateError } = await supabase
         .from('activities')
         .update({

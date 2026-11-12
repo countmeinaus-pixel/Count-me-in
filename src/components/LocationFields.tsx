@@ -1,6 +1,6 @@
 import { ChevronDown, MapPin } from 'lucide-react'
 import { useState } from 'react'
-import { parseCoordinates } from '../lib/location'
+import { parseCoordinates, parseMapPin } from '../lib/location'
 
 type LocationFieldsProps = {
   meetingPoint: string
@@ -24,7 +24,8 @@ export function LocationFields({
   onCoordinatesChange,
 }: LocationFieldsProps) {
   const [helpOpen, setHelpOpen] = useState(false)
-  const coordinatesInvalid = coordinates.trim() !== '' && !parseCoordinates(coordinates)
+  const coordinatesUnreadable = coordinates.trim() !== '' && !parseCoordinates(coordinates)
+  const coordinatesInvalid = coordinates.trim() !== '' && !parseMapPin(coordinates)
 
   return (
     <fieldset className="location-fields">
@@ -74,8 +75,10 @@ export function LocationFields({
           aria-describedby="map-pin-helper"
         />
         <small id="map-pin-helper" className={coordinatesInvalid ? 'field-error' : 'field-helper'}>
-          {coordinatesInvalid
+          {coordinatesUnreadable
             ? 'Paste two numbers separated by a comma, like -34.9285, 138.6007.'
+            : coordinatesInvalid
+            ? 'This pin is not in South Australia. Check the numbers, like -34.9285, 138.6007.'
             : 'Puts your activity on the map. Handy for spots without an address, like a beach or trailhead.'}
         </small>
       </label>

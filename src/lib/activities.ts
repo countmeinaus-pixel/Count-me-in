@@ -1,5 +1,5 @@
 import { getDefaultActivityHero } from '../data/mockData'
-import { isMissingLocationColumns } from './location'
+import { fixAustralianLatitude, isMissingLocationColumns } from './location'
 import { supabase } from './supabase'
 
 export type SavedActivityDetails = {
@@ -101,7 +101,7 @@ export async function getSavedActivity(id: string): Promise<SavedActivityDetails
     meetingPoint: activity.meeting_point,
     suburb: activity.suburb,
     address: location?.address ?? '',
-    latitude: location?.latitude ?? null,
+    latitude: fixAustralianLatitude(location?.latitude ?? null, location?.longitude ?? null),
     longitude: location?.longitude ?? null,
     spotsTotal: activity.spots_total,
     level: activity.level_wanted,

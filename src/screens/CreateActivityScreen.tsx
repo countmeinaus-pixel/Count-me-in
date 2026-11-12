@@ -30,7 +30,7 @@ import { LocationFields } from '../components/LocationFields'
 import { activities, getDefaultActivityHero } from '../data/mockData'
 import { compressActivityCover, deleteActivityCover, uploadActivityCover } from '../lib/activityImages'
 import { getMetMates } from '../lib/friends'
-import { isMissingLocationColumns, locationNotSavedMessage, parseCoordinates } from '../lib/location'
+import { isMissingLocationColumns, locationNotSavedMessage, parseCoordinates, parseMapPin } from '../lib/location'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 type SportOption = {
@@ -327,7 +327,7 @@ export function CreateActivityScreen() {
     Number(durationHours) <= 24 &&
     meetingPoint.trim().length > 0 &&
     suburb.trim().length > 0 &&
-    (coordinates.trim() === '' || parseCoordinates(coordinates) !== null) &&
+    (coordinates.trim() === '' || parseMapPin(coordinates) !== null) &&
     notes.length <= 300
 
   useEffect(() => {
@@ -484,7 +484,7 @@ export function CreateActivityScreen() {
           : sportDetails,
         cover_image_url: coverImageUrl,
       }
-      const pin = parseCoordinates(coordinates)
+      const pin = parseMapPin(coordinates)
       let { data: createdActivity, error: createError } = await client
         .from('activities')
         .insert({
@@ -956,7 +956,7 @@ export function CreateActivityScreen() {
               <p>{date && time ? new Date(`${date}T${time}`).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'Date and time not set'}</p>
               <p>{formatDuration(Math.round(Number(durationHours || 0) * 60))} · {spotsTotal === 1 ? '1 buddy wanted' : `${spotsTotal} spots`}</p>
               <p><MapPin />{[meetingPoint, address.trim(), suburb].filter(Boolean).join(', ')}</p>
-              {parseCoordinates(coordinates) && <p>Map pin added</p>}
+              {parseMapPin(coordinates) && <p>Map pin added</p>}
               {Object.entries(sportDetails)
                 .filter(([key, value]) => key !== 'activity_name' && value.trim())
                 .map(([key, value]) => (

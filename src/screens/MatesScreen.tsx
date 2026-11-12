@@ -19,11 +19,14 @@ import { useViewerProfile } from "../lib/viewerProfile"
 import { inviteMate } from "../lib/invite"
 
 
-// Two pages from one screen:
+// Three pages from one screen:
 // - "friends" (bottom nav): only the people you are friends with.
-// - "crew" (More > Community): friend requests, invite a mate, and search everyone else.
-export function MatesScreen({ view = "friends" }: { view?: "friends" | "crew" }) {
+// - "requests" (More > Community): Invite a mate, then the friend requests you received.
+// - "crew" (More > Community): search and filter everyone else.
+export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests" | "crew" }) {
   const isCrew = view === "crew"
+  const isRequests = view === "requests"
+  const isMorePage = isCrew || isRequests
   const navigate = useNavigate()
   const location = useLocation()
   const backToMore = useBackToMore()
@@ -128,8 +131,8 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "crew" })
   }
 
   function goBack() {
-    if (location.state?.from === "/more" || (isCrew && !(window.history.state?.idx > 0))) backToMore()
-    else if (isCrew) navigate(-1)
+    if (location.state?.from === "/more" || (isMorePage && !(window.history.state?.idx > 0))) backToMore()
+    else if (isMorePage) navigate(-1)
     else navigate("/")
   }
 
@@ -145,24 +148,53 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "crew" })
           <ArrowLeft />
         </button>
         <div>
-          <p className="eyebrow">{isCrew ? "Invites and new mates" : "Good people, good plans"}</p>
-          <h1>{isCrew ? "Find new crew" : "Friends"}</h1>
+          <p className="eyebrow">{isCrew ? "New mates around Adelaide" : isRequests ? "Invites and requests" : "Good people, good plans"}</p>
+          <h1>{isCrew ? "Find new crew" : isRequests ? "Friend requests" : "Friends"}</h1>
         </div>
       </header>
 
-      {!isCrew && (
-        <button type="button" className="mates-crew-link" onClick={() => navigate("/more/crew")}>
+      {view === "friends" && incoming.length > 0 && (
+        <button type="button" className="mates-crew-link" onClick={() => navigate("/more/requests")}>
           <span className="mates-crew-link-icon"><UserPlus aria-hidden="true" /></span>
           <span className="grow">
-            <strong>Find new crew</strong>
-            <small>{incoming.length > 0 ? `${incoming.length} friend ${incoming.length === 1 ? "request" : "requests"} waiting` : "Friend requests, invites and new mates"}</small>
+            <strong>Friend requests</strong>
+            <small>{incoming.length} {incoming.length === 1 ? "request" : "requests"} waiting</small>
           </span>
-          {incoming.length > 0 && <span className="mates-crew-link-badge">{incoming.length}</span>}
+          <span className="mates-crew-link-badge">{incoming.length}</span>
+          <ChevronRight aria-hidden="true" />
+        </button>
+      )}
+      {view === "friends" && (
+        <button type="button" className="mates-crew-link" onClick={() => navigate("/more/crew")}>
+          <span className="mates-crew-link-icon"><Search aria-hidden="true" /></span>
+          <span className="grow">
+            <strong>Find new crew</strong>
+            <small>Search mates by sport, level and distance</small>
+          </span>
           <ChevronRight aria-hidden="true" />
         </button>
       )}
 
-      {isCrew && incoming.length > 0 && (
+      {isRequests && (
+        <button type="button" className="mates-crew-link" onClick={() => void inviteMate()}>
+          <span className="mates-crew-link-icon"><UserPlus aria-hidden="true" /></span>
+          <span className="grow">
+            <strong>Invite a mate</strong>
+            <small>Send him a link to Count Me In</small>
+          </span>
+          <ChevronRight aria-hidden="true" />
+        </button>
+      )}
+
+      {isRequests && incoming.length === 0 && !friendshipsError && (
+        <div className="mate-empty-state">
+          <h2>No friend requests</h2>
+          <p>When someone taps Add friend on your profile, his request shows up here.</p>
+          <button type="button" onClick={() => navigate("/more/crew")}>Find new crew</button>
+        </div>
+      )}
+
+      {isRequests && incoming.length > 0 && (
         <section className="friend-requests" aria-labelledby="friend-requests-heading">
           <div className="mates-results-heading">
             <h2 id="friend-requests-heading">Friend requests</h2>
@@ -195,7 +227,7 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "crew" })
       )}
       {friendshipsError && <p className="inline-error" role="alert">{friendshipsError}</p>}
 
-      {!isCrew && (
+      {view === "friends" && (
       <section aria-labelledby="your-friends-heading">
         <div className="mates-results-heading">
           <h2 id="your-friends-heading">Your friends</h2>
@@ -227,14 +259,6 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "crew" })
 
       {isCrew && (
       <>
-      <button type="button" className="mates-crew-link" onClick={() => void inviteMate()}>
-        <span className="mates-crew-link-icon"><UserPlus aria-hidden="true" /></span>
-        <span className="grow">
-          <strong>Invite a mate</strong>
-          <small>Send him a link to Count Me In</small>
-        </span>
-        <ChevronRight aria-hidden="true" />
-      </button>
 
       <section
         className="mates-crew-section"

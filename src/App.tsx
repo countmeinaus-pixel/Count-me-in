@@ -150,7 +150,7 @@ function AppShell() {
       : // Desktop: More pages are highlighted in the side nav groups instead.
         isSideNav && (path.startsWith("/more") || (path.startsWith("/profile/") && path !== "/profile"))
         ? null
-      : path === "/more/friends" || path === "/more/crew"
+      : path === "/more/friends" || path === "/more/crew" || path === "/more/requests"
         ? "friends"
       : path.startsWith("/more")
         ? "more"
@@ -238,6 +238,7 @@ const router = createBrowserRouter([
       { path: "/profile/records", element: <PersonalRecordsScreen /> },
       { path: "/more", element: <MoreScreen /> },
       { path: "/more/crew", element: <MatesScreen view="crew" /> },
+      { path: "/more/requests", element: <MatesScreen view="requests" /> },
       { path: "/more/friends", element: <Navigate to="/more/crew" replace /> },
       { path: "/more/sports", element: <MySportsScreen /> },
       { path: "/more/notifications", element: <NotificationSettingsScreen /> },

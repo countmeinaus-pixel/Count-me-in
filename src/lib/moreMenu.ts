@@ -8,6 +8,7 @@ import {
   LogOut,
   MapPin,
   MessageCircleQuestion,
+  Search,
   ShieldCheck,
   Trophy,
   UserPlus,
@@ -43,7 +44,8 @@ export const menuGroups: MenuGroup[] = [
   {
     title: 'Community',
     items: [
-      { label: 'Find new crew', href: '/more/crew', icon: UserPlus },
+      { label: 'Find new crew', href: '/more/crew', icon: Search },
+      { label: 'Friend requests', href: '/more/requests', icon: UserPlus },
     ],
   },
   {

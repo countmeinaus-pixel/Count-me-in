@@ -16,6 +16,10 @@ import {
   Sunrise,
   Users,
   Shell,
+  UserPlus,
+  MapPin,
+  Compass,
+  Map as MapIcon,
   Waves,
   type LucideIcon,
 } from 'lucide-react'
@@ -38,6 +42,10 @@ const icons: Record<string, LucideIcon> = {
   shield: ShieldCheck,
   sunrise: Sunrise,
   users: Users,
+  'user-plus': UserPlus,
+  'map-pin': MapPin,
+  compass: Compass,
+  map: MapIcon,
   waves: Waves,
 }
 

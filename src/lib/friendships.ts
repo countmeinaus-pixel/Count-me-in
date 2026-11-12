@@ -161,3 +161,30 @@ export function useMyFriendships() {
   }, [])
   return state
 }
+
+// When each friendship of the viewer started, oldest first (for the friend patches).
+// Kept per name so another member's profile never shows your friend patches.
+let friendDates: { name: string; dates: string[] } | null = null
+
+export function getFriendDatesFor(name: string) {
+  return friendDates?.name === name ? friendDates.dates : []
+}
+
+export async function loadFriendDates(viewerName: string) {
+  const viewerId = await getViewerId()
+  if (!supabase || !viewerId) return []
+  const { data, error } = await supabase
+    .from('friend_requests')
+    .select('created_at, responded_at')
+    .eq('status', 'accepted')
+    .or(`requester_id.eq.${viewerId},addressee_id.eq.${viewerId}`)
+  if (error) {
+    if (isMissingDatabaseFeature(error)) return []
+    throw error
+  }
+  const dates = (data ?? [])
+    .map((row) => (row.responded_at as string | null) ?? (row.created_at as string))
+    .sort()
+  friendDates = { name: viewerName, dates }
+  return dates
+}

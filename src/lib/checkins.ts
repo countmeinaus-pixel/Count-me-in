@@ -1,4 +1,6 @@
 import { activities, demoConfirmedMeetups } from '../data/mockData'
+import { getFriendDatesFor } from './friendships'
+import { activityRegion } from './regions'
 import { waterSportNames } from '../data/sports'
 import { patchDefinitions, type PatchDefinition, type SportPatchRule } from '../data/patches'
 import { getConfirmedPrDates } from './personalRecords'
@@ -17,6 +19,9 @@ export type ConfirmedMeetup = {
   oceanActivity?: boolean
   terrain?: string
   details?: Record<string, string>
+  // Where it happened (for the Places patches).
+  suburb?: string
+  region?: string | null
 }
 
 type StoredConfirmedMeetup = Omit<ConfirmedMeetup, 'sport' | 'startsAt' | 'hosted'>
@@ -115,7 +120,7 @@ export async function loadSavedMeetupsForUser(userName?: string): Promise<string
   const [activitiesResult, profilesResult] = await Promise.all([
     supabase
       .from('activities')
-      .select('id, host_id, title, starts_at, sport_id, sport_details')
+      .select('id, host_id, title, starts_at, sport_id, sport_details, suburb')
       .in('id', activityIds),
     supabase.from('profiles').select('id, first_name').in('id', partnerIds),
   ])
@@ -129,6 +134,9 @@ export async function loadSavedMeetupsForUser(userName?: string): Promise<string
     : { data: [], error: null }
   if (sportsResult.error) throw sportsResult.error
 
+  // Map pins in a separate query, so this still works before the pin columns exist.
+  const pinsResult = await supabase.from('activities').select('id, latitude, longitude').in('id', activityIds)
+  const pinsById = new Map((pinsResult.error ? [] : pinsResult.data ?? []).map((pin) => [pin.id, pin]))
   const activitiesById = new Map(activityRows.map((entry) => [entry.id, entry]))
   const partnersById = new Map(
     (profilesResult.data ?? []).map((profile) => [profile.id, profile.first_name]),
@@ -168,6 +176,8 @@ export async function loadSavedMeetupsForUser(userName?: string): Promise<string
         oceanActivity: typeof location === 'string' && location.toLowerCase() === 'ocean',
         terrain: typeof terrain === 'string' ? terrain : undefined,
         details: sportDetails,
+        suburb: activity.suburb ?? undefined,
+        region: activityRegion({ suburb: activity.suburb, latitude: pinsById.get(activity.id)?.latitude, longitude: pinsById.get(activity.id)?.longitude }),
       }]
     }),
   )
@@ -395,6 +405,21 @@ export function getPatchMetricProgress(
       const uniqueActivities = [...new Map(qualifyingEntries.map((entry) => [entry.activityId, entry])).values()]
       return { progress: uniqueActivities.length, qualifyingEntries: uniqueActivities }
     }
+    case 'suburbs':
+    case 'regions': {
+      // Different places: one per suburb, or one per Adelaide region.
+      const qualifyingEntries: ConfirmedMeetup[] = []
+      const seen = new Set<string>()
+      for (const entry of entries) {
+        const place = metric === 'suburbs' ? entry.suburb?.trim().toLowerCase() : entry.region
+        if (!place || seen.has(place)) continue
+        seen.add(place)
+        qualifyingEntries.push(entry)
+      }
+      return { progress: seen.size, qualifyingEntries }
+    }
+    case 'friends':
+      return { progress: 0, qualifyingEntries: [] }
     case 'sports': {
       const qualifyingEntries: ConfirmedMeetup[] = []
       const sports = new Set<string>()
@@ -414,8 +439,8 @@ export function getPatchProgressForUser(user: string): PatchProgress[] {
     .sort((left, right) => left.confirmedAt.localeCompare(right.confirmedAt))
 
   return patchDefinitions.map((definition) => {
-    if (definition.metric === 'prConfirms') {
-      const dates = getConfirmedPrDates()
+    if (definition.metric === 'prConfirms' || definition.metric === 'friends') {
+      const dates = definition.metric === 'friends' ? getFriendDatesFor(user) : getConfirmedPrDates()
       const earned = dates.length >= definition.target
       return {
         ...definition,

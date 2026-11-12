@@ -19,13 +19,14 @@ import { getCurrentProfile } from '../lib/profile'
 import { supabase } from '../lib/supabase'
 import { getMoreOrigin } from '../lib/moreNavigation'
 import { loadConfirmedPrDates } from '../lib/personalRecords'
+import { loadFriendDates } from '../lib/friendships'
 
 function formatEarnedDate(date: string | null) {
   if (!date) return ''
   return new Date(date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-const generalPatchCategories: string[] = ['Getting started', 'Consistency', 'Sports', 'Social']
+const generalPatchCategories: string[] = ['Getting started', 'Consistency', 'Sports', 'Social', 'Places']
 
 function formatTimeLeft(endsAt: Date) {
   const days = Math.ceil((endsAt.getTime() - Date.now()) / 86400000)
@@ -112,6 +113,7 @@ export function PatchesScreen() {
           setUserName(profile.firstName)
           await loadSavedMeetupsForUser(profile.firstName)
           await loadConfirmedPrDates().catch(() => undefined)
+          await loadFriendDates(profile.firstName).catch(() => undefined)
           if (active) setCheckinVersion((version) => version + 1)
         }
       } catch (error) {

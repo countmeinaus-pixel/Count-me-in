@@ -1,8 +1,8 @@
 import { buildSportPatches } from './sportPatches'
 import { sportNames, type SportName } from './sports'
 
-export type PatchCategory = 'Getting started' | 'Consistency' | 'Sports' | 'Social' | SportName
-export type PatchMetric = 'meetups' | 'earlyBird' | 'saltWater' | 'trailhead' | 'hosted' | 'sports' | 'sport' | 'prConfirms'
+export type PatchCategory = 'Getting started' | 'Consistency' | 'Sports' | 'Social' | 'Places' | SportName
+export type PatchMetric = 'meetups' | 'earlyBird' | 'saltWater' | 'trailhead' | 'hosted' | 'sports' | 'sport' | 'prConfirms' | 'friends' | 'suburbs' | 'regions'
 
 // Sports come from the one list in data/sports.ts.
 export type { SportName }
@@ -36,6 +36,17 @@ export type PatchDefinition = {
 }
 
 const basePatches: PatchDefinition[] = [
+  // Friends (accepted friendships)
+  { id: 'first-friend', name: 'First friend', icon: 'user-plus', category: 'Social', description: 'Every crew starts with one mate.', rule: 'Make 1 friend.', metric: 'friends', target: 1, progressLabel: 'friends' },
+  { id: 'crew-of-five', name: 'Crew of five', icon: 'users', category: 'Social', description: 'Enough mates for a proper session.', rule: 'Make 5 friends.', metric: 'friends', target: 5, progressLabel: 'friends' },
+  { id: 'squad', name: 'Squad', icon: 'users', category: 'Social', description: 'There is always someone keen.', rule: 'Make 10 friends.', metric: 'friends', target: 10, progressLabel: 'friends' },
+  { id: 'tribe', name: 'Tribe', icon: 'users', category: 'Social', description: 'Half of Adelaide knows your name.', rule: 'Make 25 friends.', metric: 'friends', target: 25, progressLabel: 'friends' },
+  // Places (where your confirmed meetups were)
+  { id: 'local-explorer', name: 'Local explorer', icon: 'map-pin', category: 'Places', description: 'You know more than your own backyard.', rule: 'Complete meetups in 5 different suburbs.', metric: 'suburbs', target: 5, progressLabel: 'suburbs' },
+  { id: 'suburb-collector', name: 'Suburb collector', icon: 'map-pin', category: 'Places', description: 'Fifteen suburbs and counting.', rule: 'Complete meetups in 15 different suburbs.', metric: 'suburbs', target: 15, progressLabel: 'suburbs' },
+  { id: 'out-of-the-neighbourhood', name: 'Out of the neighbourhood', icon: 'compass', category: 'Places', description: 'You crossed into another part of town.', rule: 'Complete meetups in 2 regions of Adelaide.', metric: 'regions', target: 2, progressLabel: 'regions' },
+  { id: 'region-hopper', name: 'Region hopper', icon: 'compass', category: 'Places', description: 'Beaches, hills, north and south.', rule: 'Complete meetups in 4 regions of Adelaide.', metric: 'regions', target: 4, progressLabel: 'regions' },
+  { id: 'all-over-adelaide', name: 'All over Adelaide', icon: 'map', category: 'Places', description: 'City, North, West beaches, East & Hills, South coast and the Fleurieu.', rule: 'Complete meetups in all 6 regions of Adelaide.', metric: 'regions', target: 6, progressLabel: 'regions' },
   {
     id: 'witness',
     name: 'Witness',
@@ -162,6 +173,6 @@ const basePatches: PatchDefinition[] = [
 export const patchDefinitions: PatchDefinition[] = [...basePatches, ...buildSportPatches()]
 
 export const patchCategories: PatchCategory[] = [
-  'Getting started', 'Consistency', 'Sports', 'Social',
+  'Getting started', 'Consistency', 'Sports', 'Social', 'Places',
   ...sportNames,
 ]

@@ -45,7 +45,7 @@ export const menuGroups: MenuGroup[] = [
   {
     title: 'Community',
     items: [
-      { label: 'Activities', href: '/more/activities', icon: Compass },
+      { label: 'Find activities', href: '/more/activities', icon: Compass },
       { label: 'Find new crew', href: '/more/crew', icon: Search },
       { label: 'Friend requests', href: '/more/requests', icon: UserPlus },
     ],

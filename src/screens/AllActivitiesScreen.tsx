@@ -92,7 +92,7 @@ export function AllActivitiesScreen() {
         </button>
         <div>
           <p className="eyebrow">Find something to join</p>
-          <h1>Activities</h1>
+          <h1>Find activities</h1>
         </div>
       </header>
 

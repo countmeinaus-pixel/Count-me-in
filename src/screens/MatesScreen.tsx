@@ -17,7 +17,7 @@ import { getSavedActivityFeed } from "../lib/activityParticipation"
 import { setLocationPreference, useLocationPreference } from "../lib/distance"
 import { applyMateFilters, countActiveFilters, defaultMateFilters, type MateFilters } from "../lib/mateFilters"
 import { useViewerProfile } from "../lib/viewerProfile"
-import { inviteMate } from "../lib/invite"
+import { InvitePanel } from "../components/InvitePanel"
 
 
 // Three pages from one screen:
@@ -34,6 +34,7 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
   const [query, setQuery] = useState("")
   const [filters, setFilters] = useState<MateFilters>(defaultMateFilters)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
   const locationPreference = useLocationPreference()
   const [hostingSoonNames, setHostingSoonNames] = useState<Set<string>>(new Set())
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
@@ -139,6 +140,7 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
 
   return (
     <div className="screen mates-screen">
+      {inviteOpen && <InvitePanel onClose={() => setInviteOpen(false)} />}
       <header className="mates-header">
         <button
           type="button"
@@ -177,7 +179,7 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
       )}
 
       {isRequests && (
-        <button type="button" className="mates-crew-link" onClick={() => void inviteMate()}>
+        <button type="button" className="mates-crew-link" onClick={() => setInviteOpen(true)}>
           <span className="mates-crew-link-icon"><UserPlus aria-hidden="true" /></span>
           <span className="grow">
             <strong>Invite a mate</strong>

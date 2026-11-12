@@ -1,14 +1,38 @@
-// Share the app link with a mate: the phone's share sheet, or copy as a fallback.
-export async function inviteMate() {
-  const url = window.location.origin
-  const text = 'Join me on Count Me In: find a crew for runs, dives, rides and more around Adelaide.'
+// Inviting a mate: free share links only (no APIs, no keys).
+
+export const inviteText = 'Join me on Count Me In: find a crew for runs, dives, rides and more around Adelaide.'
+
+export function getInviteUrl() {
+  return window.location.origin
+}
+
+// Opens WhatsApp (app or web) with the message filled in.
+export function getWhatsAppUrl() {
+  return `https://wa.me/?text=${encodeURIComponent(`${inviteText} ${getInviteUrl()}`)}`
+}
+
+// Messenger's share link only works in the phone app; on a computer it needs
+// a Facebook developer account, so the button is only shown on phones.
+export function getMessengerUrl() {
+  return `fb-messenger://share/?link=${encodeURIComponent(getInviteUrl())}`
+}
+
+export function isPhone() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
+export function canUseShareSheet() {
+  return typeof navigator.share === 'function'
+}
+
+export async function copyInvite() {
+  await navigator.clipboard.writeText(`${inviteText} ${getInviteUrl()}`)
+}
+
+// The device's own share menu (AirDrop, Messages, Instagram on phones, ...).
+export async function openShareSheet() {
   try {
-    if (navigator.share) {
-      await navigator.share({ title: 'Count Me In', text, url })
-      return
-    }
-    await navigator.clipboard.writeText(`${text} ${url}`)
-    window.alert('Invite link copied. Paste it in a message to your mate.')
+    await navigator.share({ title: 'Count Me In', text: inviteText, url: getInviteUrl() })
   } catch {
     // Sharing was cancelled.
   }

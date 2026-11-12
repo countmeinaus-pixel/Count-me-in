@@ -5145,3 +5145,35 @@ h1 .skeleton { margin: 4px 0; }
 
 /* Home: button below the first activities, to the full Activities page. */
 .view-all-activities { width: 100%; margin-top: 12px; }
+
+/* Invite a mate panel */
+.invite-intro { color: var(--text-secondary); }
+.invite-options { display: grid; gap: 8px; }
+.invite-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.invite-option:hover { background: var(--surface-2); }
+.invite-option strong { display: block; font-weight: 600; }
+.invite-option small { color: var(--text-secondary); font-size: 13px; }
+.invite-option-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--seafoam-subtle);
+  color: var(--seafoam);
+}
+.invite-option-icon svg { width: 20px; height: 20px; }

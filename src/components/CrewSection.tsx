@@ -1,6 +1,6 @@
 import { CalendarDays, Check, MapPin, ShieldCheck, Sparkles, UserPlus, Users } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { inviteMate } from '../lib/invite'
+import { useState, type ReactNode } from 'react'
+import { InvitePanel } from './InvitePanel'
 import type { ActivityCardData } from './ActivityCard'
 import { Avatar } from './Avatar'
 import { SportIcon } from './SportIcon'
@@ -65,9 +65,11 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
   const [top, ...rest] = suggestions
   const tops = suggestions.slice(0, 3)
   const side = rest.slice(0, 9)
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   return (
     <>
+      {inviteOpen && <InvitePanel onClose={() => setInviteOpen(false)} />}
       {(
         <div className="crew-friends">
           <h3>Your friends</h3>
@@ -100,7 +102,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
                 </button>
               )
             })}
-            <button type="button" className="friend-tile friend-tile-invite" onClick={() => void inviteMate()}>
+            <button type="button" className="friend-tile friend-tile-invite" onClick={() => setInviteOpen(true)}>
               <span className="friend-tile-invite-icon"><UserPlus aria-hidden="true" /></span>
               <strong>Invite a mate</strong>
               <small>Bring your crew along</small>

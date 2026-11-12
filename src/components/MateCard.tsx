@@ -7,8 +7,8 @@ function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
 }
 
-// Profile card: square photo top left with name, age and suburb next to it,
-// the sports underneath, and the stats at the bottom (lined up across a row).
+// Profile card: square photo top left with name, age, suburb and sports next to
+// it, and the stats at the bottom (lined up across a row).
 export function MateCard({
   member,
   onClick,
@@ -34,11 +34,11 @@ export function MateCard({
             {member.name}, {member.age}
           </span>
           <span className="mate-card-location"><MapPin aria-hidden="true" />{member.suburb}</span>
+          <span className="mate-card-sports">
+            {member.sports.slice(0, 3).map((sport) => <span className="mate-sport" key={sport.name}>{sport.name}</span>)}
+            {member.sports.length > 3 && <span className="mate-sport-more">+{member.sports.length - 3}</span>}
+          </span>
         </span>
-      </span>
-      <span className="mate-card-sports">
-        {member.sports.slice(0, 3).map((sport) => <span className="mate-sport" key={sport.name}>{sport.name}</span>)}
-        {member.sports.length > 3 && <span className="mate-sport-more">+{member.sports.length - 3}</span>}
       </span>
       <span className="mate-card-stats">
         <span><strong>{member.stats.meetups}</strong><small>meetups</small></span>

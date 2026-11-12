@@ -438,7 +438,8 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--accent);
 }
 .mate-card-photo.tint-water .mate-card-sport-icon { color: var(--seafoam); }
-.mate-card-identity { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-top: 2px; }
+.mate-card-identity { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; padding-top: 2px; }
+.mate-card-identity .mate-card-sports { margin-top: 2px; min-height: 0; }
 .mate-card-name { flex-wrap: wrap; }
 .mate-sport,
 .mate-sport-more {
@@ -5313,3 +5314,21 @@ h1 .skeleton { margin: 4px 0; }
 .map-picker { width: 100%; height: min(60vh, 520px); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
 .map-picker-hint { color: var(--text-secondary); font-size: 14px; }
 .map-picker-coords { color: var(--text-secondary); font-size: 13px; font-variant-numeric: tabular-nums; word-break: break-all; }
+
+/* Profile card: on narrow cards (two a row on phones) the sports move under the
+   photo, full width, so they are not squeezed next to it. */
+.mate-card { container-type: inline-size; }
+@container (max-width: 190px) {
+  .mate-card-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "photo name" "photo place" "sports sports";
+    column-gap: 10px;
+    row-gap: 6px;
+  }
+  .mate-card-identity { display: contents; }
+  .mate-card-photo { grid-area: photo; width: 64px; }
+  .mate-card-name { grid-area: name; align-self: end; }
+  .mate-card-location { grid-area: place; align-self: start; }
+  .mate-card-identity .mate-card-sports { grid-area: sports; margin-top: 4px; }
+}

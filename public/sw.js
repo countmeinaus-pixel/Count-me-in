@@ -15,7 +15,8 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'Count Me In', {
       body: data.body || '',
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      // Status bar icon (Android): only the shape is used, so a white shield on transparent.
+      badge: '/badge-96.png',
       data: { url: data.url || '/notifications' },
     }),
   )

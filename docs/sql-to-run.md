@@ -21,6 +21,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 13 | `supabase/migrations/20261112150000_open_activity_review.sql` | Elke Open activity wacht op een moderator; uitgelogde bezoekers zien activiteiten weer |
 | 14 | `supabase/migrations/20261112160000_review_suggest_sport.sql` | Bij goedkeuren kiezen: alleen de activiteit, of ook de sport voorstellen aan de admin |
 | 15 | `supabase/migrations/20261112170000_push_notifications.sql` | Pushmeldingen: push-adressen per toestel en meldingsinstellingen per lid |
+| 16 | `supabase/migrations/20261112180000_service_role_read_access.sql` | De push-functie mag de chat, activiteiten en instellingen lezen (anders komt er geen push) |
 
 ## Zo doe je het (per bestand)
 

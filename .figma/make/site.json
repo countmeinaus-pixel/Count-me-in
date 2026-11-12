@@ -1,7 +1,7 @@
 {
-  "description": "Reviews project documentation and helps teams clarify requirements by identifying questions before development begins.",
+  "description": "Mates for surfing, diving, riding, running and hiking around Adelaide. Post a callout, tap Count me in, get outside.",
   "robots": {
-    "index": false
+    "index": true
   },
   "accessibility": {
     "addBypassLinks": false,

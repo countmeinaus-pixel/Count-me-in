@@ -7,7 +7,7 @@ import { activities, currentUser } from '../data/mockData'
 import { CrewSection } from '../components/CrewSection'
 import { LocationControls } from '../components/LocationControls'
 import { SidePanel } from '../components/SidePanel'
-import { isWithinRadius, memberCoordinates, setLocationPreference, suburbCoordinates, useLocationPreference, type LocationPreference } from '../lib/distance'
+import { applyHomeSuburbDefault, isWithinRadius, memberCoordinates, setLocationPreference, suburbCoordinates, useLocationPreference, type LocationPreference } from '../lib/distance'
 import {
   getSavedActivityFeed,
   type FeedActivity,
@@ -92,6 +92,11 @@ export function HomeScreen() {
     [viewerProfile],
   )
   const userSuburb = viewerProfile?.suburb ?? currentUser.suburb
+  // Signed in and never picked a location on this device: start around your own suburb.
+  const profileSuburb = viewerProfile?.suburb
+  useEffect(() => {
+    void applyHomeSuburbDefault(profileSuburb)
+  }, [profileSuburb])
   const [blockedNames, setBlockedNames] = useState<string[]>(() => {
     try {
       return getBlockedUsers()

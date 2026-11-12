@@ -35,7 +35,7 @@ Afspraak: tijden worden in de database in UTC opgeslagen. Een activiteit wordt g
 - [ ] ⚠️ Kaartpin mag alleen in Zuid-Australië liggen (`isInSouthAustralia` in `src/lib/location.ts`). Moet heel Australië worden.
 - [ ] ⚠️ Kaarten starten altijd boven Adelaide (`src/components/ActivityMap.tsx`, `src/components/MapPinPicker.tsx`). Moet starten bij jouw stad.
 - [ ] ⚠️ Voorbeeld-coördinaten en Google Maps-link wijzen naar Adelaide (`src/components/LocationFields.tsx`).
-- [ ] ❌ Home en Friends tonen standaard alleen activiteiten en leden uit jouw eigen stad (niet die uit Perth als je in Sydney woont).
+- [x] ✅ Home en Friends starten (eerste keer op een toestel, ingelogd) rond de suburb uit je profiel, 25 km. Kies je zelf iets anders of "Anywhere", dan blijft die keuze staan.
 
 ## 3. Patches
 
@@ -47,7 +47,7 @@ Afspraak: tijden worden in de database in UTC opgeslagen. Een activiteit wordt g
 - [ ] ⚠️ Knop linksboven op Home toont standaard "Adelaide": `HomeScreen.tsx`
 - [ ] ⚠️ "New around Adelaide" / "New mates around Adelaide": `CrewSection.tsx`, `MatesScreen.tsx`
 - [ ] ⚠️ Standaardtitel "Sport at Adelaide": `CreateActivityScreen.tsx`
-- [ ] ⚠️ Welkomstslides "Adelaide Hills": `AuthScreen.tsx`
+- [x] ✅ Welkomstslides: beschrijving van de foto zegt niet meer "Adelaide Hills"
 - [ ] ⚠️ "Made in Adelaide" op About (mag blijven, dat is waar je het maakt)
 
 ## 5. Projectregels

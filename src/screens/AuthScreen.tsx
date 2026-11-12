@@ -8,13 +8,13 @@ import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 
 const featureSlides = {
   en: [
-    { image: activities[1].hero, alt: 'Trail through the Adelaide Hills', title: 'Find your crew', body: 'Meet local mates who share your kind of adventure.' },
+    { image: activities[1].hero, alt: 'Road winding through rocky hills', title: 'Find your crew', body: 'Meet local mates who share your kind of adventure.' },
     { image: activities[0].hero, alt: 'Diver exploring the reef', title: 'Make a plan', body: 'Find a callout or post one of your own.' },
     { image: activities[2].hero, alt: 'Runner on an outdoor trail', title: 'Stay in the loop', body: 'Chat with the crew before you head out.' },
     { image: activities[3].hero, alt: 'Kitesurfing along the coast', title: 'Show up together', body: 'Meet in person and build your crew, one outing at a time.' },
   ],
   nl: [
-    { image: activities[1].hero, alt: 'Pad door de Adelaide Hills', title: 'Vind je crew', body: 'Ontmoet locals die graag hetzelfde avontuur aangaan.' },
+    { image: activities[1].hero, alt: 'Weg door rotsachtige heuvels', title: 'Vind je crew', body: 'Ontmoet locals die graag hetzelfde avontuur aangaan.' },
     { image: activities[0].hero, alt: 'Duiker op het rif', title: 'Maak een plan', body: 'Vind een activiteit of plaats er zelf een.' },
     { image: activities[2].hero, alt: 'Hardloper op een buitenpad', title: 'Blijf op de hoogte', body: 'Chat met de groep voordat je op pad gaat.' },
     { image: activities[3].hero, alt: 'Kitesurfen aan de kust', title: 'Ga samen op pad', body: 'Ontmoet elkaar en bouw aan je crew, activiteit voor activiteit.' },

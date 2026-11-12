@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { suburbCentres } from '../data/adelaideSuburbs'
-import { findLocality, formatLocality, nearestLocality, onLocalitiesLoaded } from './localities'
+import { findLocality, formatLocality, loadLocalities, nearestLocality, onLocalitiesLoaded } from './localities'
 import type { Coordinates } from './location'
 
 // Straight-line distance in km between two points (haversine).
@@ -79,11 +79,38 @@ export type LocationPreference = {
 const storageKey = 'count-me-in-location-v1'
 const changedEvent = 'count-me-in-location-changed'
 export const defaultRadiusKm = 25
+const anywhereValue = 'anywhere'
+
+// True once a location (or "Anywhere") was chosen on this device.
+function hasChosenLocation() {
+  try {
+    return window.localStorage.getItem(storageKey) !== null
+  } catch {
+    return memoryPreference !== undefined
+  }
+}
+
+// First visit on this device: start around your own suburb (25 km) instead of all of
+// Australia, so someone in Sydney does not first see Perth. Any later choice wins.
+export async function applyHomeSuburbDefault(suburb: string | null | undefined) {
+  if (!suburb?.trim() || hasChosenLocation()) return
+  await loadLocalities()
+  if (hasChosenLocation()) return
+  const place = findLocality(suburb)
+  if (!place) return
+  setLocationPreference({
+    mode: 'suburb',
+    label: formatLocality(place),
+    latitude: place.latitude,
+    longitude: place.longitude,
+    radiusKm: defaultRadiusKm,
+  })
+}
 
 export function getLocationPreference(): LocationPreference | null {
   try {
     const value = window.localStorage.getItem(storageKey)
-    if (!value) return null
+    if (!value || value === anywhereValue) return null
     const parsed = JSON.parse(value) as LocationPreference
     return typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number' ? parsed : null
   } catch {
@@ -93,8 +120,8 @@ export function getLocationPreference(): LocationPreference | null {
 
 export function setLocationPreference(preference: LocationPreference | null) {
   try {
-    if (preference) window.localStorage.setItem(storageKey, JSON.stringify(preference))
-    else window.localStorage.removeItem(storageKey)
+    // "Anywhere" is remembered too, so it is not replaced by your home suburb later.
+    window.localStorage.setItem(storageKey, preference ? JSON.stringify(preference) : anywhereValue)
   } catch {
     // Storage blocked: the choice lasts until the page reloads.
   }

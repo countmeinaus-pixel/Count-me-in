@@ -2472,6 +2472,13 @@ h3 { font: 700 21px/24px var(--font-display); }
 .patch-sport-group .all-patches-grid { padding: 0 12px 12px; }
 .challenges-intro { color: var(--text-secondary); font-size: 14px; }
 .challenge-list { display: grid; gap: 10px; }
+/* Desktop: 3 challenges a row, equal height, buttons lined up at the bottom. */
+@container app (min-width: 900px) {
+  .challenge-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .challenge-body { display: flex; flex-direction: column; }
+  .challenge-body > small { flex: 1; }
+  .challenge-body .button { align-self: flex-start; }
+}
 .challenge-card {
   display: grid;
   grid-template-columns: auto 1fr;

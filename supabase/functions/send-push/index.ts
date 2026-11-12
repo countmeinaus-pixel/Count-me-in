@@ -107,12 +107,17 @@ async function sendTo(userIds: string[], preference: PreferenceKey | null, push:
     const optedOut = new Set((prefs ?? []).filter((row) => row[preference] === false).map((row) => row.user_id))
     recipients = userIds.filter((id) => !optedOut.has(id))
   }
-  if (recipients.length === 0) return 0
+  if (recipients.length === 0) {
+    console.log(`No recipients left: ${userIds.length} found, all switched "${preference}" off`)
+    return 0
+  }
 
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions, error: subscriptionError } = await supabase
     .from('push_subscriptions')
     .select('endpoint, p256dh, auth')
     .in('user_id', recipients)
+  if (subscriptionError) console.error('Could not read push_subscriptions', subscriptionError.message)
+  console.log(`Recipients: ${recipients.length}, devices with push on: ${subscriptions?.length ?? 0}`)
 
   let sent = 0
   await Promise.all((subscriptions ?? []).map(async (subscription) => {
@@ -140,6 +145,7 @@ Deno.serve(async (request) => {
   if (!isServiceRole(request)) return new Response('Forbidden', { status: 403 })
 
   const { type, table, record } = await request.json()
+  console.log(`Webhook: ${type} on ${table}`)
   if (type !== 'INSERT' || !record) return new Response('Ignored')
 
   let sent = 0
@@ -166,6 +172,7 @@ Deno.serve(async (request) => {
     ])
     const name = await firstName(record.sender_id)
     const others = (members ?? []).map((member) => member.user_id as string).filter((id) => id !== record.sender_id)
+    console.log(`Chat members: ${members?.length ?? 0}, others than the sender: ${others.length}`)
     sent = await sendTo(others, 'chat_messages', {
       title: thread?.title ?? 'New message',
       body: shorten(`${name}: ${record.body}`),
@@ -173,5 +180,6 @@ Deno.serve(async (request) => {
     })
   }
 
+  console.log(`Pushes sent: ${sent}`)
   return new Response(JSON.stringify({ sent }), { headers: { 'Content-Type': 'application/json' } })
 })

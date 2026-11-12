@@ -51,12 +51,24 @@ export async function getActivitiesToReview(): Promise<ActivityToReview[]> {
   })
 }
 
-export async function reviewActivity(activityId: string, approve: boolean, message = '') {
+// suggestAsSport: also ask the admins to consider adding this sport to the list.
+export async function reviewActivity(activityId: string, approve: boolean, message = '', suggestAsSport = false) {
   if (!supabase) throw new Error('Supabase is not configured yet.')
   const { error } = await supabase.rpc('review_activity', {
     target_activity_id: activityId,
     approve,
     review_message: message,
+    suggest_as_sport: suggestAsSport,
   })
+  // Before migration 20261112160000 the function has no suggest_as_sport input.
+  if (error?.code === 'PGRST202') {
+    const { error: oldError } = await supabase.rpc('review_activity', {
+      target_activity_id: activityId,
+      approve,
+      review_message: message,
+    })
+    if (oldError) throw oldError
+    return
+  }
   if (error) throw error
 }

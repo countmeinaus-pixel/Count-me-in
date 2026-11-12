@@ -63,6 +63,8 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
   const [activitiesToReview, setActivitiesToReview] = useState<ActivityToReview[] | null>(null)
   const [activitiesError, setActivitiesError] = useState("")
   const [reviewingId, setReviewingId] = useState<string | null>(null)
+  // The card that shows the "Approve activity only / + suggest as sport" choice.
+  const [choosingId, setChoosingId] = useState<string | null>(null)
   const [recordsToCheck, setRecordsToCheck] = useState<PersonalRecord[] | null>(null)
   const [recordsError, setRecordsError] = useState("")
   const [recordsVersion, setRecordsVersion] = useState(0)
@@ -86,7 +88,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
     }
   }, [role, tab])
 
-  async function answerActivity(item: ActivityToReview, approve: boolean) {
+  async function answerActivity(item: ActivityToReview, approve: boolean, suggestAsSport = false) {
     let message = ""
     if (!approve) {
       const reason = window.prompt(`Why is "${item.title}" not approved? ${item.hostName} sees this message. You can leave it empty.`, "")
@@ -96,7 +98,8 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
     setReviewingId(item.id)
     setActivitiesError("")
     try {
-      await reviewActivity(item.id, approve, message)
+      await reviewActivity(item.id, approve, message, suggestAsSport)
+      setChoosingId(null)
       setActivitiesToReview((current) => current?.filter((entry) => entry.id !== item.id) ?? null)
     } catch (reviewError) {
       setActivitiesError(reviewError instanceof Error ? reviewError.message : "Unable to review this activity.")
@@ -238,9 +241,9 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
           {tab === "activities" ? (
             <>
               <p className="more-settings-intro">
-                Activities with a sport that is not in the list yet. Approve to
-                put it live for everyone; admins then get a notification to
-                consider adding the sport. Reject to keep it hidden.
+                Open activities wait here before others can see them. Approve to
+                put one live; you can also suggest its sport for the sport list,
+                which notifies the admins. Reject to keep it hidden.
               </p>
               {activitiesError ? (
                 <p className="edit-form-error" role="alert">{activitiesError}</p>
@@ -259,24 +262,49 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
                       <p>{[item.meetingPoint, item.suburb].filter(Boolean).join(", ")}</p>
                       {item.notes && <p className="review-activity-notes">{item.notes}</p>}
                       <Link className="text-action" to={`/activity/${item.id}`}>Open activity</Link>
-                      <div className="review-activity-actions">
-                        <button
-                          type="button"
-                          className="button button-secondary button-md"
-                          disabled={reviewingId !== null}
-                          onClick={() => void answerActivity(item, false)}
-                        >
-                          Reject
-                        </button>
-                        <button
-                          type="button"
-                          className="button button-primary button-md"
-                          disabled={reviewingId !== null}
-                          onClick={() => void answerActivity(item, true)}
-                        >
-                          {reviewingId === item.id ? "Saving…" : "Approve"}
-                        </button>
-                      </div>
+                      {choosingId === item.id ? (
+                        <div className="review-activity-choice">
+                          <p>Should {item.suggestedSport} also be considered for the sport list?</p>
+                          <button
+                            type="button"
+                            className="button button-secondary button-md"
+                            disabled={reviewingId !== null}
+                            onClick={() => void answerActivity(item, true, false)}
+                          >
+                            Approve activity only
+                          </button>
+                          <button
+                            type="button"
+                            className="button button-primary button-md"
+                            disabled={reviewingId !== null}
+                            onClick={() => void answerActivity(item, true, true)}
+                          >
+                            {reviewingId === item.id ? "Saving…" : "Approve + suggest as sport"}
+                          </button>
+                          <button type="button" className="text-action" disabled={reviewingId !== null} onClick={() => setChoosingId(null)}>
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="review-activity-actions">
+                          <button
+                            type="button"
+                            className="button button-secondary button-md"
+                            disabled={reviewingId !== null}
+                            onClick={() => void answerActivity(item, false)}
+                          >
+                            Reject
+                          </button>
+                          <button
+                            type="button"
+                            className="button button-primary button-md"
+                            disabled={reviewingId !== null}
+                            onClick={() => setChoosingId(item.id)}
+                          >
+                            Approve
+                          </button>
+                        </div>
+                      )}
                     </article>
                   ))}
                 </div>

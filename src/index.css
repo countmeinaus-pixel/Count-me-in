@@ -5256,3 +5256,7 @@ h1 .skeleton { margin: 4px 0; }
 /* Moderation tabs: width follows the label, so "Review activities" fits on phones too. */
 .moderation-page .segment-bar { display: flex; max-width: 520px; }
 .moderation-page .segment-bar button { flex: 1 1 auto; }
+/* Review: choice after Approve */
+.review-activity-choice { display: grid; gap: 8px; margin-top: auto; padding-top: 8px; }
+.review-activity-choice p { color: var(--text-primary); font-size: 14px; }
+.review-activity-choice .text-action { justify-self: center; }

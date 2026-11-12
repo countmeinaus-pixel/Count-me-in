@@ -19,6 +19,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 11 | `supabase/migrations/20261112130000_sport_suggestions.sql` | Leden kunnen een nieuwe sport voorstellen; die activiteit wacht op een moderator. Alleen admins kunnen nog sporten toevoegen |
 | 12 | `supabase/migrations/20261112140000_manage_moderators.sql` | Admin kan leden moderator maken en weer verwijderen (More > Moderation > Team) |
 | 13 | `supabase/migrations/20261112150000_open_activity_review.sql` | Elke Open activity wacht op een moderator; uitgelogde bezoekers zien activiteiten weer |
+| 14 | `supabase/migrations/20261112160000_review_suggest_sport.sql` | Bij goedkeuren kiezen: alleen de activiteit, of ook de sport voorstellen aan de admin |
 
 ## Zo doe je het (per bestand)
 
@@ -43,3 +44,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 11:** ga naar **Create activity**. Onder de sporten staat **Can't find your sport? Suggest one**.
 - **Na 12:** ga als admin naar **Moderation** > **Team**, zoek een lid en klik op **Make moderator**. Je krijgt geen foutmelding.
 - **Na 13:** maak een Open activity. Je ziet "Waiting for review", en hij staat bij **Moderation** > **Review activities**.
+- **Na 14:** klik bij **Review activities** op **Approve** en kies **Approve activity only**. De admin krijgt dan géén melding "New sport suggested".

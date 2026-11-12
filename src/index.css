@@ -838,6 +838,11 @@ h3 { font: 700 21px/24px var(--font-display); }
   line-height: 1;
 }
 .day-icons .day-icon svg { display: block; width: 11px; height: 11px; }
+/* Activities you are going to: filled green, like the green map marker. */
+.day-icons .day-icon.going { background: var(--seafoam); color: var(--on-seafoam); }
+.day-card.has-going,
+.month-cell.has-going { background: var(--seafoam-subtle); }
+.day-card .day-going { color: var(--seafoam); font-size: 11px; font-weight: 600; }
 .day-icons .day-overflow {
   background: var(--accent-subtle);
   color: var(--accent);

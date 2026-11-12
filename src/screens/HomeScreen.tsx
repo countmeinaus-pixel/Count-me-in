@@ -306,6 +306,8 @@ export function HomeScreen() {
       existing.push(activity)
       map.set(key, existing)
     })
+    // Activities you are going to come first, so their icon is always visible.
+    map.forEach((list) => list.sort((a, b) => Number(b.joinStatus === 'accepted') - Number(a.joinStatus === 'accepted')))
     return map
   }, [visible])
 
@@ -493,12 +495,13 @@ export function HomeScreen() {
                 const extra = Math.max(dayActivities.length - 3, 0)
                 const visibleIcons = dayActivities.slice(0, 3)
                 const isSelected = selectedDateKey === dateKey
+                const isGoing = dayActivities.some((activity) => activity.joinStatus === 'accepted')
 
                 return (
                   <button
                     key={`${label}-${day}`}
                     type="button"
-                    className={`day-card ${isSelected ? 'selected' : ''}`}
+                    className={`day-card ${isSelected ? 'selected' : ''} ${isGoing ? 'has-going' : ''}`}
                     onClick={() => setSelectedDateKey(dateKey)}
                   >
                     <span>{label}</span>
@@ -509,7 +512,7 @@ export function HomeScreen() {
                         {visibleIcons.map((activity) => {
                           const Icon = activityIcons[activity.icon]
                           return (
-                            <span key={activity.id} className="day-icon" title={activity.sport}>
+                            <span key={activity.id} className={`day-icon ${activity.joinStatus === 'accepted' ? 'going' : ''}`} title={activity.joinStatus === 'accepted' ? `${activity.sport} · Going` : activity.sport}>
                               <Icon aria-hidden="true" />
                             </span>
                           )
@@ -519,6 +522,7 @@ export function HomeScreen() {
                     ) : (
                       <div className="day-empty">No plans</div>
                     )}
+                    {isGoing && <small className="day-going">Going</small>}
                   </button>
                 )
               })}
@@ -537,12 +541,13 @@ export function HomeScreen() {
                 const dayActivities = calendarActivityMap.get(dateKey) ?? []
                 const extra = Math.max(dayActivities.length - 2, 0)
                 const isSelected = selectedDateKey === dateKey
+                const isGoing = dayActivities.some((activity) => activity.joinStatus === 'accepted')
 
                 return (
                   <button
                     key={`month-${dateKey}`}
                     type="button"
-                    className={`month-cell ${isSelected ? 'selected' : ''}`}
+                    className={`month-cell ${isSelected ? 'selected' : ''} ${isGoing ? 'has-going' : ''}`}
                     onClick={() => setSelectedDateKey(dateKey)}
                   >
                     <span>{day}</span>
@@ -551,7 +556,7 @@ export function HomeScreen() {
                         {dayActivities.slice(0, 2).map((activity) => {
                           const Icon = activityIcons[activity.icon]
                           return (
-                            <span key={activity.id} className="day-icon" title={activity.sport}>
+                            <span key={activity.id} className={`day-icon ${activity.joinStatus === 'accepted' ? 'going' : ''}`} title={activity.joinStatus === 'accepted' ? `${activity.sport} · Going` : activity.sport}>
                               <Icon aria-hidden="true" />
                             </span>
                           )

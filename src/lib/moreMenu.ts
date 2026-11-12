@@ -75,8 +75,12 @@ export const moderationGroup: MenuGroup = {
 }
 
 // Side nav: "Other" sits inside Settings to keep the list short.
+// Desktop has room: Patches and Personal records sit with the main links (under Chats).
+const mainLinkHrefs = ['/profile/patches', '/profile/records']
+export const sideNavMainItems: MenuItem[] = menuGroups[0].items.filter((item) => mainLinkHrefs.includes(item.href ?? ''))
+
 export const sideNavGroups: MenuGroup[] = [
-  menuGroups[0],
+  { ...menuGroups[0], items: menuGroups[0].items.filter((item) => !mainLinkHrefs.includes(item.href ?? '')) },
   menuGroups[1],
   { title: 'Settings', items: [...menuGroups[2].items, ...menuGroups[3].items] },
 ]

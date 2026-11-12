@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { currentUser } from '../data/mockData'
 import { getCurrentModerationRole } from '../lib/moderation'
 import { getMoreOrigin, requestCloseMoreMenu } from '../lib/moreNavigation'
-import { logOut, moderationGroup, sideNavGroups, type MenuItem } from '../lib/moreMenu'
+import { logOut, moderationGroup, sideNavGroups, sideNavMainItems, type MenuItem } from '../lib/moreMenu'
 import { useMediaQuery } from '../lib/useMediaQuery'
 import { useViewerProfile } from '../lib/viewerProfile'
 
@@ -120,6 +120,24 @@ export function BottomNav({
           {active === id && <ChevronRight className="side-nav-active-chevron" aria-hidden="true" />}
         </button>
       ))}
+      {/* Desktop only: Patches and Personal records as main links. */}
+      {isSideNav && sideNavMainItems.map(({ label, href, icon: Icon }) => {
+        const isActive = location.pathname === href
+        return (
+          <button
+            key={href}
+            type="button"
+            className={isActive ? 'active' : ''}
+            onClick={() => href && navigate(href)}
+            aria-label={label}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <Icon />
+            <span>{label}</span>
+            {isActive && <ChevronRight className="side-nav-active-chevron" aria-hidden="true" />}
+          </button>
+        )
+      })}
       {/* Desktop only: the More menu as groups that fold open. */}
       <div className="side-nav-groups">
         {groups.map((group) => {

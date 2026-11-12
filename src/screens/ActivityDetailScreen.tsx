@@ -48,17 +48,7 @@ import {
   loadSavedMeetupsForUser,
   recordMeetupCheckIn,
 } from "../lib/checkins"
-
-// The calendar day on this device (its own time zone, anywhere in Australia).
-function getLocalDateKey(date: Date) {
-  const parts = new Intl.DateTimeFormat("en-AU", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date)
-  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]))
-  return `${values.year}-${values.month}-${values.day}`
-}
+import { dateKeyInTimeZone, placeTimeZone } from "../lib/timeZones"
 
 export function ActivityDetailScreen() {
   const { id } = useParams()
@@ -674,9 +664,12 @@ export function ActivityDetailScreen() {
   const activityStart = savedDetails
     ? new Date(savedDetails.startsAt)
     : mockActivity?.startsAt
+  // The activity day counts in the time zone of the place, like the database does.
+  const activityTimeZone = placeTimeZone(savedDetails?.suburb ?? mockActivity?.suburb)
   const isActivityDay =
     activityStart !== undefined &&
-    getLocalDateKey(activityStart) === getLocalDateKey(new Date())
+    dateKeyInTimeZone(activityStart, activityTimeZone) ===
+      dateKeyInTimeZone(new Date(), activityTimeZone)
   const isHost =
     savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
   const canEditActivity = savedDetails?.viewerCanEdit ?? false

@@ -23,8 +23,8 @@ Afspraak: tijden worden in de database in UTC opgeslagen. Een activiteit wordt g
 - [ ] ❌ Activiteiten hebben een tijdzone (bijvoorbeeld een kolom `time_zone` met `Australia/Perth`), ingevuld op basis van de stad of kaartpin.
 - [ ] ❌ Create activity en Edit activity rekenen de ingevulde tijd om met de tijdzone van de plek. Nu gebruiken ze de tijdzone van de telefoon (`src/screens/EditActivityScreen.tsx`).
 - [ ] ❌ Datums en tijden op kaarten, detailpagina, kalender en chat tonen de tijd van de plek, met een label zoals "AWST" als die anders is dan jouw eigen tijd.
-- [ ] ⚠️ "Vandaag" bij inchecken staat vast op Adelaide-tijd: `src/screens/ActivityDetailScreen.tsx` (regel 54) en `supabase/migrations/20261103170000_activity_checkins.sql` (regel 173).
-- [ ] ⚠️ Het annuleerbericht toont de tijd in Adelaide-tijd: `supabase/migrations/20261110180000_host_cancel_activity.sql` (regel 68).
+- [x] ✅ "Vandaag" bij inchecken gebruikt de tijdzone van de plek van de activiteit (app: `src/lib/timeZones.ts`, database: SQL 17 `20261113090000_place_time_zones.sql`).
+- [x] ✅ Het annuleerbericht toont de tijd in de tijdzone van de plek (SQL 17).
 - [ ] ❌ Zomertijd klopt: NSW, VIC, TAS, ACT en SA hebben zomertijd; QLD, WA en NT niet. (Werkt vanzelf als we tijdzone-namen zoals `Australia/Brisbane` gebruiken, geen vaste +10:00.)
 
 ## 2. Locatie en steden

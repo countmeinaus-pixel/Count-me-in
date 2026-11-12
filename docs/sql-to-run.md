@@ -22,6 +22,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 14 | `supabase/migrations/20261112160000_review_suggest_sport.sql` | Bij goedkeuren kiezen: alleen de activiteit, of ook de sport voorstellen aan de admin |
 | 15 | `supabase/migrations/20261112170000_push_notifications.sql` | Pushmeldingen: push-adressen per toestel en meldingsinstellingen per lid |
 | 16 | `supabase/migrations/20261112180000_service_role_read_access.sql` | De push-functie mag de chat, activiteiten en instellingen lezen (anders komt er geen push) |
+| 17 | `supabase/migrations/20261113090000_place_time_zones.sql` | Inchecken op de dag zelf en de tijd in het annuleerbericht gebruiken de tijdzone van de plek (Perth, Brisbane…) in plaats van altijd Adelaide |
 
 ## Zo doe je het (per bestand)
 
@@ -48,3 +49,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 13:** maak een Open activity. Je ziet "Waiting for review", en hij staat bij **Moderation** > **Review activities**.
 - **Na 14:** klik bij **Review activities** op **Approve** en kies **Approve activity only**. De admin krijgt dan géén melding "New sport suggested".
 - **Na 15:** ga naar **More** > **Notification settings** en zet **Push notifications on this device** aan. Je krijgt geen melding "This needs a database update".
+- **Na 17:** plak in de SQL Editor `select public.place_time_zone('Cottesloe, WA');` en klik op **Run**. Je ziet `Australia/Perth`.

@@ -19,15 +19,15 @@ export function fixAustralianLatitude(latitude: number | null, longitude: number
   return latitude > 0 && longitude >= 112 && longitude <= 154 ? -latitude : latitude
 }
 
-// Roughly South Australia. Pins outside it are almost always a typo.
-export function isInSouthAustralia(point: Coordinates) {
-  return point.latitude >= -38.6 && point.latitude <= -25.9 && point.longitude >= 128.9 && point.longitude <= 141.1
+// Australia including Tasmania and the islands. Pins outside it are almost always a typo.
+export function isInAustralia(point: Coordinates) {
+  return point.latitude >= -44.5 && point.latitude <= -9 && point.longitude >= 112 && point.longitude <= 154.5
 }
 
-// A map pin that is usable for an activity: valid numbers, inside South Australia.
+// A map pin that is usable for an activity: valid numbers, inside Australia.
 export function parseMapPin(value: string): Coordinates | null {
   const point = parseCoordinates(value)
-  return point && isInSouthAustralia(point) ? point : null
+  return point && isInAustralia(point) ? point : null
 }
 
 // Full precision: activity pins are never rounded.

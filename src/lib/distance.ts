@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { suburbCentres } from '../data/adelaideSuburbs'
+import { findLocality, formatLocality, nearestLocality, onLocalitiesLoaded } from './localities'
 import type { Coordinates } from './location'
 
 // Straight-line distance in km between two points (haversine).
@@ -11,14 +12,22 @@ export function distanceKm(from: Coordinates, to: Coordinates) {
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+// The centre of any Australian place ("Glenelg, SA", "Alice Springs, NT", ...).
+// Until the full list has loaded, the built-in list of Adelaide suburbs is used.
 export function suburbCoordinates(suburb: string | null | undefined): Coordinates | null {
   if (!suburb) return null
-  const key = Object.keys(suburbCentres).find((name) => name.toLowerCase() === suburb.trim().toLowerCase())
+  const place = findLocality(suburb)
+  if (place) return { latitude: place.latitude, longitude: place.longitude }
+  const plain = suburb.trim().replace(/,?\s*SA$/i, '').toLowerCase()
+  const key = Object.keys(suburbCentres).find((name) => name.toLowerCase() === plain)
   return key ? suburbCentres[key] : null
 }
 
+// The name of the closest place, e.g. for "Near Bondi Beach, NSW".
 export function nearestSuburb(point: Coordinates) {
-  let best = 'Adelaide'
+  const place = nearestLocality(point)
+  if (place) return formatLocality(place)
+  let best = 'Australia'
   let bestKm = Infinity
   for (const [name, centre] of Object.entries(suburbCentres)) {
     const km = distanceKm(point, centre)
@@ -100,7 +109,13 @@ export function useLocationPreference() {
   useEffect(() => {
     const update = () => setPreference(memoryPreference !== undefined ? memoryPreference : getLocationPreference())
     window.addEventListener(changedEvent, update)
-    return () => window.removeEventListener(changedEvent, update)
+    // When the list of Australian places arrives, hand out a fresh object so
+    // distance filters that depend on it recalculate.
+    const stopLocalities = onLocalitiesLoaded(() => setPreference((current) => (current ? { ...current } : current)))
+    return () => {
+      window.removeEventListener(changedEvent, update)
+      stopLocalities()
+    }
   }, [])
   return preference
 }

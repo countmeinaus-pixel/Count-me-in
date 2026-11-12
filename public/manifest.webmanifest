@@ -1,7 +1,7 @@
 {
   "name": "Count Me In",
   "short_name": "Count Me In",
-  "description": "Find your mates for the things you love in Adelaide.",
+  "description": "Find your mates for the things you love, anywhere in Australia.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A1621",

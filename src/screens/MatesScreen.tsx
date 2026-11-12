@@ -151,7 +151,7 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
           <ArrowLeft />
         </button>
         <div>
-          <p className="eyebrow">{isCrew ? "New mates around Adelaide" : isRequests ? "Invites and requests" : "Good people, good plans"}</p>
+          <p className="eyebrow">{isCrew ? "New mates near you" : isRequests ? "Invites and requests" : "Good people, good plans"}</p>
           <h1>{isCrew ? "Find new crew" : isRequests ? "Friend requests" : "Friends"}</h1>
         </div>
       </header>
@@ -309,7 +309,7 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
       </div>
 
       <div className="mates-results-heading">
-        <h3>{locationPreference ? `Mates near ${locationPreference.label.replace(/^Near /, '')}` : 'Mates around Adelaide'}</h3>
+        <h3>{locationPreference ? `Mates near ${locationPreference.label.replace(/^Near /, '')}` : 'Mates across Australia'}</h3>
         <span>{filteredMembers.length} profiles</span>
       </div>
 

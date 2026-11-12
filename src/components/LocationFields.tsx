@@ -1,3 +1,4 @@
+import { SuburbInput } from './SuburbInput'
 import { ChevronDown, LocateFixed, Map as MapIcon, MapPin } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { suburbCoordinates } from '../lib/distance'
@@ -67,12 +68,7 @@ export function LocationFields({
         </label>
         <label className="field">
           <span>Suburb</span>
-          <input
-            value={suburb}
-            onChange={(event) => onSuburbChange(event.target.value)}
-            maxLength={100}
-            placeholder="For example, Glenelg"
-          />
+          <SuburbInput value={suburb} onChange={onSuburbChange} placeholder="For example, Glenelg, SA" ariaLabel="Suburb or town" />
         </label>
       </div>
 
@@ -101,7 +97,7 @@ export function LocationFields({
           {coordinatesUnreadable
             ? 'Paste two numbers separated by a comma, like -34.9285, 138.6007.'
             : coordinatesInvalid
-            ? 'This pin is not in South Australia. Check the numbers, like -34.9285, 138.6007.'
+            ? 'This pin is not in Australia. Check the numbers, like -34.9285, 138.6007.'
             : 'Puts your activity on the map. Handy for spots without an address, like a beach or trailhead.'}
         </small>
       </label>

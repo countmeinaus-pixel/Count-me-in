@@ -1,6 +1,6 @@
 // Inviting a mate: free share links only (no APIs, no keys).
 
-export const inviteText = 'Join me on Count Me In: find a crew for runs, dives, rides and more around Adelaide.'
+export const inviteText = 'Join me on Count Me In: find a crew for runs, dives, rides and more near you.'
 
 export function getInviteUrl() {
   return window.location.origin

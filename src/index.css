@@ -5412,3 +5412,5 @@ h1 .skeleton { margin: 4px 0; }
 /* The knot logo as an image: large on login pages, icon-sized in menus. */
 .brand-mark { display: block; flex: 0 0 auto; width: 20px; height: 20px; border-radius: 5px; }
 .brand-mark.brand-mark-lg { width: 48px; height: 48px; border-radius: 14px; }
+
+.about-credit { color: var(--text-muted); font-size: 11px; line-height: 1.5; }

@@ -2,18 +2,18 @@
 
 ## What the app is
 
-Count Me In helps men in Adelaide find a mate for the sports and outdoor activities they love. You post a callout ("Saturday, spearfishing at Port Noarlunga, who's in?"), other men nearby tap "Count me in", you meet up and do it together. Friendships grow from doing things side by side.
+Count Me In helps men anywhere in Australia find a mate for the sports and outdoor activities they love. You post a callout ("Saturday, spearfishing at Port Noarlunga, who's in?"), other men nearby tap "Count me in", you meet up and do it together. Friendships grow from doing things side by side.
 
-- Audience: men only, 18 and older, living in or around Adelaide, South Australia.
+- Audience: men only, 18 and older, living anywhere in Australia (it started in Adelaide, South Australia).
 - Typical user: an expat or newcomer with few local friends, or a local whose partner and friends don't share his hobbies.
 - Mission (not shown in the UI): men's mental health, through real-world friendship. The app itself feels like a sports and mates app, never a support app.
 - Tagline: "Find your mates for the things you love."
-- Region: all of Adelaide and surrounds. Users show a suburb, never an exact address.
+- Region: all of Australia, cities, towns and remote areas. Users show a suburb, never an exact address.
 
 ## Navigation
 
 Bottom navigation with 5 tabs:
-1. **Home**: feed of upcoming activities in Adelaide.
+1. **Home**: feed of upcoming activities near you.
 2. **Friends**: friends and their profiles.
 3. **My activities** (centre): activities I'm hosting or have joined, and open invitations (Upcoming / Invited / Past). A "Create activity" button below the page heading starts a new activity.
 4. **Chats**: one group chat per activity I'm part of.
@@ -104,7 +104,7 @@ Patches are about doing things together, never about collecting people. Initial 
 2. **Phone number**: Australian number input (+61 prefix). "Send code".
 3. **Verify code**: 6-digit code boxes, resend timer. Any 6 digits work in the prototype.
 4. **Community check**: two required checkboxes: "I'm 18 or older" and "I'm a man joining a community for men". Short community rules below (Show up when you say you will. Respect each other. Look out for your mates, especially in risky sports). "Agree and continue".
-5. **Your profile**: photo upload (circle placeholder), first name, age, suburb (search field with Adelaide suburbs), short bio (optional, 150 characters).
+5. **Your profile**: photo upload (circle placeholder), first name, age, suburb or town (search field with all Australian places, saved as "Name, STATE"), short bio (optional, 150 characters).
 6. **Selfie check**: camera frame with face outline, "Take selfie", then a verifying spinner, then "You're verified" with the seafoam tick.
 7. **Pick your sports**: SportTile grid, multi-select, minimum 1. Search at top. "Continue (3 selected)".
 8. **Your level**: one row per selected sport with three Chips (Beginner, Intermediate, Experienced).
@@ -114,7 +114,7 @@ Patches are about doing things together, never about collecting people. Initial 
 Use ProgressSteps on steps 2 to 9.
 
 ### Home (feed)
-- TopBar: "Adelaide" with a small location icon on the left, bell icon on the right.
+- TopBar: your chosen place (or "Anywhere") with a small location icon on the left, bell icon on the right.
 - Greeting line in `h1`: "Morning, Jai" (time-based).
 - Horizontal scroll of filter Chips: "My sports" (default selected), then each sport.
 - Section "This week" then "Coming up", each with ActivityCards.

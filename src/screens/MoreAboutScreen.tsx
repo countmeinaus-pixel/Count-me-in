@@ -50,6 +50,10 @@ export function MoreAboutScreen() {
         <span>Version {packageDetails.version}</span>
         <span>Made in Adelaide</span>
       </footer>
+      {/* Required by the CC BY licence of the place data (public/au-localities.json). */}
+      <p className="about-credit">
+        Place data: Australian Postcodes by Matthew Proctor, CC BY 4.0. Maps © OpenStreetMap contributors.
+      </p>
     </main>
   )
 }

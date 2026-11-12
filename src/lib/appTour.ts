@@ -7,7 +7,7 @@ export const appTourSteps: TourStep[] = [
   { path: '/', target: 'home-filters', title: 'Your sports, front and centre', body: 'Filter the feed by the sports you picked. Swipe sideways to see them all.' },
   { path: '/', target: 'home-views', title: 'List, map or calendar', body: 'See what is on near you as a list, on a map, or day by day.' },
   { path: '/', target: 'home-notifications', title: 'Stay in the loop', body: 'Join requests, invites, confirmed PRs and changes to your plans show up here.' },
-  { path: '/', target: 'nav-friends', title: 'Friends and your crew', body: 'Your friends, plus people around Adelaide who share your sports.' },
+  { path: '/', target: 'nav-friends', title: 'Friends and your crew', body: 'Your friends, plus people near you who share your sports.' },
   { path: '/activities', target: 'create-activity', title: 'Post your own activity', body: 'Keen to do something? Tap Create activity here. Your upcoming plans, invites and past meetups are on this page too.' },
   { path: '/create', target: 'create-steps', title: 'Five quick steps', body: 'Pick a sport, set when and where, add a few details, invite friends and check it before you post.' },
   {

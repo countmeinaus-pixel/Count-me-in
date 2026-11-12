@@ -1,6 +1,6 @@
+import { SuburbInput } from './SuburbInput'
 import { LocateFixed } from 'lucide-react'
 import { useState } from 'react'
-import { adelaideSuburbs } from '../data/adelaideSuburbs'
 import {
   defaultRadiusKm,
   getDeviceLocation,
@@ -25,6 +25,7 @@ export function LocationControls({
   const [error, setError] = useState('')
   const [share, setShare] = useState(false)
   const [notice, setNotice] = useState('')
+  const [suburbText, setSuburbText] = useState(value?.mode === 'suburb' ? value.label : '')
   const radius = value?.radiusKm ?? null
   const stepIndex = radius === null ? radiusSteps.length : Math.max(0, radiusSteps.findIndex((step) => step >= radius))
 
@@ -66,22 +67,21 @@ export function LocationControls({
       </label>
 
       <label className="location-field">
-        <span>Or pick a suburb</span>
-        <select
-          value={value?.mode === 'suburb' ? value.label : ''}
-          onChange={(event) => {
-            const suburb = event.target.value
-            const point = suburbCoordinates(suburb)
-            if (!suburb || !point) {
+        <span>Or pick a suburb or town</span>
+        <SuburbInput
+          value={suburbText}
+          ariaLabel="Suburb or town"
+          placeholder="Anywhere in Australia"
+          onChange={(text) => {
+            setSuburbText(text)
+            if (!text.trim()) {
               onChange(null)
               return
             }
-            onChange({ mode: 'suburb', label: suburb, ...point, radiusKm: value?.radiusKm ?? defaultRadiusKm })
+            const point = suburbCoordinates(text)
+            if (point) onChange({ mode: 'suburb', label: text.trim(), ...point, radiusKm: value?.radiusKm ?? defaultRadiusKm })
           }}
-        >
-          <option value="">All of Adelaide</option>
-          {adelaideSuburbs.map((suburb) => <option key={suburb} value={suburb}>{suburb}</option>)}
-        </select>
+        />
       </label>
 
       <label className="location-field">

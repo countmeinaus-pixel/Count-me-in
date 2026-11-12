@@ -49,9 +49,9 @@ import {
   recordMeetupCheckIn,
 } from "../lib/checkins"
 
-function getAdelaideDateKey(date: Date) {
+// The calendar day on this device (its own time zone, anywhere in Australia).
+function getLocalDateKey(date: Date) {
   const parts = new Intl.DateTimeFormat("en-AU", {
-    timeZone: "Australia/Adelaide",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -676,7 +676,7 @@ export function ActivityDetailScreen() {
     : mockActivity?.startsAt
   const isActivityDay =
     activityStart !== undefined &&
-    getAdelaideDateKey(activityStart) === getAdelaideDateKey(new Date())
+    getLocalDateKey(activityStart) === getLocalDateKey(new Date())
   const isHost =
     savedDetails?.viewerIsHost ?? mockActivity?.host === currentUser.name
   const canEditActivity = savedDetails?.viewerCanEdit ?? false

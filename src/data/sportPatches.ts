@@ -102,7 +102,7 @@ function sharedPatches(f: SportFlavour): SpecialPatch[] {
     {
       key: 'tribe',
       name: `${f.title} tribe`,
-      description: 'Half of Adelaide has shared a session with you.',
+      description: 'Half the crew has shared a session with you.',
       rule: `Confirm ${f.sessions} with 15 different mates.`,
       target: 15,
       progressLabel: 'mates',

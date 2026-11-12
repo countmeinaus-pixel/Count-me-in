@@ -1,6 +1,6 @@
 # Count Me In
 
-Men-only activity partner app for Adelaide. Users post a callout for a sport or outdoor activity, other men tap "Count me in", they meet up and confirm the meetup with a QR scan.
+Men-only activity partner app for all of Australia (cities, towns and remote areas; it started in Adelaide). Users post a callout for a sport or outdoor activity, other men tap "Count me in", they meet up and confirm the meetup with a QR scan.
 
 ## Read first
 - `guidelines/Guidelines.md`: design system (tokens, typography, components). Follow it for every UI change.
@@ -35,4 +35,5 @@ Jai is a UX/UI designer, not a developer. He does not write code himself.
 - Every Supabase table has Row Level Security enabled with explicit policies.
 - Make small, working steps. After each step: run the app, check there are no errors, then commit with a clear message.
 - Do not add features that are not in app-spec.md or the current phase without asking.
+- Places: every Australian suburb and town is in `public/au-localities.json` (open dataset), read via `src/lib/localities.ts`. Save places as "Name, STATE" (e.g. "Glenelg, SA"); older entries without a state mean SA. Map pins must be inside Australia.
 - Sports live in one list: `src/data/sports.ts`. To add a sport, add it there; the build (`npm run build` runs `tsc`) then fails until it also has Create activity fields, patches and PR types. The Supabase `sports` table is filled automatically from that list.

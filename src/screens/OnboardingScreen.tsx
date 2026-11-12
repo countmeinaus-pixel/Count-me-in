@@ -1,3 +1,4 @@
+import { SuburbInput } from '../components/SuburbInput'
 import { CalendarDays, Camera, Check, QrCode, ShieldCheck, Trophy } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -5,7 +6,6 @@ import { ClaimPrDialog } from '../components/ClaimPrDialog'
 import { FlowLayout } from '../components/FlowLayout'
 import { PatchIcon } from '../components/PatchIcon'
 import { SportIcon } from '../components/SportIcon'
-import { adelaideSuburbs } from '../data/adelaideSuburbs'
 import {
   calculateAgeFromDateOfBirth,
   compressProfilePhoto,
@@ -267,10 +267,7 @@ export function OnboardingScreen() {
       >
         <label className="flow-field">
           <span>Suburb</span>
-          <input value={suburb} list="onboarding-suburbs" autoComplete="address-level2" onChange={(event) => setSuburb(event.target.value)} placeholder="For example, Brighton" />
-          <datalist id="onboarding-suburbs">
-            {adelaideSuburbs.map((option) => <option key={option} value={option} />)}
-          </datalist>
+          <SuburbInput value={suburb} onChange={setSuburb} ariaLabel="Suburb or town" />
         </label>
         {errorBox}
       </FlowLayout>

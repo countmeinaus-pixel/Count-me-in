@@ -64,7 +64,7 @@ export function getCrewSuggestions(
           ? `Also into ${shared[0].toLowerCase()}`
           : nearby
             ? `Also in ${member.suburb}`
-            : 'New around Adelaide'
+            : 'New to Count Me In'
       return {
         member,
         reason: nearby && shared.length > 0 ? `${reason} · ${member.suburb}` : reason,

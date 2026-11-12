@@ -82,7 +82,7 @@ export function AllActivitiesScreen() {
 
   const areaLabel = searchLocation
     ? `${searchLocation.label.replace(/^Near /, '')}${searchLocation.radiusKm === null ? '' : ` · within ${searchLocation.radiusKm} km`}`
-    : 'All of Adelaide'
+    : 'Anywhere in Australia'
 
   return (
     <div className="screen mates-screen">

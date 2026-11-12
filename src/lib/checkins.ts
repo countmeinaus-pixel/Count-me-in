@@ -1,6 +1,7 @@
 import { activities, demoConfirmedMeetups } from '../data/mockData'
 import { getFriendDatesFor } from './friendships'
-import { activityRegion } from './regions'
+import { activityState } from './regions'
+import { loadLocalities } from './localities'
 import { waterSportNames } from '../data/sports'
 import { patchDefinitions, type PatchDefinition, type SportPatchRule } from '../data/patches'
 import { getConfirmedPrDates } from './personalRecords'
@@ -19,7 +20,7 @@ export type ConfirmedMeetup = {
   oceanActivity?: boolean
   terrain?: string
   details?: Record<string, string>
-  // Where it happened (for the Places patches).
+  // Where it happened (for the Places patches): suburb, and state or territory.
   suburb?: string
   region?: string | null
 }
@@ -134,6 +135,8 @@ export async function loadSavedMeetupsForUser(userName?: string): Promise<string
     : { data: [], error: null }
   if (sportsResult.error) throw sportsResult.error
 
+  // States for the Places patches need the list of Australian places.
+  await loadLocalities()
   // Map pins in a separate query, so this still works before the pin columns exist.
   const pinsResult = await supabase.from('activities').select('id, latitude, longitude').in('id', activityIds)
   const pinsById = new Map((pinsResult.error ? [] : pinsResult.data ?? []).map((pin) => [pin.id, pin]))
@@ -177,7 +180,7 @@ export async function loadSavedMeetupsForUser(userName?: string): Promise<string
         terrain: typeof terrain === 'string' ? terrain : undefined,
         details: sportDetails,
         suburb: activity.suburb ?? undefined,
-        region: activityRegion({ suburb: activity.suburb, latitude: pinsById.get(activity.id)?.latitude, longitude: pinsById.get(activity.id)?.longitude }),
+        region: activityState({ suburb: activity.suburb, latitude: pinsById.get(activity.id)?.latitude, longitude: pinsById.get(activity.id)?.longitude }),
       }]
     }),
   )
@@ -407,7 +410,7 @@ export function getPatchMetricProgress(
     }
     case 'suburbs':
     case 'regions': {
-      // Different places: one per suburb, or one per Adelaide region.
+      // Different places: one per suburb, or one per state or territory.
       const qualifyingEntries: ConfirmedMeetup[] = []
       const seen = new Set<string>()
       for (const entry of entries) {

@@ -141,7 +141,8 @@ function getLocalDateMinimum() {
 }
 
 function getSuggestedTitle(sport: string, suburb: string) {
-  return `${sport} at ${suburb || 'Adelaide'}`
+  const place = suburb.trim().replace(/,?\s*(NSW|VIC|QLD|SA|WA|TAS|NT|ACT)$/i, '')
+  return place ? `${sport} at ${place}` : sport
 }
 
 function formatDuration(minutes: number) {

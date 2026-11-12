@@ -177,7 +177,7 @@ export function TopMatchCard({
   if (nearby) reasons.push({ key: 'nearby', icon: <MapPin aria-hidden="true" />, text: `He's also in ${member.suburb}` })
   // Every member is verified, so that is no reason to show; their track record is.
   if (member.stats.meetups > 0) reasons.push({ key: 'meetups', icon: <Users aria-hidden="true" />, text: `${member.stats.meetups} ${member.stats.meetups === 1 ? 'meetup' : 'meetups'} with the crew` })
-  reasons.push({ key: 'new', icon: <Users aria-hidden="true" />, text: 'New around Adelaide' })
+  reasons.push({ key: 'new', icon: <Users aria-hidden="true" />, text: 'New to Count Me In' })
   reasons.splice(2)
 
   return (

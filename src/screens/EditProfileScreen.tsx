@@ -1,7 +1,7 @@
+import { SuburbInput } from '../components/SuburbInput'
 import { ArrowLeft, Camera, ImagePlus, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { adelaideSuburbs } from '../data/adelaideSuburbs'
 import { getSupabaseSetupHint, supabase } from '../lib/supabase'
 import { refreshViewerProfile } from '../lib/viewerProfile'
 import { useUnsavedChangesWarning } from '../lib/useUnsavedChangesWarning'
@@ -292,15 +292,7 @@ export function EditProfileScreen() {
 
         <label className="edit-field">
           <span>Suburb</span>
-          <input
-            value={form.suburb}
-            list="edit-suburb-options"
-            onChange={(event) => updateField('suburb', event.target.value)}
-            autoComplete="address-level2"
-          />
-          <datalist id="edit-suburb-options">
-            {adelaideSuburbs.map((suburb) => <option value={suburb} key={suburb} />)}
-          </datalist>
+          <SuburbInput value={form.suburb} onChange={(value) => updateField('suburb', value)} ariaLabel="Suburb or town" />
         </label>
 
         <label className="edit-field">

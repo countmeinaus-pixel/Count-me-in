@@ -9,7 +9,8 @@ import { Avatar } from './Avatar'
 import { SportIcon } from './SportIcon'
 import { formatActivityDate, getActivitySpotsLabel } from '../data/mockData'
 
-const adelaide: [number, number] = [138.6007, -34.9285]
+// Without pins the map shows the whole of Australia; with pins it zooms to them.
+const australia: [number, number] = [134.5, -27.5]
 // Pins closer than this on screen are grouped into one cluster.
 const clusterRadiusPx = 44
 // Pins this close together (about 30 m) are treated as the same spot.
@@ -47,8 +48,8 @@ export default function ActivityMap({ activities, onOpenActivity }: ActivityMapP
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: createMapStyle(),
-      center: adelaide,
-      zoom: 9.5,
+      center: australia,
+      zoom: 3.2,
       attributionControl: { compact: true },
       dragRotate: false,
       pitchWithRotate: false,
@@ -192,7 +193,7 @@ export default function ActivityMap({ activities, onOpenActivity }: ActivityMapP
 
   return (
     <div className="activity-map">
-      <div ref={containerRef} className="activity-map-canvas" aria-label="Map of activities around Adelaide" />
+      <div ref={containerRef} className="activity-map-canvas" aria-label="Map of activities" />
       {selected && selection && (
         <div className="activity-map-card">
           {/* Same content as the activity card, side by side: photo left, details right. */}

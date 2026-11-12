@@ -333,10 +333,10 @@ export function HomeScreen() {
             setLocationDraft(locationPreference)
             setLocationOpen(true)
           }}
-          aria-label={`Location: ${locationPreference ? `${locationPreference.label}, ${locationPreference.radiusKm === null ? 'no distance limit' : `within ${locationPreference.radiusKm} km`}` : 'all of Adelaide'}. Change location`}
+          aria-label={`Location: ${locationPreference ? `${locationPreference.label}, ${locationPreference.radiusKm === null ? 'no distance limit' : `within ${locationPreference.radiusKm} km`}` : 'anywhere in Australia'}. Change location`}
         >
           <MapPin />
-          {locationPreference?.label ?? 'Adelaide'}
+          {locationPreference?.label ?? 'Anywhere'}
           {locationPreference?.radiusKm != null && <small>· {locationPreference.radiusKm} km</small>}
           <ChevronDown className="location-chevron" aria-hidden="true" />
         </button>
@@ -649,7 +649,7 @@ export function HomeScreen() {
               <button type="button" className="button button-secondary button-md" onClick={() => {
                 setLocationPreference(null)
                 setLocationOpen(false)
-              }}>All of Adelaide</button>
+              }}>Anywhere</button>
               <button type="button" className="button button-primary button-md" onClick={() => {
                 setLocationPreference(locationDraft)
                 setLocationOpen(false)

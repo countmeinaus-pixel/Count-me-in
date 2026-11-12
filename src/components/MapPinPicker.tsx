@@ -1,11 +1,11 @@
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef, useState } from 'react'
-import { isInSouthAustralia, type Coordinates } from '../lib/location'
+import { isInAustralia, type Coordinates } from '../lib/location'
 import { createMapStyle } from '../lib/mapStyle'
 import { SidePanel } from './SidePanel'
 
-const adelaide: [number, number] = [138.6007, -34.9285]
+const australia: [number, number] = [134.5, -27.5]
 
 // Tap the map (or drag the pin) to choose the exact meeting spot.
 // Coordinates are kept exactly as the map gives them: never rounded.
@@ -31,8 +31,8 @@ export default function MapPinPicker({
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: createMapStyle(),
-      center: center ? [center.longitude, center.latitude] : adelaide,
-      zoom: initial ? 16 : start ? 13 : 9.5,
+      center: center ? [center.longitude, center.latitude] : australia,
+      zoom: initial ? 16 : start ? 13 : 3.2,
       attributionControl: { compact: true },
       dragRotate: false,
       pitchWithRotate: false,
@@ -74,7 +74,7 @@ export default function MapPinPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const outsideSouthAustralia = point !== null && !isInSouthAustralia(point)
+  const outsideAustralia = point !== null && !isInAustralia(point)
 
   return (
     <SidePanel
@@ -86,7 +86,7 @@ export default function MapPinPicker({
           <button
             type="button"
             className="button button-primary button-md"
-            disabled={!point || outsideSouthAustralia}
+            disabled={!point || outsideAustralia}
             onClick={() => point && onPick(point)}
           >
             Use this spot
@@ -96,9 +96,9 @@ export default function MapPinPicker({
     >
       <p className="map-picker-hint">Tap the map where you meet. Drag the pin to fine-tune it, zoom in for more detail.</p>
       <div ref={containerRef} className="map-picker" />
-      <p className={outsideSouthAustralia ? 'field-error' : 'map-picker-coords'}>
-        {outsideSouthAustralia
-          ? 'This spot is not in South Australia.'
+      <p className={outsideAustralia ? 'field-error' : 'map-picker-coords'}>
+        {outsideAustralia
+          ? 'This spot is not in Australia.'
           : point
           ? `${point.latitude}, ${point.longitude}`
           : 'No spot chosen yet.'}

@@ -64,9 +64,13 @@ export function ProfileSkeleton() {
 export function MateCardSkeleton() {
   return (
     <div className="mate-card skeleton-card" aria-hidden="true">
-      <Skeleton width={48} height={48} radius="50%" />
-      <Skeleton width="70%" height={18} />
-      <Skeleton width="50%" height={12} />
+      <div className="mate-card-head">
+        <Skeleton width={88} height={88} radius={12} />
+        <div className="mate-card-identity" style={{ flex: 1 }}>
+          <Skeleton width="80%" height={18} />
+          <Skeleton width="60%" height={12} />
+        </div>
+      </div>
       <div className="skeleton-row tight">
         <Skeleton width={64} height={22} radius={999} />
         <Skeleton width={56} height={22} radius={999} />

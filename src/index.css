@@ -380,7 +380,7 @@ h3 { font: 700 21px/24px var(--font-display); }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 12px;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -410,18 +410,36 @@ h3 { font: 700 21px/24px var(--font-display); }
 .mate-card-location svg,
 .mate-card-meta svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }
 .mate-card-sports { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
-.mate-card-top,
-.mate-card-identity {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  max-width: 100%;
-  min-width: 0;
+/* Head: square photo top left, name, age and suburb next to it. */
+.mate-card-head { display: flex; align-items: flex-start; gap: 12px; width: 100%; min-width: 0; }
+.mate-card-photo {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 38%, 112px);
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--accent-subtle);
 }
-/* Suggestions on Home: name, age and suburb next to the photo. */
-.mate-card.horizontal .mate-card-top { flex-direction: row; align-items: center; gap: 12px; }
-.mate-card.horizontal .mate-card-identity { gap: 4px; }
+.mate-card-photo.tint-water { background: var(--seafoam-subtle); }
+.mate-card-photo img { width: 100%; height: 100%; object-fit: cover; }
+.mate-card-initials { font: 700 28px/1 var(--font-display); color: var(--text-primary); }
+.mate-card-photo .mate-card-sport-icon {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--scrim);
+  color: var(--accent);
+}
+.mate-card-photo.tint-water .mate-card-sport-icon { color: var(--seafoam); }
+.mate-card-identity { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-top: 2px; }
+.mate-card-name { flex-wrap: wrap; }
 .mate-sport,
 .mate-sport-more {
   max-width: 100%;
@@ -4777,7 +4795,7 @@ h1 .skeleton { margin: 4px 0; }
 .friend-tile {
   flex: 0 0 140px;
   display: grid;
-  grid-template-rows: 130px auto;
+  grid-template-rows: auto auto;
   overflow: hidden;
   padding: 0;
   border: 1px solid var(--border);
@@ -4790,6 +4808,8 @@ h1 .skeleton { margin: 4px 0; }
 }
 .friend-tile.is-today { border-color: var(--seafoam); box-shadow: 0 0 0 1px var(--seafoam); }
 .friend-tile-photo {
+  /* Always square, whatever the width of the tile. */
+  aspect-ratio: 1 / 1;
   position: relative;
   display: grid;
   place-items: center;
@@ -4946,7 +4966,6 @@ h1 .skeleton { margin: 4px 0; }
     padding: 0;
   }
   .friend-tile-grid .friend-tile { flex: none; grid-template-rows: auto auto; }
-  .friend-tile-grid .friend-tile-photo { aspect-ratio: 4 / 3; }
   .friend-tile-grid .friend-tile.beyond-grid { display: none; }
   .friend-tile-grid .friend-tile-invite { min-height: 100%; }
   /* Same space below the top match as between the tiles. */

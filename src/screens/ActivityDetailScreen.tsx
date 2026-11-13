@@ -9,6 +9,7 @@ import {
 import QRCode from "qrcode"
 import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { flushSync } from "react-dom"
 import { Avatar } from "../components/Avatar"
 import { Button } from "../components/Button"
 import { ReportDialog } from "../components/ReportDialog"
@@ -542,10 +543,10 @@ export function ActivityDetailScreen() {
   }
 
   async function startCameraScan() {
-    setScanMode("camera")
     setQrError("")
 
     if (!savedActivity) {
+      setScanMode("camera")
       window.setTimeout(() => {
         confirmMeetup()
         setScanMode("success")
@@ -553,8 +554,32 @@ export function ActivityDetailScreen() {
       return
     }
 
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setQrError("This browser can’t use the camera. Open Count Me In in Safari or Chrome, not inside WhatsApp or Instagram.")
+      return
+    }
+
+    // Ask for the camera straight from the tap (iPhones need this), back camera first.
+    let stream: MediaStream
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
+    } catch (error) {
+      const name = error instanceof DOMException ? error.name : ""
+      setQrError(
+        name === "NotAllowedError"
+          ? "Camera access is blocked. Allow the camera for this site in your phone settings (iPhone: Settings > Safari > Camera), then try again."
+          : name === "NotFoundError"
+            ? "No camera was found on this device."
+            : "Unable to open the camera. Close other apps that use the camera and try again.",
+      )
+      return
+    }
+
     scanHandledRef.current = false
+    // Show the camera view first, so the video element exists.
+    flushSync(() => setScanMode("camera"))
     if (!videoRef.current) {
+      stream.getTracks().forEach((track) => track.stop())
       setQrError("The camera preview could not be opened.")
       setScanMode("qr")
       return
@@ -563,8 +588,8 @@ export function ActivityDetailScreen() {
     try {
       const { BrowserQRCodeReader } = await import("@zxing/browser")
       const reader = new BrowserQRCodeReader()
-      scannerControlsRef.current = await reader.decodeFromVideoDevice(
-        undefined,
+      scannerControlsRef.current = await reader.decodeFromStream(
+        stream,
         videoRef.current,
         (result, _error, controls) => {
           if (!result || scanHandledRef.current) return
@@ -575,10 +600,11 @@ export function ActivityDetailScreen() {
         },
       )
     } catch (error) {
+      stream.getTracks().forEach((track) => track.stop())
       setQrError(
         error instanceof Error
-          ? `Unable to access the camera: ${error.message}`
-          : "Unable to access the camera. Check your browser permissions and try again.",
+          ? `Unable to use the camera: ${error.message}`
+          : "Unable to use the camera. Try again.",
       )
       setScanMode("qr")
     }

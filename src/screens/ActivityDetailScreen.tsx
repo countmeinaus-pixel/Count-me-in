@@ -982,20 +982,30 @@ export function ActivityDetailScreen() {
         )}
       </section>
 
-      {!isWaitingForReview && !(isHost && savedDetails && !isActivityDay) && (
+      {!isWaitingForReview && (
       <div className="sticky-action">
         <div className="sticky-action-group" data-tour="activity-join">
           {isHost ? (
             savedDetails ? (
-              isActivityDay && (
+              // The host can open the group chat too; Check in only on the day.
+              <>
                 <Button
+                  variant="secondary"
                   size="lg"
-                  onClick={() => setQrOpen(true)}
-                  disabled={confirmed || isLoadingConfirmation}
+                  onClick={() => void openSavedActivityChat()}
                 >
-                  {confirmed ? "Confirmed" : "Check in"}
+                  Open chat
                 </Button>
-              )
+                {isActivityDay && (
+                  <Button
+                    size="lg"
+                    onClick={() => setQrOpen(true)}
+                    disabled={confirmed || isLoadingConfirmation}
+                  >
+                    {confirmed ? "Confirmed" : "Check in"}
+                  </Button>
+                )}
+              </>
             ) : isActivityDay ? (
               <Button
                 size="lg"

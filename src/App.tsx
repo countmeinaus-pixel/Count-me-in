@@ -39,6 +39,7 @@ import { MySportsScreen } from "./screens/MySportsScreen"
 import { LanguageSettingsScreen } from "./screens/LanguageSettingsScreen"
 import { LocationSettingsScreen } from "./screens/LocationSettingsScreen"
 import { AdminEditProfileScreen } from "./screens/AdminEditProfileScreen"
+import { SendStaffMessageScreen } from "./screens/SendStaffMessageScreen"
 import { AllActivitiesScreen } from "./screens/AllActivitiesScreen"
 import { TeamScreen } from "./screens/TeamScreen"
 import { PrivacySettingsScreen } from "./screens/PrivacySettingsScreen"
@@ -46,6 +47,7 @@ import { SportProfileScreen } from "./screens/SportProfileScreen"
 import { MatesScreen } from "./screens/MatesScreen"
 import { getUnreadChatThreadCount, hasUnreadChatThreads } from "./lib/chat"
 import { getUnreadDirectChatCount } from "./lib/directChats"
+import { getOpenStaffMessageCount } from "./lib/staffMessages"
 import { ModerationScreen } from "./screens/ModerationScreen"
 
 const pathsWithoutWelcome = ["/welcome", "/login", "/reset-password", "/onboarding"]
@@ -125,9 +127,9 @@ function AppShell() {
   useEffect(() => {
     let active = true
     const refreshUnreadChats = () => {
-      void Promise.all([getUnreadChatThreadCount(), getUnreadDirectChatCount().catch(() => 0)])
-        .then(([groupCount, directCount]) => {
-          const count = groupCount + directCount
+      void Promise.all([getUnreadChatThreadCount(), getUnreadDirectChatCount().catch(() => 0), getOpenStaffMessageCount().catch(() => 0)])
+        .then(([groupCount, directCount, teamCount]) => {
+          const count = groupCount + directCount + teamCount
           if (active) {
             setHasUnreadChats(count > 0)
             setChatUnreadError("")
@@ -234,6 +236,7 @@ const router = createBrowserRouter([
       { path: "/chats", element: <ChatsScreen /> },
       { path: "/chats/:id", element: <ChatsScreen /> },
       { path: "/chats/dm/:id", element: <ChatsScreen /> },
+      { path: "/chats/team/:id", element: <ChatsScreen /> },
       { path: "/profile/:name?", element: <ProfileScreen /> },
       { path: "/profile/edit", element: <EditProfileScreen /> },
       { path: "/profile/sports/edit", element: <EditSportsScreen /> },
@@ -259,6 +262,7 @@ const router = createBrowserRouter([
       { path: "/more/moderation/activities", element: <ModerationScreen tab="activities" /> },
       { path: "/more/moderation/team", element: <TeamScreen /> },
       { path: "/more/moderation/members/:id/edit", element: <AdminEditProfileScreen /> },
+      { path: "/more/moderation/members/:id/message", element: <SendStaffMessageScreen /> },
     ],
   },
 ])

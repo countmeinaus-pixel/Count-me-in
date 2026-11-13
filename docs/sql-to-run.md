@@ -28,6 +28,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 20 | `supabase/migrations/20261113160000_admin_edit_profile.sql` | Admins kunnen het profiel van een lid aanpassen (username, geboortedatum, locatie, bio, foto weghalen); het lid krijgt een melding |
 | 21 | `supabase/migrations/20261113170000_admin_profile_photo.sql` | Admins kunnen ook een nieuwe profielfoto voor een lid uploaden (Choose photo / Take photo) |
 | 22 | `supabase/migrations/20261113180000_fix_admin_update_profile.sql` | Herstelt het opslaan bij Edit member profile (fout "Unable to save the changes") |
+| 23 | `supabase/migrations/20261113190000_staff_messages.sql` | Waarschuwingen en berichten van het Count Me In team aan een lid, vastgepind in Chats tot hij bevestigt of antwoordt |
 
 ## Zo doe je het (per bestand)
 
@@ -57,3 +58,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 17:** plak in de SQL Editor `select public.place_time_zone('Cottesloe, WA');` en klik op **Run**. Je ziet `Australia/Perth`.
 - **Na 18:** open het profiel van een vriend en tik op **Message**. Er opent een chat zonder foutmelding.
 - **Na 20:** open als admin het profiel van een lid, tik rechtsboven op het menu en kies **Edit profile (admin)**. Het formulier laadt zonder foutmelding.
+- **Na 23:** open als admin het profiel van een lid, kies in het menu **Warning or message (admin)** en stuur een bericht. Bij het lid staat het bovenaan **Chats**.

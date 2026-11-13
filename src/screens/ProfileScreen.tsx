@@ -538,6 +538,14 @@ export function ProfileScreen() {
                       Edit profile (admin)
                     </button>
                   )}
+                  {viewerIsAdmin && profileId && (
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/more/moderation/members/${profileId}/message`)}
+                    >
+                      Warning or message (admin)
+                    </button>
+                  )}
                 </div>
               )}
             </div>

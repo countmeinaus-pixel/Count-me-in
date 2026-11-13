@@ -8,6 +8,9 @@ import { directChatPath, getDirectChatsForViewer, type DirectChat } from "../lib
 import { useMediaQuery, wideChatLayoutQuery } from "../lib/useMediaQuery"
 import { ChatThreadScreen } from "./ChatThreadScreen"
 import { DirectChatScreen } from "./DirectChatScreen"
+import { StaffMessageScreen } from "./StaffMessageScreen"
+import { getMyStaffMessages, isOpenStaffMessage, staffMessagePath, type StaffMessage } from "../lib/staffMessages"
+import { ShieldAlert, ShieldCheck } from "lucide-react"
 
 type ChatTab = "all" | "activities" | "friends"
 const tabLabels: Record<ChatTab, string> = { all: "All", activities: "Activities", friends: "Friends" }
@@ -15,7 +18,7 @@ const tabLabels: Record<ChatTab, string> = { all: "All", activities: "Activities
 // One row in the list: an activity group chat or a private chat with a friend.
 type ChatRow = {
   key: string
-  kind: "activity" | "friend"
+  kind: "activity" | "friend" | "team"
   id: string
   path: string
   title: string
@@ -37,6 +40,16 @@ function friendRow(chat: DirectChat): ChatRow {
   return {
     key: `friend-${chat.id}`, kind: "friend", id: chat.id, path: directChatPath(chat.id),
     title: chat.friendName, preview: chat.preview, lastMessageAt: chat.lastMessageAt, unreadCount: chat.unreadCount, photoUrl: chat.friendPhotoUrl,
+  }
+}
+
+function teamRow(message: StaffMessage): ChatRow {
+  const isOpen = isOpenStaffMessage(message)
+  return {
+    key: `team-${message.id}`, kind: "team", id: message.id, path: staffMessagePath(message.id),
+    title: "Count Me In team",
+    preview: message.kind === "warning" ? `Warning: ${message.body}` : message.body, lastMessageAt: Date.parse(message.repliedAt ?? message.acknowledgedAt ?? message.createdAt),
+    unreadCount: isOpen ? 1 : 0, sport: message.kind,
   }
 }
 
@@ -74,10 +87,13 @@ function formatChatTime(timestamp: number) {
 export function ChatsScreen() {
   const navigate = useNavigate()
   const { id: openChatId } = useParams()
-  const isDirectOpen = useLocation().pathname.startsWith("/chats/dm/")
+  const pathname = useLocation().pathname
+  const isDirectOpen = pathname.startsWith("/chats/dm/")
+  const isTeamOpen = pathname.startsWith("/chats/team/")
   const isWide = useMediaQuery(wideChatLayoutQuery)
   const [threads, setThreads] = useState<ChatThread[]>([])
   const [directChats, setDirectChats] = useState<DirectChat[]>([])
+  const [staffMessages, setStaffMessages] = useState<StaffMessage[]>([])
   const [tab, setTab] = useState<ChatTab>(readSavedTab)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -95,10 +111,15 @@ export function ChatsScreen() {
     let active = true
     async function loadThreads() {
       try {
-        const [groupChats, privateChats] = await Promise.all([getChatThreadsForViewer(), getDirectChatsForViewer()])
+        const [groupChats, privateChats, teamMessages] = await Promise.all([
+          getChatThreadsForViewer(),
+          getDirectChatsForViewer(),
+          getMyStaffMessages().catch(() => []),
+        ])
         if (active) {
           setThreads(groupChats)
           setDirectChats(privateChats)
+          setStaffMessages(teamMessages)
         }
       } catch (loadError) {
         if (active) {
@@ -118,16 +139,19 @@ export function ChatsScreen() {
     }
   }, [])
 
-  if (openChatId && !isWide) return isDirectOpen ? <DirectChatScreen /> : <ChatThreadScreen />
+  if (openChatId && !isWide) return isTeamOpen ? <StaffMessageScreen /> : isDirectOpen ? <DirectChatScreen /> : <ChatThreadScreen />
 
   const rowsByTab: Record<ChatTab, ChatRow[]> = {
     activities: threads.map(activityRow),
     friends: directChats.map(friendRow),
-    all: [...threads.map(activityRow), ...directChats.map(friendRow)].sort((left, right) => right.lastMessageAt - left.lastMessageAt),
+    all: [...threads.map(activityRow), ...directChats.map(friendRow), ...staffMessages.filter((message) => !isOpenStaffMessage(message)).map(teamRow)]
+      .sort((left, right) => right.lastMessageAt - left.lastMessageAt),
   }
-  const rows = rowsByTab[tab]
+  // Open team messages stay pinned at the top of every tab until handled.
+  const pinned = staffMessages.filter(isOpenStaffMessage).map(teamRow)
+  const rows = [...pinned, ...rowsByTab[tab]]
   const unreadIn = (key: ChatTab) => rowsByTab[key].filter((row) => row.unreadCount > 0).length
-  const openKey = openChatId ? `${isDirectOpen ? "friend" : "activity"}-${openChatId}` : null
+  const openKey = openChatId ? `${isTeamOpen ? "team" : isDirectOpen ? "friend" : "activity"}-${openChatId}` : null
 
   const emptyState =
     tab === "friends" ? (
@@ -176,12 +200,16 @@ export function ChatsScreen() {
             <button
               key={chat.key}
               type="button"
-              className={`chat-row ${chat.key === openKey ? "active" : ""}`}
+              className={`chat-row ${chat.key === openKey ? "active" : ""} ${chat.kind === "team" && chat.unreadCount > 0 ? `chat-row-pinned ${chat.sport === "warning" ? "warning" : ""}` : ""}`}
               aria-current={chat.key === openKey ? "true" : undefined}
               onClick={() => navigate(chat.path)}
               aria-label={`${chat.kind === "friend" ? "Chat with " : ""}${chat.title}${chat.unreadCount ? `, ${chat.unreadCount} unread messages` : ""}`}
             >
-              {chat.kind === "activity" ? (
+              {chat.kind === "team" ? (
+                <span className={`staff-icon ${chat.sport === "warning" ? "warning" : ""}`} aria-hidden="true">
+                  {chat.sport === "warning" ? <ShieldAlert /> : <ShieldCheck />}
+                </span>
+              ) : chat.kind === "activity" ? (
                 <div className="sport-icon">
                   <SportIcon sport={chat.sport ?? ""} />
                 </div>
@@ -198,7 +226,9 @@ export function ChatsScreen() {
                 <time dateTime={chat.lastMessageAt ? new Date(chat.lastMessageAt).toISOString() : undefined}>
                   {formatChatTime(chat.lastMessageAt)}
                 </time>
-                {chat.unreadCount > 0 && (
+                {chat.kind === "team" && chat.unreadCount > 0 ? (
+                  <span className="chat-pinned-label">Action needed</span>
+                ) : chat.unreadCount > 0 && (
                   <span className="chat-unread-badge" aria-label={`${chat.unreadCount} unread messages`}>
                     {chat.unreadCount}
                   </span>
@@ -225,7 +255,7 @@ export function ChatsScreen() {
           </aside>
           <section className="chats-split-thread">
             {openChatId ? (
-              isDirectOpen ? <DirectChatScreen key={`dm-${openChatId}`} embedded /> : <ChatThreadScreen key={openChatId} embedded />
+              isTeamOpen ? <StaffMessageScreen key={`team-${openChatId}`} embedded /> : isDirectOpen ? <DirectChatScreen key={`dm-${openChatId}`} embedded /> : <ChatThreadScreen key={openChatId} embedded />
             ) : (
               <div className="chats-split-empty">
                 <h3>Pick a chat</h3>

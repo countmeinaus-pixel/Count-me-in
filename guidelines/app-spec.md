@@ -172,6 +172,11 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 - Can change username, date of birth (18+), location and bio, give a new photo (Choose/Take photo, then Move and zoom) or remove the photo. Optional note to the member.
 - The member always gets a "Profile updated" notification listing what changed (plus the note). Sports, PRs and email stay with the member.
 
+### Admin: warnings and team messages
+- Admins only. On someone's profile: menu > "Warning or message (admin)". Choose Warning or Message, start from a template (Respect, No-shows, Spam or selling, Profile) or write your own (max 1000 characters).
+- The member sees it from "Count Me In team" (never the admin's name), pinned at the top of Chats (all tabs, red for a warning, "Action needed") until he taps "I understand and will follow the community guidelines" (or "Got it") or replies once. He also gets a notification and push.
+- When he replies, the admin who sent it gets a notification. The admin screen shows every earlier warning/message for that member with its status (waiting, confirmed, replied) and the reply.
+
 ### Chats
 - Tabs: All, Activities, Friends (dot when a tab has unread chats). All mixes both, newest first.
 - Private chats (Friends tab): 1-on-1, text only, only between friends (accepted friend request). Start one with "Message" on a friend's profile. Not possible when one blocked the other; after unfriending, old messages stay readable but you cannot send. Push notification per message (Chat messages switch).

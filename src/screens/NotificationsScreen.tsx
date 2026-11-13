@@ -71,6 +71,8 @@ const titles = {
   sport_suggested: 'New sport suggested',
   role_changed: 'Your role changed',
   profile_updated: 'Profile updated',
+  staff_message: 'From the Count Me In team',
+  staff_message_reply: 'Reply to your team message',
 } as const
 
 function formatRelativeTime(value: string) {
@@ -107,10 +109,14 @@ export function NotificationsScreen() {
         const openFriendRequests = new Map((friendships?.incoming ?? []).map((request) => [request.member.id, request.requestId]))
         setNotifications(saved.map((item) => ({
           id: item.id,
-          title: item.type === 'participant_left' && item.actorName ? `${item.actorName} can’t make it` : titles[item.type],
+          title: item.type === 'participant_left' && item.actorName ? `${item.actorName} can’t make it` : item.type === 'staff_message_reply' && item.actorName ? `${item.actorName} replied` : titles[item.type],
           message: item.message ? `${item.body} “${item.message}”` : item.body,
           time: formatRelativeTime(item.createdAt),
-          href: (item.type === 'friend_request' || item.type === 'friend_accepted') && item.actorId
+          href: item.type === 'staff_message'
+            ? '/chats'
+            : item.type === 'staff_message_reply' && item.actorId
+            ? `/more/moderation/members/${item.actorId}/message`
+            : (item.type === 'friend_request' || item.type === 'friend_accepted') && item.actorId
             ? getProfilePath({ id: item.actorId, name: item.actorName ?? 'member' })
             : item.type === 'pr_confirmed' || item.type === 'pr_flagged' || item.type === 'pr_verified'
             ? '/profile/records'

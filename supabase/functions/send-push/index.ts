@@ -4,6 +4,8 @@
 //   - notifications            -> the member it is for
 //   - activity_join_requests   -> the host of the activity
 //   - activity_chat_messages   -> everyone in the chat except the sender
+// and a fourth on INSERT into:
+//   - direct_messages          -> the friend in the private chat
 // It respects each member's switches on Notification settings, and removes
 // devices that no longer accept pushes.
 //
@@ -187,6 +189,19 @@ Deno.serve(async (request) => {
       body: shorten(`${name}: ${record.body}`),
       url: `/chats/${record.thread_id}`,
     })
+  } else if (table === 'direct_messages') {
+    const { data: chat, error: chatError } = await supabase
+      .from('direct_chats').select('user_low, user_high').eq('id', record.chat_id).maybeSingle()
+    if (chatError) console.error('Could not read the private chat', chatError.message)
+    if (chat) {
+      const friendId = chat.user_low === record.sender_id ? chat.user_high : chat.user_low
+      const name = await firstName(record.sender_id)
+      sent = await sendTo([friendId as string], 'chat_messages', {
+        title: name,
+        body: shorten(record.body),
+        url: `/chats/dm/${record.chat_id}`,
+      })
+    }
   }
 
   console.log(`Pushes sent: ${sent}`)

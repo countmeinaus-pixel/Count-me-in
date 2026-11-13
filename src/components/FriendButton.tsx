@@ -1,5 +1,7 @@
-import { Check, Clock3, UserCheck, UserPlus, X } from 'lucide-react'
+import { Check, Clock3, MessageCircle, UserCheck, UserPlus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { directChatPath, openDirectChat } from '../lib/directChats'
 import {
   friendsChangedEvent,
   getFriendStatus,
@@ -11,6 +13,7 @@ import {
 
 // Add friend / Requested / Accept + Decline / Friends, on someone's profile.
 export function FriendButton({ profileId, name }: { profileId: string; name: string }) {
+  const navigate = useNavigate()
   const [status, setStatus] = useState<FriendStatus | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
   const [isBusy, setIsBusy] = useState(false)
@@ -108,21 +111,35 @@ export function FriendButton({ profileId, name }: { profileId: string; name: str
         </>
       )}
       {status === 'friends' && (
-        <button
-          type="button"
-          className="button button-secondary button-md"
-          disabled={isBusy}
-          onClick={() => {
-            if (window.confirm(`Remove ${name} from your friends?`)) {
-              void run(async () => {
-                await removeFriend(profileId)
-                setStatus('none')
-              })
-            }
-          }}
-        >
-          <UserCheck aria-hidden="true" /> Friends
-        </button>
+        <div className="friend-button-row">
+          <button
+            type="button"
+            className="button button-secondary button-md"
+            disabled={isBusy}
+            aria-label={`Friends with ${name}. Tap to remove`}
+            onClick={() => {
+              if (window.confirm(`Remove ${name} from your friends?`)) {
+                void run(async () => {
+                  await removeFriend(profileId)
+                  setStatus('none')
+                })
+              }
+            }}
+          >
+            <UserCheck aria-hidden="true" /> Friends
+          </button>
+          <button
+            type="button"
+            className="button button-primary button-md"
+            disabled={isBusy}
+            onClick={() => void run(async () => {
+              const chatId = await openDirectChat(profileId)
+              navigate(directChatPath(chatId))
+            })}
+          >
+            <MessageCircle aria-hidden="true" /> Message
+          </button>
+        </div>
       )}
       {error && <p className="activity-join-error" role="alert">{error}</p>}
     </div>

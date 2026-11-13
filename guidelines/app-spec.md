@@ -16,7 +16,7 @@ Bottom navigation with 5 tabs:
 1. **Home**: feed of upcoming activities near you.
 2. **Friends**: friends and their profiles.
 3. **My activities** (centre): activities I'm hosting or have joined, and open invitations (Upcoming / Invited / Past). A "Create activity" button below the page heading starts a new activity.
-4. **Chats**: one group chat per activity I'm part of.
+4. **Chats**: one group chat per activity I'm part of, plus private 1-on-1 chats with friends.
 5. **More**: my profile, stats, achievement patches, settings, About.
 
 ## Activities and presets
@@ -168,6 +168,8 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 - Host notifications: a participant can't make it (with their optional message), an invitation was accepted or declined.
 
 ### Chats
+- Tabs: All, Activities, Friends (dot when a tab has unread chats). All mixes both, newest first.
+- Private chats (Friends tab): 1-on-1, text only, only between friends (accepted friend request). Start one with "Message" on a friend's profile. Not possible when one blocked the other; after unfriending, old messages stay readable but you cannot send. Push notification per message (Chat messages switch).
 - List of activity group chats: sport icon, activity title, last message, time, unread dot.
 - Chat screen: TopBar with activity title and date (tap opens activity detail), ChatBubbles, text input with send icon button. Text only.
 - Saved activity chats use Supabase Realtime. A chat is created when a join request is accepted (including auto-accept); only the host and accepted participants can read or write.

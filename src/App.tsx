@@ -44,6 +44,7 @@ import { PrivacySettingsScreen } from "./screens/PrivacySettingsScreen"
 import { SportProfileScreen } from "./screens/SportProfileScreen"
 import { MatesScreen } from "./screens/MatesScreen"
 import { getUnreadChatThreadCount, hasUnreadChatThreads } from "./lib/chat"
+import { getUnreadDirectChatCount } from "./lib/directChats"
 import { ModerationScreen } from "./screens/ModerationScreen"
 
 const pathsWithoutWelcome = ["/welcome", "/login", "/reset-password", "/onboarding"]
@@ -123,8 +124,9 @@ function AppShell() {
   useEffect(() => {
     let active = true
     const refreshUnreadChats = () => {
-      void getUnreadChatThreadCount()
-        .then((count) => {
+      void Promise.all([getUnreadChatThreadCount(), getUnreadDirectChatCount().catch(() => 0)])
+        .then(([groupCount, directCount]) => {
+          const count = groupCount + directCount
           if (active) {
             setHasUnreadChats(count > 0)
             setChatUnreadError("")
@@ -230,6 +232,7 @@ const router = createBrowserRouter([
       { path: "/create", element: <CreateActivityScreen /> },
       { path: "/chats", element: <ChatsScreen /> },
       { path: "/chats/:id", element: <ChatsScreen /> },
+      { path: "/chats/dm/:id", element: <ChatsScreen /> },
       { path: "/profile/:name?", element: <ProfileScreen /> },
       { path: "/profile/edit", element: <EditProfileScreen /> },
       { path: "/profile/sports/edit", element: <EditSportsScreen /> },

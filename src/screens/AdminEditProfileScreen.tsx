@@ -1,7 +1,8 @@
-import { ArrowLeft, ShieldCheck } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, Camera, ImagePlus, ShieldCheck } from 'lucide-react'
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
+import { PhotoCropDialog } from '../components/PhotoCropDialog'
 import { SuburbInput } from '../components/SuburbInput'
 import { adminGetProfile, adminUpdateProfile, getCurrentModerationRole, type AdminProfile } from '../lib/moderation'
 import { calculateAgeFromDateOfBirth, getProfilePath } from '../lib/profile'
@@ -19,6 +20,36 @@ export function AdminEditProfileScreen() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  // A new photo for the member: chosen, then moved and zoomed in PhotoCropDialog.
+  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null)
+  const [newPhoto, setNewPhoto] = useState<File | null>(null)
+  const [newPhotoUrl, setNewPhotoUrl] = useState<string | null>(null)
+  const photoInputRef = useRef<HTMLInputElement | null>(null)
+  const cameraInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => () => {
+    if (newPhotoUrl) URL.revokeObjectURL(newPhotoUrl)
+  }, [newPhotoUrl])
+
+  function handlePhotoSelect(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Choose an image file for the profile photo.')
+      return
+    }
+    setError('')
+    setPhotoToCrop(file)
+  }
+
+  function handlePhotoCropped(cropped: File) {
+    setPhotoToCrop(null)
+    setNewPhoto(cropped)
+    setNewPhotoUrl(URL.createObjectURL(cropped))
+    setForm((current) => (current ? { ...current, removePhoto: false } : current))
+    setSaved(false)
+  }
 
   useEffect(() => {
     let active = true
@@ -55,7 +86,8 @@ export function AdminEditProfileScreen() {
     form.dateOfBirth !== profile.dateOfBirth ||
     form.suburb.trim() !== profile.suburb ||
     form.bio.trim() !== profile.bio ||
-    form.removePhoto
+    form.removePhoto ||
+    newPhoto !== null
   )
   const valid = !!form && !!form.firstName.trim() && !!form.suburb.trim() && age !== null && age >= 18 && age <= 99 && form.bio.length <= 150
 
@@ -74,7 +106,7 @@ export function AdminEditProfileScreen() {
     setIsSaving(true)
     setError('')
     try {
-      await adminUpdateProfile({
+      const savedPhotoUrl = await adminUpdateProfile({
         userId: profile.id,
         firstName: form.firstName.trim(),
         dateOfBirth: form.dateOfBirth,
@@ -82,8 +114,12 @@ export function AdminEditProfileScreen() {
         bio: form.bio.trim(),
         removePhoto: form.removePhoto,
         note: form.note.trim(),
+        newPhoto,
       })
-      const updated = { ...profile, firstName: form.firstName.trim(), dateOfBirth: form.dateOfBirth, suburb: form.suburb.trim(), bio: form.bio.trim(), photoUrl: form.removePhoto ? null : profile.photoUrl }
+      const photoUrl = savedPhotoUrl ?? (form.removePhoto ? null : profile.photoUrl)
+      const updated = { ...profile, firstName: form.firstName.trim(), dateOfBirth: form.dateOfBirth, suburb: form.suburb.trim(), bio: form.bio.trim(), photoUrl }
+      setNewPhoto(null)
+      setNewPhotoUrl(null)
       setProfile(updated)
       setForm({ ...form, removePhoto: false, note: '' })
       setSaved(true)
@@ -127,12 +163,23 @@ export function AdminEditProfileScreen() {
       </p>
 
       <section className="admin-edit-photo">
-        <Avatar name={form.firstName || profile.firstName} photoUrl={form.removePhoto ? null : profile.photoUrl} size={96} />
-        {profile.photoUrl && (
+        <Avatar name={form.firstName || profile.firstName} photoUrl={newPhotoUrl ?? (form.removePhoto ? null : profile.photoUrl)} size={96} />
+        <div className="edit-photo-actions">
+          <button type="button" className="secondary-action" onClick={() => photoInputRef.current?.click()}><ImagePlus />Choose photo</button>
+          <button type="button" className="secondary-action" onClick={() => cameraInputRef.current?.click()}><Camera />Take photo</button>
+        </div>
+        <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} hidden />
+        <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoSelect} hidden />
+        {newPhoto ? (
+          <button type="button" className="text-action" onClick={() => { setNewPhoto(null); setNewPhotoUrl(null) }}>Undo new photo</button>
+        ) : profile.photoUrl && (
           <label className="admin-edit-check">
             <input type="checkbox" checked={form.removePhoto} onChange={(event) => update('removePhoto', event.target.checked)} />
             <span>Remove profile photo</span>
           </label>
+        )}
+        {photoToCrop && (
+          <PhotoCropDialog file={photoToCrop} onCancel={() => setPhotoToCrop(null)} onDone={handlePhotoCropped} />
         )}
       </section>
 

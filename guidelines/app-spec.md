@@ -169,7 +169,7 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 
 ### Admin: edit a member's profile
 - Admins only. On someone's profile: menu (top right) > "Edit profile (admin)".
-- Can change username, date of birth (18+), location and bio, and remove the photo. Optional note to the member.
+- Can change username, date of birth (18+), location and bio, give a new photo (Choose/Take photo, then Move and zoom) or remove the photo. Optional note to the member.
 - The member always gets a "Profile updated" notification listing what changed (plus the note). Sports, PRs and email stay with the member.
 
 ### Chats

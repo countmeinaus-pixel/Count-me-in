@@ -286,8 +286,26 @@ export async function adminUpdateProfile(input: {
   bio: string
   removePhoto: boolean
   note: string
+  newPhoto?: File | null
 }) {
   const client = requireSupabase()
+  // A new photo (already cropped to a square) goes into the member's own folder.
+  let newPhotoUrl: string | null = null
+  if (input.newPhoto) {
+    const path = `${input.userId}/${Date.now()}.jpg`
+    const { error: uploadError } = await client.storage.from("avatars").upload(path, input.newPhoto, {
+      cacheControl: "3600",
+      contentType: "image/jpeg",
+      upsert: false,
+    })
+    if (uploadError) {
+      if (/row-level security|unauthorized|403/i.test(uploadError.message)) {
+        throw new Error("Uploading a photo for a member needs a database update (SQL 21 in docs/sql-to-run.md).")
+      }
+      throw uploadError
+    }
+    newPhotoUrl = client.storage.from("avatars").getPublicUrl(path).data.publicUrl
+  }
   const { error } = await client.rpc("admin_update_profile", {
     target_user_id: input.userId,
     new_first_name: input.firstName,
@@ -296,9 +314,11 @@ export async function adminUpdateProfile(input: {
     new_bio: input.bio,
     remove_photo: input.removePhoto,
     note: input.note,
+    new_photo_url: newPhotoUrl,
   })
   if (error) {
-    if (error.code === "PGRST202") throw new Error("Editing member profiles needs a database update (SQL 20 in docs/sql-to-run.md).")
+    if (error.code === "PGRST202") throw new Error("Editing member profiles needs a database update (SQL 20 and 21 in docs/sql-to-run.md).")
     throw error
   }
+  return newPhotoUrl
 }

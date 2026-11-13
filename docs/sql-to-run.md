@@ -26,6 +26,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 18 | `supabase/migrations/20261113120000_direct_chats.sql` | Privéchats tussen vrienden (1-op-1): tabellen, wie mag lezen/sturen, live-updates. Daarna ook de 4e webhook `push-direct` maken (zie onder) |
 | 19 | `supabase/migrations/20261113140000_avatar_size_limit.sql` | Profielfoto's max. 3 MB per bestand in de opslag (was 5 MB) |
 | 20 | `supabase/migrations/20261113160000_admin_edit_profile.sql` | Admins kunnen het profiel van een lid aanpassen (username, geboortedatum, locatie, bio, foto weghalen); het lid krijgt een melding |
+| 21 | `supabase/migrations/20261113170000_admin_profile_photo.sql` | Admins kunnen ook een nieuwe profielfoto voor een lid uploaden (Choose photo / Take photo) |
 
 ## Zo doe je het (per bestand)
 

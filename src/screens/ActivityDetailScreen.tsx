@@ -270,6 +270,35 @@ export function ActivityDetailScreen() {
 
   useEffect(() => () => scannerControlsRef.current?.stop(), [])
 
+  // While your QR code is on screen, check every few seconds whether the other
+  // person scanned it. Then show the same success screen as on their phone.
+  useEffect(() => {
+    if (!qrOpen || scanMode !== "qr" || !savedActivity || confirmed) return
+    let active = true
+    const timer = window.setInterval(() => {
+      void hasSavedActivityCheckin(savedActivity.id)
+        .then(async (result) => {
+          if (!active || !result) return
+          setConfirmed(true)
+          setScanMode("success")
+          try {
+            const userName = await loadSavedMeetupsForUser()
+            if (active && userName) setCheckinUserName(userName)
+            if (active) setCheckinStatsVersion((version) => version + 1)
+          } catch {
+            // The meetup is confirmed; stats refresh on the next visit.
+          }
+        })
+        .catch(() => {
+          // Try again on the next tick.
+        })
+    }, 3000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [qrOpen, scanMode, savedActivity, confirmed])
+
   if (!activity && isLoadingSavedActivity) {
     return <main className="detail-layout"><DetailSkeleton /></main>
   }

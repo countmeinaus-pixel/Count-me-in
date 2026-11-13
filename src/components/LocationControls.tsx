@@ -1,6 +1,7 @@
 import { SuburbInput } from './SuburbInput'
 import { LocateFixed } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   defaultRadiusKm,
   getDeviceLocation,
@@ -17,45 +18,19 @@ const radiusSteps = [5, 10, 15, 25, 40, 60, 100]
 export function LocationControls({
   value,
   onChange,
+  showShareLink = true,
 }: {
   value: LocationPreference | null
   onChange: (next: LocationPreference | null) => void
+  showShareLink?: boolean
 }) {
   const [isLocating, setIsLocating] = useState(false)
   const [error, setError] = useState('')
-  // Whether you share your approximate location: a setting on your profile, not
-  // part of this filter. It stays on until you untick it.
+  // Sharing your location is a setting on More > Location (ShareLocationSetting).
+  // When it is on, using your current location here also updates the shared spot.
   const viewer = useViewerProfile()
   const viewerProfile = viewer.status === 'ready' ? viewer.profile : null
-  const [share, setShare] = useState(Boolean(viewerProfile?.sharedLocation))
-  const [isSharing, setIsSharing] = useState(false)
-  useEffect(() => {
-    setShare(Boolean(viewerProfile?.sharedLocation))
-  }, [viewerProfile?.sharedLocation])
-
-  async function toggleShare(next: boolean) {
-    if (!viewerProfile) return
-    setIsSharing(true)
-    setError('')
-    setNotice('')
-    setShare(next)
-    try {
-      if (next) {
-        const point = await getDeviceLocation()
-        await saveSharedLocation(viewerProfile.id, point)
-        setNotice('Shared. Mates now see roughly how far away you are (rounded to about 1 km).')
-      } else {
-        await saveSharedLocation(viewerProfile.id, null)
-        setNotice('You stopped sharing. Distances now use the centre of your suburb.')
-      }
-      await refreshViewerProfile()
-    } catch (shareError) {
-      setShare(!next)
-      setError(shareError instanceof Error ? shareError.message : 'Your location could not be shared.')
-    } finally {
-      setIsSharing(false)
-    }
-  }
+  const share = Boolean(viewerProfile?.sharedLocation)
   const [notice, setNotice] = useState('')
   const [suburbText, setSuburbText] = useState(value?.mode === 'suburb' ? value.label : '')
   const radius = value?.radiusKm ?? null
@@ -121,14 +96,11 @@ export function LocationControls({
       <button type="button" className="button button-secondary button-md location-current" onClick={() => void useCurrentLocation()} disabled={isLocating}>
         <LocateFixed aria-hidden="true" /> {isLocating ? 'Finding you…' : 'Use my current location'}
       </button>
-      {viewerProfile && (
-        <label className="location-share">
-          <input type="checkbox" checked={share} disabled={isSharing} onChange={(event) => void toggleShare(event.target.checked)} />
-          <span>
-            {isSharing ? 'Saving…' : 'Share my approximate location (about 1 km) so mates see how far away I am'}
-            <small>{share ? 'On. Untick to stop sharing.' : 'Off. Others see the distance to the centre of your suburb.'}</small>
-          </span>
-        </label>
+      {showShareLink && viewerProfile && (
+        <p className="location-share-link">
+          {share ? 'You share your approximate location with mates.' : 'Want mates to see how far away you are?'}{' '}
+          <Link to="/more/location">{share ? 'Change' : 'Share your location'}</Link>
+        </p>
       )}
 
       <label className="location-field location-distance">

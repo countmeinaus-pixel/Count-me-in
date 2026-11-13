@@ -181,7 +181,7 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 ### Distance to members
 - Member cards and profiles show "3 km away" (under 1 km / one decimal under 10 km / whole km).
 - Measured from you: your current location if you chose "Use my current location", else your shared approximate location, else the centre of your suburb. To the other member: his shared approximate location, else the centre of his suburb.
-- "Share my approximate location (about 1 km)" in the location panel is a saved profile setting: ticking it saves your rounded location, unticking removes it.
+- "Share my location with mates" is a switch in its own section on More > Location (saved on your profile): on saves your rounded location (about 1 km), off removes it. The location panels on Home and Friends link to it.
 
 ### Chats
 - Tabs: All, Activities, Friends (dot when a tab has unread chats). All mixes both, newest first.

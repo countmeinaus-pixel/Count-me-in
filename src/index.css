@@ -5302,7 +5302,9 @@ h1 .skeleton { margin: 4px 0; }
 .location-current svg { width: 18px; height: 18px; }
 .location-share { display: flex; gap: 10px; align-items: flex-start; color: var(--text-secondary); font-size: 13px; line-height: 1.4; }
 .location-share input { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 1px; accent-color: var(--seafoam); }
-.location-share small { display: block; margin-top: 2px; color: var(--text-muted); font-size: 12px; }
+.location-share-link { margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.4; }
+.location-share-link a { color: var(--seafoam); text-decoration: underline; text-underline-offset: 2px; }
+.location-share-title { margin-top: 32px; }
 .location-field { display: grid; gap: 8px; color: var(--text-secondary); font-size: 14px; }
 .location-field strong { color: var(--text-primary); }
 .location-field select {

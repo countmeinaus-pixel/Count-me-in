@@ -24,6 +24,15 @@ type Preferences = {
 type PreferenceKey = keyof Preferences
 type Push = { title: string; body: string; url: string }
 
+// A shared activity is sent as a link; show "Shared an activity" instead.
+function chatText(body: unknown) {
+  const text = String(body ?? '')
+  const link = /(?:https?:\/\/[^\s/]+)?\/activity\/[A-Za-z0-9-]+\b/
+  if (!link.test(text)) return text
+  const rest = text.replace(link, '').trim()
+  return rest ? `${rest} (shared an activity)` : 'Shared an activity'
+}
+
 // Supabase has two kinds of server keys: the older service_role key (a JWT)
 // and the newer secret keys (sb_secret_...). Accept both.
 // The new keys come first: on projects that switched to them, the old key may no
@@ -200,7 +209,7 @@ Deno.serve(async (request) => {
     console.log(`Chat members: ${members?.length ?? 0}, others than the sender: ${others.length}`)
     sent = await sendTo(others, 'chat_messages', {
       title: thread?.title ?? 'New message',
-      body: shorten(`${name}: ${record.body}`),
+      body: shorten(`${name}: ${chatText(record.body)}`),
       url: `/chats/${record.thread_id}`,
     })
   } else if (table === 'direct_messages') {
@@ -212,7 +221,7 @@ Deno.serve(async (request) => {
       const name = await firstName(record.sender_id)
       sent = await sendTo([friendId as string], 'chat_messages', {
         title: name,
-        body: shorten(record.body),
+        body: shorten(chatText(record.body)),
         url: `/chats/dm/${record.chat_id}`,
       })
     }

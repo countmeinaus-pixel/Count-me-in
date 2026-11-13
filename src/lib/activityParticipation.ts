@@ -190,6 +190,17 @@ type ActivityFeedRow = {
 const feedActivityColumns =
   "id, host_id, sport_id, title, starts_at, meeting_point, suburb, spots_total, level_wanted, notes, sport_details, cover_image_url"
 
+// One activity as the same card data as on Home (for activities shared in a chat).
+export async function getFeedActivity(id: string): Promise<FeedActivity | null> {
+  const client = requireSupabase()
+  const { data: sessionData } = await client.auth.getSession()
+  const { data, error } = await client.from("activities").select(feedActivityColumns).eq("id", id).maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const [activity] = await toFeedActivities(client, [data], sessionData.session?.user.id ?? null)
+  return activity ?? null
+}
+
 async function toFeedActivities(
   client: ReturnType<typeof requireSupabase>,
   rows: ActivityFeedRow[],

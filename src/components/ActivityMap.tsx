@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { createMapStyle } from '../lib/mapStyle'
 import type { ActivityCardData } from './ActivityCard'
-import { Avatar } from './Avatar'
+import { ActivityPreviewCard } from './ActivityPreviewCard'
 import { SportIcon } from './SportIcon'
 import { formatActivityDate, getActivitySpotsLabel } from '../data/mockData'
 
@@ -215,28 +215,7 @@ export default function ActivityMap({ activities, onOpenActivity, home = null }:
       {selected && selection && (
         <div className="activity-map-card">
           {/* Same content as the activity card, side by side: photo left, details right. */}
-          <button type="button" className="activity-map-card-open" onClick={() => onOpenActivity(selected.id)}>
-            <span className="map-card-media">
-              <img src={selected.hero} alt="" />
-              <span className="map-card-pill map-card-sport"><SportIcon sport={selected.sport} />{selected.sport}</span>
-              <time className="map-card-pill map-card-time">
-                {formatActivityDate(selected.startsAt, { weekday: 'short', day: 'numeric', month: 'short' }, selected.suburb)}
-              </time>
-            </span>
-            <span className="map-card-body">
-              <strong>{selected.title}</strong>
-              {selected.facts && <span className="map-card-facts">{selected.facts}</span>}
-              <span className="map-card-place"><MapPin aria-hidden="true" /><span className="map-card-place-text">{selected.place}{selected.suburb && selected.place !== selected.suburb ? `, ${selected.suburb}` : ''}</span></span>
-              <span className="map-card-bottom">
-                <span className="map-card-host">
-                  <Avatar name={selected.host} photoUrl={selected.attendeePhotos?.[0]} size={24} />
-                  {selected.host}
-                </span>
-                <span className="level-pill">{selected.level}</span>
-                <span className="map-card-spots">{getActivitySpotsLabel(selected)}</span>
-              </span>
-            </span>
-          </button>
+          <ActivityPreviewCard activity={selected} onOpen={() => onOpenActivity(selected.id)} />
           {selectedGroup.length > 1 && (
             <div className="activity-map-card-pager">
               <button

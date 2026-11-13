@@ -1,4 +1,5 @@
 import { ArrowLeft, Plus } from 'lucide-react'
+import { ListSkeleton } from '../components/Skeleton'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
@@ -91,7 +92,7 @@ export function PersonalRecordsScreen() {
       {error && <p className="edit-form-error" role="alert">{error}</p>}
 
       {isLoading ? (
-        <p className="pr-empty" role="status">Loading your records…</p>
+        <ListSkeleton rows={4} label="Loading your records" />
       ) : records.length > 0 ? (
         <div className="pr-grid">
           {records.map((record) => (

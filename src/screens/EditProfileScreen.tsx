@@ -1,4 +1,5 @@
 import { PhotoCropDialog } from '../components/PhotoCropDialog'
+import { FormSkeleton } from '../components/Skeleton'
 import { SuburbInput } from '../components/SuburbInput'
 import { ArrowLeft, Camera, ImagePlus, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
@@ -216,7 +217,7 @@ export function EditProfileScreen() {
   }
 
   if (isLoading) {
-    return <main className="screen edit-profile-page"><p className="edit-form-status">Loading your profile…</p></main>
+    return <main className="screen edit-profile-page"><FormSkeleton fields={5} label="Loading your profile" /></main>
   }
 
   if (!form) {

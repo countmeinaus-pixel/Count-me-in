@@ -1,4 +1,5 @@
 import { ArrowLeft, CalendarDays, CheckCircle2, MessageCircle } from 'lucide-react'
+import { ListSkeleton } from '../components/Skeleton'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
@@ -287,7 +288,7 @@ export function NotificationsScreen() {
       {error && <p className="wizard-error" role="alert">{error}</p>}
 
       {isLoading ? (
-        <p className="notification-empty" role="status">Loading notifications…</p>
+        <ListSkeleton rows={6} label="Loading notifications" />
       ) : (
         <>
           {unreadNotifications.length > 0 && (

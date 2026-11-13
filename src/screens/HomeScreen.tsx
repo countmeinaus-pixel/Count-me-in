@@ -458,7 +458,7 @@ export function HomeScreen() {
 
       {view === 'map' && (
         <div className="map-panel">
-          <Suspense fallback={<div className="activity-map activity-map-loading" role="status">Loading map…</div>}>
+          <Suspense fallback={<div className="activity-map" role="status"><span className="sr-only">Loading map</span><Skeleton width="100%" height="100%" radius={0} /></div>}>
             <ActivityMap activities={visible} home={locationPreference} onOpenActivity={(id) => navigate(`/activity/${id}`)} />
           </Suspense>
 

@@ -1,4 +1,5 @@
 import { ArrowLeft, MoreVertical, Send } from "lucide-react"
+import { ChatSkeleton } from '../components/Skeleton'
 import { ChatMessageBody } from '../components/ChatActivityCard'
 import { type FormEvent, useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -126,8 +127,8 @@ export function DirectChatScreen({ embedded = false }: { embedded?: boolean }) {
 
   if (isLoading) {
     return (
-      <main className={`chat-thread-screen chat-thread-missing ${embedded ? "embedded" : ""}`}>
-        <p>Loading chat…</p>
+      <main className={`chat-thread-screen ${embedded ? "embedded" : ""}`}>
+        <ChatSkeleton label="Loading chat" />
       </main>
     )
   }

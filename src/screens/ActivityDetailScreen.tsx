@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '../components/Skeleton'
 import {
   ArrowLeft,
   ChevronRight,
@@ -267,6 +268,10 @@ export function ActivityDetailScreen() {
   }, [qrOpen, qrPayload, checkinCode])
 
   useEffect(() => () => scannerControlsRef.current?.stop(), [])
+
+  if (!activity && isLoadingSavedActivity) {
+    return <main className="detail-layout"><DetailSkeleton /></main>
+  }
 
   if (!activity) {
     return (

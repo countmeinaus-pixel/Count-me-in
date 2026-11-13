@@ -79,3 +79,93 @@ export function MateCardSkeleton() {
     </div>
   )
 }
+
+// Screen reader text for a loading state (the shapes themselves are hidden).
+function LoadingLabel({ label }: { label: string }) {
+  return <span className="sr-only">{label}</span>
+}
+
+// Rows like a list of chats, notifications or members: round photo and two lines.
+export function ListSkeleton({ rows = 4, label = 'Loading' }: { rows?: number; label?: string }) {
+  return (
+    <div className="list-skeleton" role="status">
+      <LoadingLabel label={label} />
+      {Array.from({ length: rows }, (_, index) => (
+        <div key={index} className="list-skeleton-row" aria-hidden="true">
+          <Skeleton width={44} height={44} radius="50%" />
+          <div className="list-skeleton-text">
+            <Skeleton width={`${60 - (index % 3) * 10}%`} height={16} />
+            <Skeleton width={`${80 - (index % 2) * 15}%`} height={12} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Grid of activity cards (My activities, Home).
+export function ActivityCardsSkeleton({ count = 3, label = 'Loading activities' }: { count?: number; label?: string }) {
+  return (
+    <div className="card-list" role="status">
+      <LoadingLabel label={label} />
+      {Array.from({ length: count }, (_, index) => <ActivityCardSkeleton key={index} />)}
+    </div>
+  )
+}
+
+// A chat: header, a few message bubbles left and right, and the message box.
+export function ChatSkeleton({ label = 'Loading chat' }: { label?: string }) {
+  return (
+    <div className="chat-skeleton" role="status">
+      <LoadingLabel label={label} />
+      <div className="chat-skeleton-header" aria-hidden="true">
+        <Skeleton width={40} height={40} radius={10} />
+        <div className="list-skeleton-text">
+          <Skeleton width="55%" height={18} />
+          <Skeleton width="30%" height={12} />
+        </div>
+      </div>
+      <div className="chat-skeleton-messages" aria-hidden="true">
+        <Skeleton width="62%" height={56} radius={14} />
+        <Skeleton width="48%" height={44} radius={14} className="mine" />
+        <Skeleton width="70%" height={72} radius={14} />
+        <Skeleton width="40%" height={44} radius={14} className="mine" />
+      </div>
+      <Skeleton width="100%" height={52} radius={14} />
+    </div>
+  )
+}
+
+// A form page: title and a few fields.
+export function FormSkeleton({ fields = 4, label = 'Loading' }: { fields?: number; label?: string }) {
+  return (
+    <div className="form-skeleton" role="status">
+      <LoadingLabel label={label} />
+      <Skeleton width="50%" height={30} />
+      {Array.from({ length: fields }, (_, index) => (
+        <div key={index} className="form-skeleton-field" aria-hidden="true">
+          <Skeleton width={90} height={12} />
+          <Skeleton width="100%" height={48} radius={12} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Activity details: big photo, title, date and info blocks.
+export function DetailSkeleton({ label = 'Loading activity' }: { label?: string }) {
+  return (
+    <div className="detail-skeleton" role="status">
+      <LoadingLabel label={label} />
+      <Skeleton width="100%" height={260} radius={0} />
+      <div className="detail-skeleton-body" aria-hidden="true">
+        <Skeleton width={90} height={12} />
+        <Skeleton width="75%" height={30} />
+        <Skeleton width="45%" height={14} />
+        <Skeleton width="100%" height={110} radius={12} />
+        <Skeleton width="100%" height={80} radius={12} />
+        <Skeleton width="100%" height={52} radius={14} />
+      </div>
+    </div>
+  )
+}

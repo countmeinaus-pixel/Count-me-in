@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { ListSkeleton } from '../components/Skeleton'
 import { MorePageHeader } from "../components/MorePageHeader"
 import { useBackToMore } from "../lib/moreNavigation"
 import {
@@ -117,7 +118,7 @@ export function PrivacySettingsScreen() {
       <section className="more-setting-section">
         <h2>Blocked members</h2>
         {isLoadingBlocks ? (
-          <p className="more-settings-note">Loading blocked members…</p>
+          <ListSkeleton rows={2} label="Loading blocked members" />
         ) : blockedUsers.length > 0 ? (
           <ul className="blocked-user-list">
             {blockedUsers.map((profile) => (

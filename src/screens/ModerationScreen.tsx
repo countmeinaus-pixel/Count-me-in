@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { ListSkeleton } from '../components/Skeleton'
 import { MorePageHeader } from "../components/MorePageHeader"
 import { useBackToMore } from "../lib/moreNavigation"
 import {
@@ -189,7 +190,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
     <main className="screen more-settings-page moderation-page">
       <MorePageHeader title="Moderation" eyebrow="Keep it safe" onBack={backToMore} />
       {isLoading ? (
-        <p className="more-settings-note">Loading reports…</p>
+        <ListSkeleton rows={4} label="Loading reports" />
       ) : role ? (
         <>
           <div className="segment-bar">
@@ -228,7 +229,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
               {activitiesError ? (
                 <p className="edit-form-error" role="alert">{activitiesError}</p>
               ) : activitiesToReview === null ? (
-                <p className="more-settings-note">Loading activities…</p>
+                <ListSkeleton rows={3} label="Loading activities" />
               ) : activitiesToReview.length ? (
                 <div className="review-activity-list">
                   {activitiesToReview.map((activity) => (
@@ -258,7 +259,7 @@ export function ModerationScreen({ tab = "reports" }: { tab?: ModerationTab }) {
               {recordsError ? (
                 <p className="edit-form-error" role="alert">{recordsError}</p>
               ) : recordsToCheck === null ? (
-                <p className="more-settings-note">Loading PRs…</p>
+                <ListSkeleton rows={3} label="Loading PRs" />
               ) : recordsToCheck.length ? (
                 <div className="pr-list">
                   {recordsToCheck.map((record) => (

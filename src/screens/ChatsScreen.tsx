@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { ListSkeleton } from '../components/Skeleton'
 import { previewWithActivityLinks } from "../lib/activityLinks"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { Avatar } from "../components/Avatar"
@@ -194,7 +195,7 @@ export function ChatsScreen() {
       </div>
 
       {isLoading ? (
-        <p className="text-[var(--text-secondary)]">Loading your chats…</p>
+        <ListSkeleton rows={5} label="Loading your chats" />
       ) : error ? (
         <p className="wizard-error" role="alert">{error}</p>
       ) : rows.length === 0 ? (

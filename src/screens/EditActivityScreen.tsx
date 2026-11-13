@@ -1,4 +1,5 @@
 import { activityLevels } from '../lib/activityFilters'
+import { FormSkeleton } from '../components/Skeleton'
 import { ArrowLeft, ImagePlus } from 'lucide-react'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -281,7 +282,7 @@ export function EditActivityScreen() {
   }
 
   if (isLoading) {
-    return <main className="screen create-wizard"><p className="text-[var(--text-secondary)]">Loading activity…</p></main>
+    return <main className="screen create-wizard"><FormSkeleton fields={5} label="Loading activity" /></main>
   }
 
   if (!activity || error && !title) {

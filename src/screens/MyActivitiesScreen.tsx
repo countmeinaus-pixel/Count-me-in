@@ -1,4 +1,5 @@
 import { ArrowLeft, Plus } from "lucide-react"
+import { ActivityCardsSkeleton } from '../components/Skeleton'
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { ActivityCard, type ActivityCardData } from "../components/ActivityCard"
@@ -251,9 +252,7 @@ export function MyActivitiesScreen() {
           {loadError}
         </p>
       ) : isLoading ? (
-        <p className="text-[var(--text-secondary)]" role="status">
-          Loading your activities…
-        </p>
+        <ActivityCardsSkeleton label="Loading your activities" />
       ) : segment === "upcoming" ? (
         <div className="my-activities-sections">
           {(["going", "hosting", "requested"] as const).map((status) => {

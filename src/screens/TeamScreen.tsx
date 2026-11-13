@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react'
+import { ListSkeleton } from '../components/Skeleton'
 import { useEffect, useState } from 'react'
 import { Avatar } from '../components/Avatar'
 import { MorePageHeader } from '../components/MorePageHeader'
@@ -87,7 +88,7 @@ export function TeamScreen() {
     <main className="screen more-settings-page team-page">
       <MorePageHeader title="Team" eyebrow="Admin" onBack={backToMore} />
       {isAdmin === null ? (
-        <p className="more-settings-note">Loading…</p>
+        <ListSkeleton rows={3} label="Loading" />
       ) : !isAdmin ? (
         <p className="more-settings-note">Only admins can manage the team.</p>
       ) : (
@@ -100,7 +101,7 @@ export function TeamScreen() {
 
           <h3 className="more-settings-subtitle">Current team</h3>
           {team === null ? (
-            <p className="more-settings-note">Loading team…</p>
+            <ListSkeleton rows={3} label="Loading team" />
           ) : (
             <div className="team-list">
               {team.map((member) => (

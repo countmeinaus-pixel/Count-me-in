@@ -1,4 +1,5 @@
 import { ArrowLeft, CheckCircle2, Send, ShieldAlert, ShieldCheck } from "lucide-react"
+import { ChatSkeleton } from '../components/Skeleton'
 import { type FormEvent, useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
@@ -77,8 +78,8 @@ export function StaffMessageScreen({ embedded = false }: { embedded?: boolean })
 
   if (isLoading) {
     return (
-      <main className={`chat-thread-screen chat-thread-missing ${embedded ? "embedded" : ""}`}>
-        <p>Loading message…</p>
+      <main className={`chat-thread-screen ${embedded ? "embedded" : ""}`}>
+        <ChatSkeleton label="Loading message" />
       </main>
     )
   }

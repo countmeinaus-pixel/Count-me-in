@@ -5774,3 +5774,24 @@ h1 .skeleton { margin: 4px 0; }
 }
 .chat-activity-card.is-loading { height: 132px; background: var(--surface-3); }
 .chat-activity-card.is-missing { padding: 12px; color: var(--text-muted); font-size: 14px; cursor: default; }
+
+/* Skeleton loading states (components/Skeleton.tsx). */
+.list-skeleton { display: grid; gap: 10px; }
+.list-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+}
+.list-skeleton-text { display: grid; flex: 1; gap: 8px; min-width: 0; }
+.chat-skeleton { display: grid; grid-template-rows: auto 1fr auto; gap: 16px; min-height: 70dvh; padding: 16px 20px; }
+.chat-skeleton-header { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.chat-skeleton-messages { display: grid; align-content: end; gap: 12px; }
+.chat-skeleton-messages .mine { justify-self: end; }
+.form-skeleton { display: grid; gap: 20px; padding-top: 24px; }
+.form-skeleton-field { display: grid; gap: 8px; }
+.detail-skeleton { display: grid; }
+.detail-skeleton-body { display: grid; gap: 14px; padding: 20px; }

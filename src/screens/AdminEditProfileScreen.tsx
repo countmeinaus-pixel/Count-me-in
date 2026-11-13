@@ -1,4 +1,5 @@
 import { ArrowLeft, Camera, ImagePlus, ShieldCheck } from 'lucide-react'
+import { FormSkeleton } from '../components/Skeleton'
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
@@ -150,7 +151,7 @@ export function AdminEditProfileScreen() {
   )
 
   if (isLoading) {
-    return <main className="screen edit-profile-page">{header}<p className="more-settings-note">Loading profile…</p></main>
+    return <main className="screen edit-profile-page">{header}<FormSkeleton fields={4} label="Loading profile" /></main>
   }
 
   if (!form || !profile) {

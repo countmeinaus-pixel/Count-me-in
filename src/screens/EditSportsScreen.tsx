@@ -1,4 +1,5 @@
 import { ArrowLeft, Check, Search } from 'lucide-react'
+import { ListSkeleton } from '../components/Skeleton'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SportIcon } from '../components/SportIcon'
@@ -163,7 +164,7 @@ export function EditSportsScreen() {
       </label>
 
       {isLoading ? (
-        <p className="edit-form-status">Loading your sports…</p>
+        <ListSkeleton rows={5} label="Loading your sports" />
       ) : (
         <div className="edit-sports-list">
           {filteredCatalog.map((sport) => {

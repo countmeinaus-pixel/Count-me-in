@@ -1,4 +1,5 @@
 import { activityLevels } from '../lib/activityFilters'
+import { FormSkeleton } from '../components/Skeleton'
 import { ensureSportsInDatabase } from '../lib/sportCatalog'
 import { openActivity, type SportName } from '../data/sports'
 import { sportIconsByKey } from '../components/sportIcons'
@@ -571,7 +572,7 @@ export function CreateActivityScreen() {
     return (
       <main className="screen create-wizard">
         <p className="eyebrow">Create activity</p>
-        <p className="text-[var(--text-secondary)]">Loading your sports…</p>
+        <FormSkeleton fields={3} label="Loading your sports" />
       </main>
     )
   }

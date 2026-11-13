@@ -5894,3 +5894,7 @@ h1 .skeleton { margin: 4px 0; }
   .patch-celebration-ring,
   .patch-celebration-spark { display: none; }
 }
+
+/* Placeholder text disappears as soon as you tap into a field. */
+input:focus::placeholder,
+textarea:focus::placeholder { color: transparent; }

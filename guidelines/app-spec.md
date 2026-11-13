@@ -187,6 +187,10 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 - Tabs: All, Activities, Friends (dot when a tab has unread chats). All mixes both, newest first.
 - Private chats (Friends tab): 1-on-1, text only, only between friends (accepted friend request). Start one with "Message" on a friend's profile. Not possible when one blocked the other; after unfriending, old messages stay readable but you cannot send. Push notification per message (Chat messages switch).
 - List of activity group chats: sport icon, activity title, last message, time, unread dot.
+- Chat options (⋮, top right of a chat), each with a warning pop-up:
+  - Group chat, host only: Members (with Remove: the member is no longer going, leaves the chat, gets a notification with an optional reason; system message "X was removed by the host"), Close chat / Reopen chat (read-only for everyone), Delete chat for everyone (all messages; the activity stays, a new chat starts when someone joins).
+  - Group chat, everyone: Members, Remove from my chats (comes back with the next message).
+  - Private chat: View profile, Delete chat (for you only; the friend keeps his copy; only newer messages show if the chat comes back).
 - Chat screen: TopBar with activity title and date (tap opens activity detail), ChatBubbles, text input with send icon button. Text only.
 - Saved activity chats use Supabase Realtime. A chat is created when a join request is accepted (including auto-accept); only the host and accepted participants can read or write.
 

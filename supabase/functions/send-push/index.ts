@@ -71,6 +71,7 @@ const notificationTitles: Record<string, string> = {
   staff_message: 'Count Me In team',
   staff_message_reply: 'Reply to your team message',
   staff_message_revoked: 'Count Me In team',
+  removed_from_activity: 'Removed from an activity',
 }
 
 // Where tapping the push opens the app, for types that are not about an activity.
@@ -86,7 +87,8 @@ function urlFor(record: { type: string; activity_id?: string | null; actor_id?: 
 function preferenceFor(type: string): PreferenceKey | null {
   if (type === 'friend_request' || type === 'friend_accepted') return 'friend_requests'
   if (['participant_left', 'invite', 'invite_accepted', 'invite_declined', 'activity_cancelled',
-    'pr_confirmed', 'pr_flagged', 'pr_verified', 'activity_approved', 'activity_rejected'].includes(type)) {
+    'pr_confirmed', 'pr_flagged', 'pr_verified', 'activity_approved', 'activity_rejected',
+    'removed_from_activity'].includes(type)) {
     return 'activity_updates'
   }
   return null

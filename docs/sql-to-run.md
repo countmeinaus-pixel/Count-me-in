@@ -30,6 +30,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 22 | `supabase/migrations/20261113180000_fix_admin_update_profile.sql` | Herstelt het opslaan bij Edit member profile (fout "Unable to save the changes") |
 | 23 | `supabase/migrations/20261113190000_staff_messages.sql` | Waarschuwingen en berichten van het Count Me In team aan een lid, vastgepind in Chats tot hij bevestigt of antwoordt |
 | 24 | `supabase/migrations/20261113200000_revoke_staff_message.sql` | Admins kunnen een waarschuwing of bericht intrekken (Revoke); het lid krijgt een melding |
+| 25 | `supabase/migrations/20261113210000_chat_management.sql` | Chats beheren: host haalt leden uit de activiteit, sluit of verwijdert de groepschat; iedereen kan chats uit zijn lijst halen |
 
 ## Zo doe je het (per bestand)
 

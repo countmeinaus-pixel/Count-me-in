@@ -2028,6 +2028,18 @@ h3 { font: 700 21px/24px var(--font-display); }
 .staff-revoke-button svg { width: 16px; height: 16px; }
 .staff-history-status svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; }
 
+/* Chat options menu (top right of a chat) */
+.chat-menu-wrap { position: relative; margin-left: auto; }
+.chat-menu { right: 0; left: auto; min-width: 220px; }
+.chat-menu .danger { color: var(--danger); }
+.chat-members-dialog { display: grid; gap: 16px; }
+.chat-members-dialog .button svg { width: 16px; height: 16px; margin-right: 4px; }
+.chat-closed-note { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.chat-closed-note svg { width: 16px; height: 16px; }
+.confirm-dialog { display: grid; gap: 16px; }
+.confirm-dialog h2 { margin: 0; }
+.confirm-dialog-body p { margin: 0; color: var(--text-secondary); line-height: 1.5; }
+
 /* Private chat with a friend */
 .direct-chat-avatar { flex: 0 0 auto; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
 .direct-chat-empty { margin: auto; max-width: 280px; color: var(--text-muted); font-size: 14px; text-align: center; }

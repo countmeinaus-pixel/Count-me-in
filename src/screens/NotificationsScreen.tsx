@@ -74,6 +74,7 @@ const titles = {
   staff_message: 'From the Count Me In team',
   staff_message_reply: 'Reply to your team message',
   staff_message_revoked: 'Withdrawn by the Count Me In team',
+  removed_from_activity: 'Removed from an activity',
 } as const
 
 function formatRelativeTime(value: string) {

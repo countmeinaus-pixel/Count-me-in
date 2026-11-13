@@ -10,6 +10,12 @@ export type ChatThread = {
   participants: string[]
   participantPhotos?: Array<string | null>
   activityId?: string
+  // Same order as participants. Used by the host to remove members.
+  participantIds?: string[]
+  hostId?: string
+  viewerIsHost?: boolean
+  // Set when the host closed the chat (read-only for everyone).
+  closedAt?: string | null
 }
 
 export type ChatMessage = {
@@ -199,12 +205,20 @@ export async function getChatThreadsForViewer(): Promise<ChatThread[]> {
   const threadIds = (memberships ?? []).map((membership) => membership.thread_id)
   if (threadIds.length === 0) return []
 
-  const { data: threadRows, error: threadsError } = await supabase
+  // closed_at exists after SQL 25; before that, read the threads without it.
+  type ThreadRow = { id: string; activity_id: string; title: string; organiser_id: string; closed_at?: string | null }
+  let threadResult = await supabase
     .from('activity_chat_threads')
-    .select('id, activity_id, title, organiser_id')
+    .select('id, activity_id, title, organiser_id, closed_at')
     .in('id', threadIds)
-  if (threadsError) throw threadsError
-  const threads = threadRows ?? []
+  if (threadResult.error?.code === '42703') {
+    threadResult = await supabase
+      .from('activity_chat_threads')
+      .select('id, activity_id, title, organiser_id')
+      .in('id', threadIds) as typeof threadResult
+  }
+  if (threadResult.error) throw threadResult.error
+  const threads = (threadResult.data ?? []) as ThreadRow[]
   if (threads.length === 0) return []
 
   const activityIds = [...new Set(threads.map((thread) => thread.activity_id))]
@@ -282,6 +296,10 @@ export async function getChatThreadsForViewer(): Promise<ChatThread[]> {
       unreadCount: unreadByThread.get(thread.id) ?? 0,
       participants: [...new Set(participants)].map((participantId) => nameById.get(participantId) ?? 'Member'),
       participantPhotos: [...new Set(participants)].map((participantId) => photoById.get(participantId) ?? null),
+      participantIds: [...new Set(participants)],
+      hostId: thread.organiser_id,
+      viewerIsHost: thread.organiser_id === userId,
+      closedAt: thread.closed_at ?? null,
       activityId: thread.activity_id,
     }
   }).sort((left, right) => right.lastMessageAt - left.lastMessageAt)

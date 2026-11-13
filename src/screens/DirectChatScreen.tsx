@@ -1,7 +1,9 @@
-import { ArrowLeft, Send } from "lucide-react"
+import { ArrowLeft, MoreVertical, Send } from "lucide-react"
 import { type FormEvent, useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Avatar } from "../components/Avatar"
+import { ConfirmDialog } from "../components/ConfirmDialog"
+import { getChatHides, hideChat, hideKey } from "../lib/chatManagement"
 import type { ChatMessage } from "../lib/chat"
 import {
   canSendDirectMessage,
@@ -26,6 +28,11 @@ export function DirectChatScreen({ embedded = false }: { embedded?: boolean }) {
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState("")
   const messageListRef = useRef<HTMLDivElement | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  // After "Delete chat", only messages sent later are shown to you.
+  const [hiddenAt, setHiddenAt] = useState(0)
+  const visibleMessages = messages.filter((message) => !message.createdAt || Date.parse(message.createdAt) > hiddenAt)
 
   useEffect(() => {
     let active = true
@@ -40,10 +47,12 @@ export function DirectChatScreen({ embedded = false }: { embedded?: boolean }) {
           if (active) setError("This chat is unavailable.")
           return
         }
-        const [loaded, allowed] = await Promise.all([
+        const [loaded, allowed, hides] = await Promise.all([
           getDirectMessages(id, found.friendName, found.friendPhotoUrl),
           canSendDirectMessage(id),
+          getChatHides(),
         ])
+        if (active) setHiddenAt(hides.get(hideKey("direct", id)) ?? 0)
         await markDirectChatRead(id)
         if (active) {
           setChat(found)
@@ -153,15 +162,26 @@ export function DirectChatScreen({ embedded = false }: { embedded?: boolean }) {
           <strong>{chat.friendName}</strong>
           <span>Friend</span>
         </button>
+        <div className="chat-menu-wrap">
+          <button type="button" className="icon-button small" aria-label="Chat options" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
+            <MoreVertical aria-hidden="true" />
+          </button>
+          {menuOpen && (
+            <div className="friend-menu chat-menu" role="menu" onClick={() => setMenuOpen(false)}>
+              <button type="button" role="menuitem" onClick={openProfile}>View profile</button>
+              <button type="button" role="menuitem" className="danger" onClick={() => setConfirmDelete(true)}>Delete chat</button>
+            </div>
+          )}
+        </div>
       </header>
 
       {error && <p className="chat-error" role="alert">{error}</p>}
 
       <div className="chat-messages" ref={messageListRef} aria-live="polite">
-        {messages.length === 0 && (
+        {visibleMessages.length === 0 && (
           <p className="direct-chat-empty">Say g’day to {chat.friendName}. Only the two of you can see this chat.</p>
         )}
-        {messages.map((message) => {
+        {visibleMessages.map((message) => {
           const bubble = (
             <div key={message.id} className={`chat-bubble ${message.mine ? "mine" : ""}`}>
               <p>{message.text}</p>
@@ -196,6 +216,21 @@ export function DirectChatScreen({ embedded = false }: { embedded?: boolean }) {
         <p className="direct-chat-readonly" role="note">
           You can only message friends. Add {chat.friendName} as a friend again to keep chatting.
         </p>
+      )}
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete this chat?"
+          confirmLabel="Delete chat"
+          destructive
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={async () => {
+            await hideChat("direct", chat.id)
+            setConfirmDelete(false)
+            navigate("/chats")
+          }}
+        >
+          <p>The messages are deleted for you. {chat.friendName} keeps his copy. If one of you sends a new message, the chat comes back with only the new messages.</p>
+        </ConfirmDialog>
       )}
     </main>
   )

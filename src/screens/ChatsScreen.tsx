@@ -5,6 +5,7 @@ import { Button } from "../components/Button"
 import { SportIcon } from "../components/SportIcon"
 import { getChatThreadsForViewer, type ChatThread } from "../lib/chat"
 import { directChatPath, getDirectChatsForViewer, type DirectChat } from "../lib/directChats"
+import { getChatHides, hideKey } from "../lib/chatManagement"
 import { useMediaQuery, wideChatLayoutQuery } from "../lib/useMediaQuery"
 import { ChatThreadScreen } from "./ChatThreadScreen"
 import { DirectChatScreen } from "./DirectChatScreen"
@@ -111,14 +112,17 @@ export function ChatsScreen() {
     let active = true
     async function loadThreads() {
       try {
-        const [groupChats, privateChats, teamMessages] = await Promise.all([
+        const [groupChats, privateChats, teamMessages, hides] = await Promise.all([
           getChatThreadsForViewer(),
           getDirectChatsForViewer(),
           getMyStaffMessages().catch(() => []),
+          getChatHides(),
         ])
+        // Chats you removed from your list stay away until there is a newer message.
+        const isVisible = (key: string, lastMessageAt: number) => lastMessageAt > (hides.get(key) ?? 0)
         if (active) {
-          setThreads(groupChats)
-          setDirectChats(privateChats)
+          setThreads(groupChats.filter((chat) => isVisible(hideKey("activity", chat.id), chat.lastMessageAt)))
+          setDirectChats(privateChats.filter((chat) => isVisible(hideKey("direct", chat.id), chat.lastMessageAt)))
           setStaffMessages(teamMessages)
         }
       } catch (loadError) {

@@ -1123,6 +1123,8 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 
 .activity-card-join-status {
+  justify-self: start; /* only as wide as its text */
+  gap: 4px;
   display: inline-flex;
   align-items: center;
   min-height: 24px;
@@ -1136,7 +1138,8 @@ h3 { font: 700 21px/24px var(--font-display); }
   color: var(--accent);
 }
 .activity-card-join-status.accepted,
-.activity-card-join-status.hosting {
+.activity-card-join-status.hosting,
+.activity-card-join-status.confirmed {
   background: var(--seafoam-subtle);
   color: var(--seafoam);
 }
@@ -5898,3 +5901,6 @@ h1 .skeleton { margin: 4px 0; }
 /* Placeholder text disappears as soon as you tap into a field. */
 input:focus::placeholder,
 textarea:focus::placeholder { color: transparent; }
+
+.activity-card-join-status svg { width: 14px; height: 14px; }
+.activity-card-join-status.confirmed { background: var(--seafoam); color: var(--on-seafoam); font-weight: 600; }

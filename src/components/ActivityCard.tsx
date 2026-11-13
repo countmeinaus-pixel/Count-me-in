@@ -1,4 +1,4 @@
-import { Fish, Footprints, MapPin, Mountain, Waves, Bike, Dumbbell } from 'lucide-react'
+import { Check, Fish, Footprints, MapPin, Mountain, Waves, Bike, Dumbbell } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { formatActivityDate, getActivitySpotsLabel, type Activity } from '../data/mockData'
 
@@ -6,6 +6,7 @@ export type ActivityCardData = Omit<Activity, 'id'> & {
   id: number | string
   joinStatus?: 'pending' | 'accepted'
   viewerIsHost?: boolean // your own activity: shows "Hosting"
+  viewerConfirmed?: boolean // checked in with a QR scan: shows "Confirmed"
 }
 
 export function ActivityCard({ activity, onClick }: { activity: ActivityCardData; onClick: () => void }) {
@@ -33,7 +34,9 @@ export function ActivityCard({ activity, onClick }: { activity: ActivityCardData
       </div>
 
       <h3>{activity.title}</h3>
-      {activity.viewerIsHost ? (
+      {activity.viewerConfirmed ? (
+        <span className="activity-card-join-status confirmed"><Check aria-hidden="true" />Confirmed</span>
+      ) : activity.viewerIsHost ? (
         <span className="activity-card-join-status hosting">Hosting</span>
       ) : activity.joinStatus && (
         <span className={`activity-card-join-status ${activity.joinStatus}`}>

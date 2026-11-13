@@ -39,6 +39,8 @@ export type FeedActivity = Omit<Activity, "id"> & {
   viewerJoinStatus: "pending" | "accepted" | null
   // You posted this activity yourself.
   viewerIsHost: boolean
+  // You checked in with a QR scan.
+  viewerConfirmed: boolean
 }
 
 function requireSupabase() {
@@ -213,7 +215,7 @@ async function toFeedActivities(
   const activityIds = rows.map((activity) => activity.id)
   const profileIds = [...new Set(rows.map((activity) => activity.host_id))]
   const sportIds = [...new Set(rows.map((activity) => activity.sport_id))]
-  const [requestsResult, profilesResult, sportsResult, pinsResult] = await Promise.all([
+  const [requestsResult, profilesResult, sportsResult, pinsResult, confirmationsResult] = await Promise.all([
     viewerId
       ? client
           .from("activity_join_requests")
@@ -225,7 +227,19 @@ async function toFeedActivities(
     client.from("sports").select("id, name").in("id", sportIds),
     // Separate query so the feed still loads before the map pin columns exist.
     client.from("activities").select("id, latitude, longitude").in("id", activityIds),
+    // Activities you already confirmed with a QR check-in.
+    viewerId
+      ? client
+          .from("activity_meetup_confirmations")
+          .select("activity_id")
+          .eq("user_id", viewerId)
+          .in("activity_id", activityIds)
+      : Promise.resolve({ data: [], error: null }),
   ])
+  // Not fatal: without it the card just says Going instead of Confirmed.
+  const confirmedIds = new Set(
+    (confirmationsResult.error ? [] : confirmationsResult.data ?? []).map((row) => row.activity_id as string),
+  )
   if (requestsResult.error) throw requestsResult.error
   if (pinsResult.error && !isMissingLocationColumns(pinsResult.error)) throw pinsResult.error
   const pinsById = new Map(
@@ -313,6 +327,7 @@ async function toFeedActivities(
           ...acceptedProfiles.map((profile) => profile.photo_url),
         ],
         viewerIsHost: viewerId !== null && activity.host_id === viewerId,
+        viewerConfirmed: confirmedIds.has(activity.id),
         viewerJoinStatus:
           viewerRequest?.status === "pending" ||
           viewerRequest?.status === "accepted"

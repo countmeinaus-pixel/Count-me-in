@@ -59,23 +59,15 @@ export function LocationControls({
 
   return (
     <div className="location-controls">
-      <button type="button" className="button button-secondary button-md location-current" onClick={() => void useCurrentLocation()} disabled={isLocating}>
-        <LocateFixed aria-hidden="true" /> {isLocating ? 'Finding you…' : 'Use my current location'}
-      </button>
-      <label className="location-share">
-        <input type="checkbox" checked={share} onChange={(event) => setShare(event.target.checked)} />
-        <span>Also share my approximate location (about 1 km) so mates see how far away I am</span>
-      </label>
-
       <div className="location-explore">
-        <h4>Explore other areas</h4>
-        <p>See activities and mates around another suburb, town or city.</p>
+        <h4>Search an area</h4>
+        <p>See activities and mates around any suburb, town or city.</p>
       </div>
       <label className="location-field">
         <SuburbInput
           variant="search"
           value={suburbText}
-          ariaLabel="Explore other areas: suburb, town or city"
+          ariaLabel="Search an area: suburb, town or city"
           placeholder="Search a suburb, town or city"
           onChange={(text) => {
             setSuburbText(text)
@@ -95,7 +87,16 @@ export function LocationControls({
         />
       </label>
 
-      <label className="location-field">
+      <p className="location-or" aria-hidden="true"><span>or</span></p>
+      <button type="button" className="button button-secondary button-md location-current" onClick={() => void useCurrentLocation()} disabled={isLocating}>
+        <LocateFixed aria-hidden="true" /> {isLocating ? 'Finding you…' : 'Use my current location'}
+      </button>
+      <label className="location-share">
+        <input type="checkbox" checked={share} onChange={(event) => setShare(event.target.checked)} />
+        <span>Also share my approximate location (about 1 km) so mates see how far away I am</span>
+      </label>
+
+      <label className="location-field location-distance">
         <span>Distance: <strong>{radius === null ? 'No limit' : `${radius} km`}</strong></span>
         <input
           type="range"

@@ -5315,7 +5315,18 @@ h1 .skeleton { margin: 4px 0; }
 .location-range-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
 .location-hint { color: var(--text-muted); font-size: 13px; }
 
-.location-explore { display: grid; gap: 4px; margin-top: 6px; padding-top: 18px; border-top: 1px solid var(--border); }
+.location-explore { display: grid; gap: 4px; }
+.location-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.location-or::before,
+.location-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.location-distance { margin-top: 6px; padding-top: 18px; border-top: 1px solid var(--border); }
 .location-explore h4 {
   margin: 0;
   color: var(--text-secondary);

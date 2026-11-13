@@ -175,6 +175,7 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 ### Admin: warnings and team messages
 - Admins only. On someone's profile: menu > "Warning or message (admin)". Choose Warning or Message, start from a template (Respect, No-shows, Spam or selling, Profile) or write your own (max 1000 characters).
 - The member sees it from "Count Me In team" (never the admin's name), pinned at the top of Chats (all tabs, red for a warning, "Action needed") until he taps "I understand and will follow the community guidelines" (or "Got it") or replies once. He also gets a notification and push.
+- Admins can Revoke a warning/message sent by mistake (optional reason): it disappears from the member's Chats, he gets a "withdrawn" notification, and the history shows it as Revoked (who, when, why).
 - When he replies, the admin who sent it gets a notification. The admin screen shows every earlier warning/message for that member with its status (waiting, confirmed, replied) and the reply.
 
 ### Chats

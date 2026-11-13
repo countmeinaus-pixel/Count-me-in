@@ -73,6 +73,7 @@ const titles = {
   profile_updated: 'Profile updated',
   staff_message: 'From the Count Me In team',
   staff_message_reply: 'Reply to your team message',
+  staff_message_revoked: 'Withdrawn by the Count Me In team',
 } as const
 
 function formatRelativeTime(value: string) {
@@ -112,7 +113,7 @@ export function NotificationsScreen() {
           title: item.type === 'participant_left' && item.actorName ? `${item.actorName} can’t make it` : item.type === 'staff_message_reply' && item.actorName ? `${item.actorName} replied` : titles[item.type],
           message: item.message ? `${item.body} “${item.message}”` : item.body,
           time: formatRelativeTime(item.createdAt),
-          href: item.type === 'staff_message'
+          href: item.type === 'staff_message' || item.type === 'staff_message_revoked'
             ? '/chats'
             : item.type === 'staff_message_reply' && item.actorId
             ? `/more/moderation/members/${item.actorId}/message`

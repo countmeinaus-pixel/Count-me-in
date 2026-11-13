@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2, Clock3, MessageSquareReply, Send, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Ban, CheckCircle2, Clock3, MessageSquareReply, Send, ShieldAlert, ShieldCheck, Undo2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
@@ -6,6 +6,7 @@ import { adminGetProfile, getCurrentModerationRole, type AdminProfile } from '..
 import { getProfilePath } from '../lib/profile'
 import {
   getStaffMessagesForMember,
+  revokeStaffMessage,
   sendStaffMessage,
   type SentStaffMessage,
   type StaffMessageKind,
@@ -53,6 +54,9 @@ export function SendStaffMessageScreen() {
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [revokingId, setRevokingId] = useState<string | null>(null)
+  const [revokeReason, setRevokeReason] = useState('')
+  const [isRevoking, setIsRevoking] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -93,6 +97,24 @@ export function SendStaffMessageScreen() {
       setError(sendError instanceof Error ? sendError.message : 'Unable to send.')
     } finally {
       setIsSending(false)
+    }
+  }
+
+  async function revoke(messageId: string) {
+    if (!member) return
+    setIsRevoking(true)
+    setError('')
+    setNotice('')
+    try {
+      await revokeStaffMessage(messageId, revokeReason.trim())
+      setRevokingId(null)
+      setRevokeReason('')
+      setNotice(`Revoked. It’s gone from ${member.firstName}’s chats and he has been told it was withdrawn.`)
+      setHistory(await getStaffMessagesForMember(member.id))
+    } catch (revokeError) {
+      setError(revokeError instanceof Error ? revokeError.message : 'Unable to revoke.')
+    } finally {
+      setIsRevoking(false)
     }
   }
 
@@ -179,18 +201,49 @@ export function SendStaffMessageScreen() {
       ) : (
         <div className="staff-history">
           {history.map((item) => (
-            <article key={item.id} className={`staff-history-item ${item.kind === 'warning' ? 'warning' : ''}`}>
+            <article key={item.id} className={`staff-history-item ${item.kind === 'warning' ? 'warning' : ''} ${item.revokedAt ? 'revoked' : ''}`}>
               <header>
                 <strong>{item.kind === 'warning' ? 'Warning' : 'Message'}</strong>
                 <small>{formatDate(item.createdAt)} · by {item.senderName}</small>
               </header>
               <p>{item.body}</p>
-              {item.reply ? (
+              {item.revokedAt ? (
+                <p className="staff-history-status revoked">
+                  <Ban aria-hidden="true" /> Revoked {formatDate(item.revokedAt)} by {item.revokedByName}{item.revokeReason ? `: “${item.revokeReason}”` : ''}
+                </p>
+              ) : item.reply ? (
                 <p className="staff-history-status"><MessageSquareReply aria-hidden="true" /> Replied {formatDate(item.repliedAt)}: “{item.reply}”</p>
               ) : item.acknowledgedAt ? (
                 <p className="staff-history-status"><CheckCircle2 aria-hidden="true" /> Confirmed {formatDate(item.acknowledgedAt)}</p>
               ) : (
                 <p className="staff-history-status pending"><Clock3 aria-hidden="true" /> Waiting for {member.firstName}</p>
+              )}
+              {!item.revokedAt && (
+                revokingId === item.id ? (
+                  <div className="staff-revoke">
+                    <label className="edit-field">
+                      <span>Why are you revoking it? <small>Optional · shown to {member.firstName} · {revokeReason.length}/280</small></span>
+                      <input
+                        value={revokeReason}
+                        maxLength={280}
+                        placeholder="For example: Sent to the wrong member, sorry."
+                        onChange={(event) => setRevokeReason(event.target.value)}
+                      />
+                    </label>
+                    <div className="photo-crop-actions">
+                      <button type="button" className="button button-secondary button-sm" disabled={isRevoking} onClick={() => { setRevokingId(null); setRevokeReason('') }}>
+                        Keep it
+                      </button>
+                      <button type="button" className="button button-destructive button-sm" disabled={isRevoking} onClick={() => void revoke(item.id)}>
+                        {isRevoking ? 'Revoking…' : `Revoke ${item.kind}`}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" className="text-action staff-revoke-button" onClick={() => { setRevokingId(item.id); setRevokeReason('') }}>
+                    <Undo2 aria-hidden="true" /> Revoke
+                  </button>
+                )
               )}
             </article>
           ))}

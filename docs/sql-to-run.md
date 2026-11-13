@@ -29,6 +29,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 21 | `supabase/migrations/20261113170000_admin_profile_photo.sql` | Admins kunnen ook een nieuwe profielfoto voor een lid uploaden (Choose photo / Take photo) |
 | 22 | `supabase/migrations/20261113180000_fix_admin_update_profile.sql` | Herstelt het opslaan bij Edit member profile (fout "Unable to save the changes") |
 | 23 | `supabase/migrations/20261113190000_staff_messages.sql` | Waarschuwingen en berichten van het Count Me In team aan een lid, vastgepind in Chats tot hij bevestigt of antwoordt |
+| 24 | `supabase/migrations/20261113200000_revoke_staff_message.sql` | Admins kunnen een waarschuwing of bericht intrekken (Revoke); het lid krijgt een melding |
 
 ## Zo doe je het (per bestand)
 

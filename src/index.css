@@ -2018,6 +2018,12 @@ h3 { font: 700 21px/24px var(--font-display); }
 .staff-history-item > p { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.45; white-space: pre-wrap; }
 .staff-history-status { display: flex; align-items: flex-start; gap: 6px; margin-top: 10px !important; color: var(--success) !important; }
 .staff-history-status.pending { color: var(--accent) !important; }
+.staff-history-status.revoked { color: var(--text-muted) !important; }
+.staff-history-item.revoked { border-left-color: var(--border-strong); opacity: 0.75; }
+.staff-history-item.revoked > p:not(.staff-history-status) { text-decoration: line-through; }
+.staff-revoke { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.staff-revoke-button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 4px; color: var(--danger); }
+.staff-revoke-button svg { width: 16px; height: 16px; }
 .staff-history-status svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; }
 
 /* Private chat with a friend */

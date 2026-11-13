@@ -15,18 +15,23 @@ export type StaffMessage = {
   repliedAt: string | null
 }
 
-// For admins: the same plus who sent it.
-export type SentStaffMessage = StaffMessage & { senderName: string }
+// For admins: the same plus who sent it, and whether (and why) it was revoked.
+export type SentStaffMessage = StaffMessage & {
+  senderName: string
+  revokedAt: string | null
+  revokedByName: string | null
+  revokeReason: string
+}
 
 export const staffMessagePath = (id: string) => `/chats/team/${id}`
 
 // Still needs the member's attention: pinned at the top of Chats.
 export const isOpenStaffMessage = (message: StaffMessage) => !message.acknowledgedAt && !message.reply
 
-const needsUpdate = 'Team messages need a database update (SQL 23 in docs/sql-to-run.md).'
+const needsUpdate = 'Team messages need a database update (SQL 23 and 24 in docs/sql-to-run.md).'
 
 function errorMessage(error: { code?: string; message?: string }) {
-  return error.code === 'PGRST202' || error.code === '42P01' || error.code === 'PGRST205' ? needsUpdate : error.message ?? 'Something went wrong.'
+  return error.code === 'PGRST202' || error.code === '42P01' || error.code === 'PGRST205' || error.code === '42703' ? needsUpdate : error.message ?? 'Something went wrong.'
 }
 
 function fromRow(row: Record<string, string | null>): StaffMessage {
@@ -88,15 +93,31 @@ export async function getStaffMessagesForMember(userId: string): Promise<SentSta
   if (!supabase) throw new Error('Supabase is not configured yet.')
   const { data, error } = await supabase
     .from('staff_messages')
-    .select('id, kind, body, created_at, acknowledged_at, reply, replied_at, sender_id')
+    .select('id, kind, body, created_at, acknowledged_at, reply, replied_at, sender_id, revoked_at, revoked_by, revoke_reason')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw new Error(errorMessage(error))
   const rows = (data ?? []) as Array<Record<string, string | null>>
-  const senderIds = [...new Set(rows.map((row) => row.sender_id).filter((id): id is string => Boolean(id)))]
+  const senderIds = [...new Set(rows.flatMap((row) => [row.sender_id, row.revoked_by]).filter((id): id is string => Boolean(id)))]
   const { data: senders } = senderIds.length
     ? await supabase.from('profiles').select('id, first_name').in('id', senderIds)
     : { data: [] }
   const nameById = new Map((senders ?? []).map((sender) => [sender.id, sender.first_name as string]))
-  return rows.map((row) => ({ ...fromRow(row), senderName: (row.sender_id && nameById.get(row.sender_id)) || 'Admin' }))
+  return rows.map((row) => ({
+    ...fromRow(row),
+    senderName: (row.sender_id && nameById.get(row.sender_id)) || 'Admin',
+    revokedAt: row.revoked_at ?? null,
+    revokedByName: row.revoked_by ? nameById.get(row.revoked_by) ?? 'Admin' : null,
+    revokeReason: row.revoke_reason ?? '',
+  }))
+}
+
+// Admin: withdraw a warning or message sent by mistake. The member is notified.
+export async function revokeStaffMessage(id: string, reason: string) {
+  if (!supabase) throw new Error('Supabase is not configured yet.')
+  const { error } = await supabase.rpc('revoke_staff_message', { target_message_id: id, reason })
+  if (error) {
+    if (error.code === 'PGRST202') throw new Error('Revoking needs a database update (SQL 24 in docs/sql-to-run.md).')
+    throw new Error(error.message)
+  }
 }

@@ -38,6 +38,7 @@ import {
   saveDemoJoinRequest,
 } from "../lib/demoParticipation"
 import { getSavedActivity, type SavedActivityDetails } from "../lib/activities"
+import { ShareActivityPanel } from "../components/ShareActivityPanel"
 import { reviewActivity } from "../lib/activityReview"
 import {
   confirmSavedActivityMeetup,
@@ -101,6 +102,7 @@ export function ActivityDetailScreen() {
   const [leaveOpen, setLeaveOpen] = useState(false)
   const [leaveMessage, setLeaveMessage] = useState("")
   const [shareFeedback, setShareFeedback] = useState("")
+  const [sharePanelOpen, setSharePanelOpen] = useState(false)
   const [confirmed, setConfirmed] = useState(() =>
     mockActivity
       ? hasConfirmedMeetupForUser(currentUser.name, mockActivity.id)
@@ -738,11 +740,19 @@ export function ActivityDetailScreen() {
           className="icon-button hero-share"
           aria-label="Share"
           type="button"
-          onClick={() => void handleShareActivity()}
+          onClick={() => setSharePanelOpen(true)}
         >
           <Share2 />
         </button>
       </section>
+      {sharePanelOpen && (
+        <ShareActivityPanel
+          activityId={id ?? ""}
+          activityTitle={activity.title}
+          onShareOutside={() => void handleShareActivity()}
+          onClose={() => setSharePanelOpen(false)}
+        />
+      )}
 
       <section className="detail-content">
         <p className="eyebrow">{activity.sport}</p>

@@ -1,4 +1,5 @@
 import { ArrowLeft, MoreVertical, Send } from "lucide-react"
+import { ChatMessageBody } from '../components/ChatActivityCard'
 import { type FormEvent, useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Avatar } from "../components/Avatar"
@@ -184,7 +185,7 @@ export function DirectChatScreen({ embedded = false }: { embedded?: boolean }) {
         {visibleMessages.map((message) => {
           const bubble = (
             <div key={message.id} className={`chat-bubble ${message.mine ? "mine" : ""}`}>
-              <p>{message.text}</p>
+              <ChatMessageBody text={message.text} />
               <time>{message.time}</time>
             </div>
           )

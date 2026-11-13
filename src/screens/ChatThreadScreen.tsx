@@ -1,4 +1,5 @@
 import { ArrowLeft, Lock, MoreVertical, Send, UserMinus } from "lucide-react"
+import { ChatMessageBody } from '../components/ChatActivityCard'
 import { type FormEvent, useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Avatar } from "../components/Avatar"
@@ -271,7 +272,7 @@ export function ChatThreadScreen({ embedded = false }: { embedded?: boolean }) {
               className={`chat-bubble ${message.mine ? "mine" : message.type === "system" ? "system" : ""}`}
             >
               {!message.mine && message.type !== "system" && <small>{message.sender}</small>}
-              <p>{message.text}</p>
+              <ChatMessageBody text={message.text} />
               <time>{message.time}</time>
             </div>
           )

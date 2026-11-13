@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { previewWithActivityLinks } from "../lib/activityLinks"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { Avatar } from "../components/Avatar"
 import { Button } from "../components/Button"
@@ -224,7 +225,7 @@ export function ChatsScreen() {
                 <strong className={chat.unreadCount > 0 ? "unread" : ""}>
                   {chat.title}
                 </strong>
-                <p>{chat.preview}</p>
+                <p>{previewWithActivityLinks(chat.preview)}</p>
               </div>
               <div className="chat-meta">
                 <time dateTime={chat.lastMessageAt ? new Date(chat.lastMessageAt).toISOString() : undefined}>

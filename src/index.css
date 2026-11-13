@@ -5904,3 +5904,18 @@ textarea:focus::placeholder { color: transparent; }
 
 .activity-card-join-status svg { width: 14px; height: 14px; }
 .activity-card-join-status.confirmed { background: var(--seafoam); color: var(--on-seafoam); font-weight: 600; }
+
+/* Home: Latest patches slider. */
+.latest-patches { display: grid; gap: 14px; margin-top: 32px; }
+.latest-patches-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 170px);
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.latest-patches-track::-webkit-scrollbar { display: none; }
+.latest-patch-card { scroll-snap-align: start; background: var(--seafoam-subtle); }

@@ -18,6 +18,7 @@ import {
 } from "../lib/personalRecords"
 import { MateCard } from "../components/MateCard"
 import { FriendButton } from "../components/FriendButton"
+import { FriendChatButton } from "../components/FriendChatButton"
 import { friendsChangedEvent, getFriendsOf, removeFriend } from "../lib/friendships"
 import { PatchIcon } from "../components/PatchIcon"
 import { ReportDialog } from "../components/ReportDialog"
@@ -490,6 +491,8 @@ export function ProfileScreen() {
           )}
 
           {!isCurrentUser && (
+            <div className="profile-top-actions">
+            {profileId && <FriendChatButton profileId={profileId} name={profile.name} />}
             <div
               className="friend-menu-wrap profile-more-wrap"
               onClick={(event) => event.stopPropagation()}
@@ -519,6 +522,7 @@ export function ProfileScreen() {
                   </button>
                 </div>
               )}
+            </div>
             </div>
           )}
         </div>

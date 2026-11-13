@@ -3537,6 +3537,11 @@ h3 { font: 700 21px/24px var(--font-display); }
 .profile-more-wrap {
   position: relative;
 }
+.profile-top-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.profile-chat-button { color: var(--seafoam); cursor: pointer; }
+/* Same size as the back button, so the top row lines up. */
+.profile-top-actions .friend-menu-button { width: 44px; height: 44px; border-radius: var(--radius-md); }
+.profile-chat-button:hover { border-color: var(--border-strong); }
 
 .empty-state-card {
   display: grid;

@@ -1,4 +1,5 @@
 import { activities, demoConfirmedMeetups } from '../data/mockData'
+import { announceNewPatches } from './patchCelebration'
 import { getFriendDatesFor } from './friendships'
 import { activityState } from './regions'
 import { loadLocalities } from './localities'
@@ -84,7 +85,14 @@ export function getConfirmedMeetupsForUser(user: string): ConfirmedMeetup[] {
   })
 }
 
+// Loads your confirmed meetups, then celebrates any patch you just earned.
 export async function loadSavedMeetupsForUser(userName?: string): Promise<string | undefined> {
+  const currentUserName = await loadSavedMeetups(userName)
+  if (currentUserName) announceNewPatches(currentUserName, getPatchProgressForUser(currentUserName))
+  return currentUserName
+}
+
+async function loadSavedMeetups(userName?: string): Promise<string | undefined> {
   if (!supabase) return undefined
   if (userName) savedMeetupsByUser.set(userName, [])
 

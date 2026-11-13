@@ -1,3 +1,4 @@
+import { PatchCelebration } from "./components/PatchCelebration"
 import {
   createBrowserRouter,
   Navigate,
@@ -207,6 +208,7 @@ function AppShell() {
           onToggleCollapsed={toggleSideNav}
         />
       )}
+      <PatchCelebration />
       {tourOpen && (
         <AppTour
           steps={appTourSteps}

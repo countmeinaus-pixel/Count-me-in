@@ -70,6 +70,7 @@ const titles = {
   activity_rejected: 'Activity not approved',
   sport_suggested: 'New sport suggested',
   role_changed: 'Your role changed',
+  profile_updated: 'Profile updated',
 } as const
 
 function formatRelativeTime(value: string) {

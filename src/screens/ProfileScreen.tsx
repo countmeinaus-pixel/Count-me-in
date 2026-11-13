@@ -53,6 +53,7 @@ import { addBlockedUser, getBlockedUsers } from "../lib/localPreferences"
 import {
   blockProfile,
   getBlockedProfiles,
+  getCurrentModerationRole,
   resolveProfileIdByName,
 } from "../lib/moderation"
 import { getMoreOrigin } from "../lib/moreNavigation"
@@ -86,6 +87,15 @@ export function ProfileScreen() {
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [openFriendMenu, setOpenFriendMenu] = useState<string | null>(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  // Admins get "Edit profile (admin)" in the menu on someone else's profile.
+  const [viewerIsAdmin, setViewerIsAdmin] = useState(false)
+  useEffect(() => {
+    let active = true
+    getCurrentModerationRole()
+      .then((role) => { if (active) setViewerIsAdmin(role === 'admin') })
+      .catch(() => { if (active) setViewerIsAdmin(false) })
+    return () => { active = false }
+  }, [])
   const [reportTarget, setReportTarget] = useState<{
     id: string
     label: string
@@ -520,6 +530,14 @@ export function ProfileScreen() {
                   >
                     Block
                   </button>
+                  {viewerIsAdmin && profileId && (
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/more/moderation/members/${profileId}/edit`)}
+                    >
+                      Edit profile (admin)
+                    </button>
+                  )}
                 </div>
               )}
             </div>

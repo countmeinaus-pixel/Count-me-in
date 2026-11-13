@@ -245,3 +245,60 @@ export async function setMemberRole(userId: string, role: "user" | "moderator") 
   const { error } = await client.rpc("set_member_role", { target_user_id: userId, new_role: role })
   if (error) throw error
 }
+
+// Admin only: a member's profile as filled in, to fix it for them.
+export type AdminProfile = {
+  id: string
+  email: string
+  firstName: string
+  dateOfBirth: string
+  suburb: string
+  bio: string
+  photoUrl: string | null
+}
+
+export async function adminGetProfile(userId: string): Promise<AdminProfile | null> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc("admin_get_profile", { target_user_id: userId })
+  if (error) {
+    if (error.code === "PGRST202") throw new Error("Editing member profiles needs a database update (SQL 20 in docs/sql-to-run.md).")
+    throw error
+  }
+  const row = (data as Array<Record<string, string | null>> | null)?.[0]
+  if (!row) return null
+  return {
+    id: String(row.id),
+    email: row.email ?? "",
+    firstName: row.first_name ?? "",
+    dateOfBirth: row.date_of_birth ?? "",
+    suburb: row.suburb ?? "",
+    bio: row.bio ?? "",
+    photoUrl: row.photo_url,
+  }
+}
+
+// Saves the changes and sends the member a notification saying what changed.
+export async function adminUpdateProfile(input: {
+  userId: string
+  firstName: string
+  dateOfBirth: string
+  suburb: string
+  bio: string
+  removePhoto: boolean
+  note: string
+}) {
+  const client = requireSupabase()
+  const { error } = await client.rpc("admin_update_profile", {
+    target_user_id: input.userId,
+    new_first_name: input.firstName,
+    new_date_of_birth: input.dateOfBirth,
+    new_suburb: input.suburb,
+    new_bio: input.bio,
+    remove_photo: input.removePhoto,
+    note: input.note,
+  })
+  if (error) {
+    if (error.code === "PGRST202") throw new Error("Editing member profiles needs a database update (SQL 20 in docs/sql-to-run.md).")
+    throw error
+  }
+}

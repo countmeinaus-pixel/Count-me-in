@@ -2184,6 +2184,27 @@ h3 { font: 700 21px/24px var(--font-display); }
 }
 .report-dialog h2 { margin-bottom: 8px; }
 
+/* Admin: edit a member's profile */
+.admin-edit-notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--seafoam-subtle);
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.admin-edit-notice svg { flex: 0 0 auto; width: 20px; height: 20px; color: var(--seafoam); }
+.admin-edit-notice strong { color: var(--text-primary); }
+.admin-edit-photo { display: grid; justify-items: center; gap: 12px; margin-bottom: 20px; }
+.admin-edit-check { display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--text-secondary); font-size: 14px; }
+.admin-edit-check input { width: 20px; height: 20px; accent-color: var(--danger); }
+.admin-edit-saved { color: var(--success); font-size: 14px; }
+
 /* Move and zoom a profile photo before saving (PhotoCropDialog) */
 .photo-crop-dialog { display: grid; gap: 16px; }
 .photo-crop-dialog > p { margin: -8px 0 0; }

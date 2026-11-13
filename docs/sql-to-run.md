@@ -25,6 +25,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 17 | `supabase/migrations/20261113090000_place_time_zones.sql` | Inchecken op de dag zelf en de tijd in het annuleerbericht gebruiken de tijdzone van de plek (Perth, Brisbane…) in plaats van altijd Adelaide |
 | 18 | `supabase/migrations/20261113120000_direct_chats.sql` | Privéchats tussen vrienden (1-op-1): tabellen, wie mag lezen/sturen, live-updates. Daarna ook de 4e webhook `push-direct` maken (zie onder) |
 | 19 | `supabase/migrations/20261113140000_avatar_size_limit.sql` | Profielfoto's max. 3 MB per bestand in de opslag (was 5 MB) |
+| 20 | `supabase/migrations/20261113160000_admin_edit_profile.sql` | Admins kunnen het profiel van een lid aanpassen (username, geboortedatum, locatie, bio, foto weghalen); het lid krijgt een melding |
 
 ## Zo doe je het (per bestand)
 
@@ -53,3 +54,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 15:** ga naar **More** > **Notification settings** en zet **Push notifications on this device** aan. Je krijgt geen melding "This needs a database update".
 - **Na 17:** plak in de SQL Editor `select public.place_time_zone('Cottesloe, WA');` en klik op **Run**. Je ziet `Australia/Perth`.
 - **Na 18:** open het profiel van een vriend en tik op **Message**. Er opent een chat zonder foutmelding.
+- **Na 20:** open als admin het profiel van een lid, tik rechtsboven op het menu en kies **Edit profile (admin)**. Het formulier laadt zonder foutmelding.

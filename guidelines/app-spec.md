@@ -167,6 +167,11 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 - Invitation: "[name] invited you to [activity]." with "Not this time" and "Count me in" buttons while the invitation is open.
 - Host notifications: a participant can't make it (with their optional message), an invitation was accepted or declined.
 
+### Admin: edit a member's profile
+- Admins only. On someone's profile: menu (top right) > "Edit profile (admin)".
+- Can change username, date of birth (18+), location and bio, and remove the photo. Optional note to the member.
+- The member always gets a "Profile updated" notification listing what changed (plus the note). Sports, PRs and email stay with the member.
+
 ### Chats
 - Tabs: All, Activities, Friends (dot when a tab has unread chats). All mixes both, newest first.
 - Private chats (Friends tab): 1-on-1, text only, only between friends (accepted friend request). Start one with "Message" on a friend's profile. Not possible when one blocked the other; after unfriending, old messages stay readable but you cannot send. Push notification per message (Chat messages switch).

@@ -453,7 +453,7 @@ export function HomeScreen() {
                   />
                 ))}
               </div>
-              <Button variant="secondary" className="view-all-activities" onClick={() => navigate('/more/activities')}>
+              <Button className="view-all-activities" onClick={() => navigate('/more/activities')}>
                 View all activities
               </Button>
             </>

@@ -141,7 +141,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
             </div>
           )}
           </div>
-          <Button variant="secondary" className="view-all-activities" onClick={() => navigate('/more/crew')}>
+          <Button className="view-all-activities" onClick={() => navigate('/more/crew')}>
             Find new crew
           </Button>
         </div>

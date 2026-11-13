@@ -93,7 +93,7 @@ export default function ActivityMap({ activities, onOpenActivity, home = null }:
     const markers = pinned.map((activity) => {
       const element = document.createElement('button')
       element.type = 'button'
-      element.className = `activity-marker${activity.joinStatus === 'accepted' ? ' going' : ''}`
+      element.className = `activity-marker${activity.joinStatus === 'accepted' || activity.viewerIsHost ? ' going' : ''}`
       element.setAttribute('aria-label', `${activity.sport}: ${activity.title}`)
       element.dataset.activityIds = String(activity.id)
       element.addEventListener('click', (event) => {

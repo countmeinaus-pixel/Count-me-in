@@ -37,6 +37,8 @@ export type MySavedActivity = Omit<Activity, "id"> & {
 export type FeedActivity = Omit<Activity, "id"> & {
   id: string
   viewerJoinStatus: "pending" | "accepted" | null
+  // You posted this activity yourself.
+  viewerIsHost: boolean
 }
 
 function requireSupabase() {
@@ -310,6 +312,7 @@ async function toFeedActivities(
           hostProfile?.photo_url ?? null,
           ...acceptedProfiles.map((profile) => profile.photo_url),
         ],
+        viewerIsHost: viewerId !== null && activity.host_id === viewerId,
         viewerJoinStatus:
           viewerRequest?.status === "pending" ||
           viewerRequest?.status === "accepted"

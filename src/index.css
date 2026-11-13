@@ -1135,7 +1135,8 @@ h3 { font: 700 21px/24px var(--font-display); }
   background: var(--accent-subtle);
   color: var(--accent);
 }
-.activity-card-join-status.accepted {
+.activity-card-join-status.accepted,
+.activity-card-join-status.hosting {
   background: var(--seafoam-subtle);
   color: var(--seafoam);
 }

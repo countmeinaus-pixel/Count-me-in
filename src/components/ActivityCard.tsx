@@ -5,6 +5,7 @@ import { formatActivityDate, getActivitySpotsLabel, type Activity } from '../dat
 export type ActivityCardData = Omit<Activity, 'id'> & {
   id: number | string
   joinStatus?: 'pending' | 'accepted'
+  viewerIsHost?: boolean // your own activity: shows "Hosting"
 }
 
 export function ActivityCard({ activity, onClick }: { activity: ActivityCardData; onClick: () => void }) {
@@ -32,7 +33,9 @@ export function ActivityCard({ activity, onClick }: { activity: ActivityCardData
       </div>
 
       <h3>{activity.title}</h3>
-      {activity.joinStatus && (
+      {activity.viewerIsHost ? (
+        <span className="activity-card-join-status hosting">Hosting</span>
+      ) : activity.joinStatus && (
         <span className={`activity-card-join-status ${activity.joinStatus}`}>
           {activity.joinStatus === 'pending' ? 'Requested' : 'Going'}
         </span>

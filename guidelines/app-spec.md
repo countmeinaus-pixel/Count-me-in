@@ -178,6 +178,11 @@ Use ProgressSteps on steps 1 to 5. The Next button stays disabled-looking until 
 - Admins can Revoke a warning/message sent by mistake (optional reason): it disappears from the member's Chats, he gets a "withdrawn" notification, and the history shows it as Revoked (who, when, why).
 - When he replies, the admin who sent it gets a notification. The admin screen shows every earlier warning/message for that member with its status (waiting, confirmed, replied) and the reply.
 
+### Distance to members
+- Member cards and profiles show "3 km away" (under 1 km / one decimal under 10 km / whole km).
+- Measured from you: your current location if you chose "Use my current location", else your shared approximate location, else the centre of your suburb. To the other member: his shared approximate location, else the centre of his suburb.
+- "Share my approximate location (about 1 km)" in the location panel is a saved profile setting: ticking it saves your rounded location, unticking removes it.
+
 ### Chats
 - Tabs: All, Activities, Friends (dot when a tab has unread chats). All mixes both, newest first.
 - Private chats (Friends tab): 1-on-1, text only, only between friends (accepted friend request). Start one with "Message" on a friend's profile. Not possible when one blocked the other; after unfriending, old messages stay readable but you cannot send. Push notification per message (Chat messages switch).

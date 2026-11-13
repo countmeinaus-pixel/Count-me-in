@@ -410,6 +410,8 @@ h3 { font: 700 21px/24px var(--font-display); }
 .mate-card-location svg,
 .mate-card-meta svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }
 .mate-card-sports { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
+.mate-card-distance { padding-left: 18px; color: var(--text-muted); font-size: 12px; }
+.profile-distance { color: var(--text-muted); }
 /* Head: square photo top left, name, age and suburb next to it. */
 .mate-card-head { display: flex; align-items: flex-start; gap: 12px; width: 100%; min-width: 0; }
 .mate-card-photo {
@@ -5300,6 +5302,7 @@ h1 .skeleton { margin: 4px 0; }
 .location-current svg { width: 18px; height: 18px; }
 .location-share { display: flex; gap: 10px; align-items: flex-start; color: var(--text-secondary); font-size: 13px; line-height: 1.4; }
 .location-share input { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 1px; accent-color: var(--seafoam); }
+.location-share small { display: block; margin-top: 2px; color: var(--text-muted); font-size: 12px; }
 .location-field { display: grid; gap: 8px; color: var(--text-secondary); font-size: 14px; }
 .location-field strong { color: var(--text-primary); }
 .location-field select {

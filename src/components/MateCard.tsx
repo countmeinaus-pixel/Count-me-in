@@ -3,6 +3,7 @@ import type { CommunityMember } from '../data/mockData'
 import { waterSportNames } from '../data/sports'
 import { SportIcon } from './SportIcon'
 import { FitChips } from './FitChips'
+import { formatDistance, useDistanceFromMe } from '../lib/useDistanceFromMe'
 
 function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
@@ -24,6 +25,8 @@ export function MateCard({
   noteHighlighted?: boolean
   className?: string
 }) {
+  const distanceFromMe = useDistanceFromMe()
+  const distance = formatDistance(distanceFromMe(member))
   const firstSport = member.sports[0]?.name
   const isWater = firstSport ? waterSportNames.includes(firstSport) : false
 
@@ -41,6 +44,7 @@ export function MateCard({
             {member.name}, {member.age}
           </span>
           <span className="mate-card-location"><MapPin aria-hidden="true" />{member.suburb}</span>
+          {distance && <span className="mate-card-distance">{distance}</span>}
           {note && (
             <span className={`mate-card-note ${noteHighlighted ? 'has-plan' : ''}`}>
               {noteHighlighted && <span className="friend-tile-dot" aria-hidden="true" />}

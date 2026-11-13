@@ -35,6 +35,8 @@ export type CurrentProfile = {
   photoUrl: string | null
   selfieVerified: boolean
   sports: ProfileSport[]
+  // Your approximate location (about 1 km) when you chose to share it, else null.
+  sharedLocation: { latitude: number; longitude: number } | null
 }
 
 export function calculateAgeFromDateOfBirth(dateOfBirth: string) {
@@ -99,8 +101,19 @@ export async function getCurrentProfile(userId?: string): Promise<CurrentProfile
   const skillBySportId = new Map((profileSports ?? []).map((item) => [item.sport_id, item.skill as SkillLevel]))
   const sportById = new Map((sportsResult.data ?? []).map((sport) => [sport.id, sport]))
 
+  // Separate query: works (as "not shared") before the shared-location columns exist.
+  const { data: shared } = await supabase
+    .from('profiles')
+    .select('shared_latitude, shared_longitude')
+    .eq('id', authenticatedUserId)
+    .maybeSingle()
+  const sharedLocation = shared?.shared_latitude != null && shared?.shared_longitude != null
+    ? { latitude: shared.shared_latitude as number, longitude: shared.shared_longitude as number }
+    : null
+
   return {
     id: profile.id,
+    sharedLocation,
     email: profile.email,
     firstName: profile.first_name,
     age: profile.age,

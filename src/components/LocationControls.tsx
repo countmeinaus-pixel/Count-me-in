@@ -1,6 +1,6 @@
 import { SuburbInput } from './SuburbInput'
 import { LocateFixed } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   defaultRadiusKm,
   getDeviceLocation,
@@ -9,7 +9,7 @@ import {
 } from '../lib/distance'
 import { formatLocality } from '../lib/localities'
 import { saveSharedLocation } from '../lib/profile'
-import { supabase } from '../lib/supabase'
+import { refreshViewerProfile, useViewerProfile } from '../lib/viewerProfile'
 
 const radiusSteps = [5, 10, 15, 25, 40, 60, 100]
 
@@ -23,7 +23,39 @@ export function LocationControls({
 }) {
   const [isLocating, setIsLocating] = useState(false)
   const [error, setError] = useState('')
-  const [share, setShare] = useState(false)
+  // Whether you share your approximate location: a setting on your profile, not
+  // part of this filter. It stays on until you untick it.
+  const viewer = useViewerProfile()
+  const viewerProfile = viewer.status === 'ready' ? viewer.profile : null
+  const [share, setShare] = useState(Boolean(viewerProfile?.sharedLocation))
+  const [isSharing, setIsSharing] = useState(false)
+  useEffect(() => {
+    setShare(Boolean(viewerProfile?.sharedLocation))
+  }, [viewerProfile?.sharedLocation])
+
+  async function toggleShare(next: boolean) {
+    if (!viewerProfile) return
+    setIsSharing(true)
+    setError('')
+    setNotice('')
+    setShare(next)
+    try {
+      if (next) {
+        const point = await getDeviceLocation()
+        await saveSharedLocation(viewerProfile.id, point)
+        setNotice('Shared. Mates now see roughly how far away you are (rounded to about 1 km).')
+      } else {
+        await saveSharedLocation(viewerProfile.id, null)
+        setNotice('You stopped sharing. Distances now use the centre of your suburb.')
+      }
+      await refreshViewerProfile()
+    } catch (shareError) {
+      setShare(!next)
+      setError(shareError instanceof Error ? shareError.message : 'Your location could not be shared.')
+    } finally {
+      setIsSharing(false)
+    }
+  }
   const [notice, setNotice] = useState('')
   const [suburbText, setSuburbText] = useState(value?.mode === 'suburb' ? value.label : '')
   const radius = value?.radiusKm ?? null
@@ -43,12 +75,10 @@ export function LocationControls({
         longitude: point.longitude,
         radiusKm: value?.radiusKm ?? defaultRadiusKm,
       })
-      if (share && supabase) {
-        const { data } = await supabase.auth.getUser()
-        if (data.user) {
-          await saveSharedLocation(data.user.id, point)
-          setNotice('Your approximate location (about 1 km) is shared on your profile.')
-        }
+      // Sharing is on: keep the shared spot up to date with where you are now.
+      if (share && viewerProfile) {
+        await saveSharedLocation(viewerProfile.id, point)
+        void refreshViewerProfile()
       }
     } catch (locateError) {
       setError(locateError instanceof Error ? locateError.message : 'Your location could not be found.')
@@ -91,10 +121,15 @@ export function LocationControls({
       <button type="button" className="button button-secondary button-md location-current" onClick={() => void useCurrentLocation()} disabled={isLocating}>
         <LocateFixed aria-hidden="true" /> {isLocating ? 'Finding you…' : 'Use my current location'}
       </button>
-      <label className="location-share">
-        <input type="checkbox" checked={share} onChange={(event) => setShare(event.target.checked)} />
-        <span>Also share my approximate location (about 1 km) so mates see how far away I am</span>
-      </label>
+      {viewerProfile && (
+        <label className="location-share">
+          <input type="checkbox" checked={share} disabled={isSharing} onChange={(event) => void toggleShare(event.target.checked)} />
+          <span>
+            {isSharing ? 'Saving…' : 'Share my approximate location (about 1 km) so mates see how far away I am'}
+            <small>{share ? 'On. Untick to stop sharing.' : 'Off. Others see the distance to the centre of your suburb.'}</small>
+          </span>
+        </label>
+      )}
 
       <label className="location-field location-distance">
         <span>Distance: <strong>{radius === null ? 'No limit' : `${radius} km`}</strong></span>

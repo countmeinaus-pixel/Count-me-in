@@ -19,6 +19,7 @@ import {
 import { MateCard } from "../components/MateCard"
 import { FriendButton } from "../components/FriendButton"
 import { FriendChatButton } from "../components/FriendChatButton"
+import { formatDistance, useDistanceFromMe } from "../lib/useDistanceFromMe"
 import { friendsChangedEvent, getFriendsOf, removeFriend } from "../lib/friendships"
 import { PatchIcon } from "../components/PatchIcon"
 import { ReportDialog } from "../components/ReportDialog"
@@ -87,6 +88,7 @@ export function ProfileScreen() {
   const [blockedUsers, setBlockedUsers] = useState<string[]>([])
   const [openFriendMenu, setOpenFriendMenu] = useState<string | null>(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const distanceFromMe = useDistanceFromMe()
   // Admins get "Edit profile (admin)" in the menu on someone else's profile.
   const [viewerIsAdmin, setViewerIsAdmin] = useState(false)
   useEffect(() => {
@@ -449,6 +451,10 @@ export function ProfileScreen() {
     return true
   }
 
+  const profileDistance = formatDistance(
+    distanceFromMe({ id: profileId, suburb: profile.suburb, sharedLocation: remoteProfile?.sharedLocation ?? null }),
+  )
+
   if (openedById && !isCurrentUser && !remoteProfile) {
     return (
       <div className="screen profile-page" aria-busy={!remoteLookupDone}>
@@ -598,6 +604,7 @@ export function ProfileScreen() {
         <p>
           <MapPin />
           {profile.suburb}
+          {!isCurrentUser && profileDistance && <span className="profile-distance"> · {profileDistance}</span>}
         </p>
         {!isCurrentUser && profileId && (
           <FriendButton profileId={profileId} name={profile.name} />

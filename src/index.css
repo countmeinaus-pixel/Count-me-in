@@ -410,7 +410,24 @@ h3 { font: 700 21px/24px var(--font-display); }
 .mate-card-location svg,
 .mate-card-meta svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--seafoam); }
 .mate-card-sports { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
-.mate-card-distance { padding-left: 18px; color: var(--text-muted); font-size: 12px; }
+.mate-card-photo .mate-card-distance {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  max-width: calc(100% - 42px);
+  padding: 3px 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--scrim);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* "away" only fits on the big photo of narrow cards (phones). */
+.mate-card-distance-suffix { display: none; }
 .profile-distance { color: var(--text-muted); }
 /* Head: square photo top left, name, age and suburb next to it. */
 .mate-card-head { display: flex; align-items: flex-start; gap: 12px; width: 100%; min-width: 0; }
@@ -5653,6 +5670,8 @@ h1 .skeleton { margin: 4px 0; }
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
   .mate-card-photo .mate-card-sport-icon { top: 10px; left: 10px; width: 28px; height: 28px; padding: 6px; }
+  .mate-card-photo .mate-card-distance { top: 12px; right: 10px; padding: 4px 9px; font-size: 12px; }
+  .mate-card-distance-suffix { display: inline; }
   .mate-card-name { grid-area: name; }
   .mate-card-location { grid-area: place; }
   .mate-card-note { grid-area: note; }

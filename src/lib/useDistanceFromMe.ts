@@ -31,3 +31,12 @@ export function formatDistance(km: number | null) {
   if (km < 10) return `${km.toFixed(1).replace(/\.0$/, '')} km away`
   return `${Math.round(km)} km away`
 }
+
+// Short label for the badge on a profile photo: "1 km", "2.4 km", "12 km".
+// Anything under 1 km shows as "1 km" (locations are approximate anyway).
+export function formatDistanceShort(km: number | null) {
+  if (km === null) return ''
+  if (km < 1) return '1 km'
+  if (km < 10) return `${km.toFixed(1).replace(/\.0$/, '')} km`
+  return `${Math.round(km)} km`
+}

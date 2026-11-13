@@ -3,7 +3,7 @@ import type { CommunityMember } from '../data/mockData'
 import { waterSportNames } from '../data/sports'
 import { SportIcon } from './SportIcon'
 import { FitChips } from './FitChips'
-import { formatDistance, useDistanceFromMe } from '../lib/useDistanceFromMe'
+import { formatDistanceShort, useDistanceFromMe } from '../lib/useDistanceFromMe'
 
 function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
@@ -26,7 +26,7 @@ export function MateCard({
   className?: string
 }) {
   const distanceFromMe = useDistanceFromMe()
-  const distance = formatDistance(distanceFromMe(member))
+  const distance = formatDistanceShort(distanceFromMe(member))
   const firstSport = member.sports[0]?.name
   const isWater = firstSport ? waterSportNames.includes(firstSport) : false
 
@@ -38,13 +38,13 @@ export function MateCard({
             ? <img src={member.photoUrl} alt="" loading="lazy" />
             : <span className="mate-card-initials">{initials(member.name)}</span>}
           {firstSport && <SportIcon sport={firstSport} className="mate-card-sport-icon" />}
+          {distance && <span className="mate-card-distance">{distance}<span className="mate-card-distance-suffix"> away</span></span>}
         </span>
         <span className="mate-card-identity">
           <span className="mate-card-name">
             {member.name}, {member.age}
           </span>
           <span className="mate-card-location"><MapPin aria-hidden="true" />{member.suburb}</span>
-          {distance && <span className="mate-card-distance">{distance}</span>}
           {note && (
             <span className={`mate-card-note ${noteHighlighted ? 'has-plan' : ''}`}>
               {noteHighlighted && <span className="friend-tile-dot" aria-hidden="true" />}

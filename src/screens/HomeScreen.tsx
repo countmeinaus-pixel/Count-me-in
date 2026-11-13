@@ -172,10 +172,14 @@ export function HomeScreen() {
       })
       .catch((error: unknown) => {
         if (active)
+          // Supabase errors are plain objects: show their message and code too,
+          // so a screenshot tells us what went wrong.
           setActivityLoadError(
             error instanceof Error
               ? error.message
-              : 'Unable to load saved activities.',
+              : typeof error === 'object' && error !== null && 'message' in error
+                ? `${String((error as { message: unknown }).message)}${'code' in error ? ` (${String((error as { code: unknown }).code)})` : ''}`
+                : 'Unable to load saved activities.',
           )
       })
       .finally(() => {

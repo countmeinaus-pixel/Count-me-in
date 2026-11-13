@@ -69,7 +69,10 @@ export function AdminEditProfileScreen() {
         setProfile(found)
         setForm({ firstName: found.firstName, dateOfBirth: found.dateOfBirth, suburb: found.suburb, bio: found.bio, removePhoto: false, note: '' })
       } catch (loadError) {
-        if (active) setError(loadError instanceof Error ? loadError.message : 'Unable to load this profile.')
+        const message = typeof loadError === 'object' && loadError !== null && 'message' in loadError
+          ? String((loadError as { message: unknown }).message)
+          : ''
+        if (active) setError(message || 'Unable to load this profile.')
       } finally {
         if (active) setIsLoading(false)
       }
@@ -124,7 +127,11 @@ export function AdminEditProfileScreen() {
       setForm({ ...form, removePhoto: false, note: '' })
       setSaved(true)
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to save the changes.')
+      // Database errors are plain objects with a message, not Error instances.
+      const message = typeof saveError === 'object' && saveError !== null && 'message' in saveError
+        ? String((saveError as { message: unknown }).message)
+        : ''
+      setError(message || 'Unable to save the changes.')
     } finally {
       setIsSaving(false)
     }

@@ -1,5 +1,7 @@
 import { CalendarDays, Check, MapPin, Sparkles, UserPlus, Users } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Button } from './Button'
 import { InvitePanel } from './InvitePanel'
 import { MateCard } from './MateCard'
 import { sportVerbs, waterSportNames } from '../data/sports'
@@ -54,6 +56,7 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
   const tops = suggestions.slice(0, 3)
   const side = rest.slice(0, 9)
   const [inviteOpen, setInviteOpen] = useState(false)
+  const navigate = useNavigate()
 
   return (
     <>
@@ -138,6 +141,9 @@ export function CrewSection({ friends, suggestions, activities, onOpenProfile, o
             </div>
           )}
           </div>
+          <Button variant="secondary" className="view-all-activities" onClick={() => navigate('/more/crew')}>
+            Find new crew
+          </Button>
         </div>
       )}
     </>

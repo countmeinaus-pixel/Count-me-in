@@ -67,6 +67,18 @@ const notificationTitles: Record<string, string> = {
   activity_rejected: 'Activity not approved',
   sport_suggested: 'New sport suggested',
   role_changed: 'Your role changed',
+  profile_updated: 'Profile updated',
+  staff_message: 'Count Me In team',
+  staff_message_reply: 'Reply to your team message',
+  staff_message_revoked: 'Count Me In team',
+}
+
+// Where tapping the push opens the app, for types that are not about an activity.
+function urlFor(record: { type: string; activity_id?: string | null; actor_id?: string | null }) {
+  if (record.activity_id) return `/activity/${record.activity_id}`
+  if (record.type === 'staff_message' || record.type === 'staff_message_revoked') return '/chats'
+  if (record.type === 'staff_message_reply' && record.actor_id) return `/more/moderation/members/${record.actor_id}/message`
+  return '/notifications'
 }
 
 // Which switch on Notification settings controls this notification type.
@@ -162,7 +174,7 @@ Deno.serve(async (request) => {
     sent = await sendTo([record.user_id], preferenceFor(record.type), {
       title: notificationTitles[record.type] ?? 'Count Me In',
       body: shorten(record.message ? `${record.body} “${record.message}”` : record.body),
-      url: record.activity_id ? `/activity/${record.activity_id}` : '/notifications',
+      url: urlFor(record),
     })
   } else if (table === 'activity_join_requests' && record.status === 'pending') {
     const { data: activity } = await supabase.from('activities').select('host_id, title').eq('id', record.activity_id).maybeSingle()

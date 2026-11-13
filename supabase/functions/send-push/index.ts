@@ -67,6 +67,7 @@ const notificationTitles: Record<string, string> = {
   invite_accepted: 'Invitation accepted',
   invite_declined: 'Invitation declined',
   activity_cancelled: 'Activity cancelled',
+  activity_updated: 'Activity updated',
   pr_confirmed: 'PR confirmed',
   pr_flagged: 'PR flagged',
   pr_verified: 'PR verified',
@@ -97,7 +98,7 @@ function preferenceFor(type: string): PreferenceKey | null {
   if (type === 'friend_request' || type === 'friend_accepted') return 'friend_requests'
   if (['participant_left', 'invite', 'invite_accepted', 'invite_declined', 'activity_cancelled',
     'pr_confirmed', 'pr_flagged', 'pr_verified', 'activity_approved', 'activity_rejected',
-    'removed_from_activity'].includes(type)) {
+    'removed_from_activity', 'activity_updated'].includes(type)) {
     return 'activity_updates'
   }
   return null

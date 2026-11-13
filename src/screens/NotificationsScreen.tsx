@@ -62,6 +62,7 @@ const titles = {
   invite_accepted: 'Invitation accepted',
   invite_declined: 'Invitation declined',
   activity_cancelled: 'Activity cancelled',
+  activity_updated: 'Activity updated',
   pr_confirmed: 'PR confirmed',
   pr_flagged: 'PR flagged',
   pr_verified: 'PR verified',

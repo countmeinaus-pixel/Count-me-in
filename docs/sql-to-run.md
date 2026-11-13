@@ -31,6 +31,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 23 | `supabase/migrations/20261113190000_staff_messages.sql` | Waarschuwingen en berichten van het Count Me In team aan een lid, vastgepind in Chats tot hij bevestigt of antwoordt |
 | 24 | `supabase/migrations/20261113200000_revoke_staff_message.sql` | Admins kunnen een waarschuwing of bericht intrekken (Revoke); het lid krijgt een melding |
 | 25 | `supabase/migrations/20261113210000_chat_management.sql` | Chats beheren: host haalt leden uit de activiteit, sluit of verwijdert de groepschat; iedereen kan chats uit zijn lijst halen |
+| 26 | `supabase/migrations/20261114100000_activity_update_notifications.sql` | Wie meedoet krijgt een melding als de host (of een admin) de activiteit wijzigt, met wat er veranderd is |
 
 ## Zo doe je het (per bestand)
 
@@ -61,3 +62,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 18:** open het profiel van een vriend en tik op **Message**. Er opent een chat zonder foutmelding.
 - **Na 20:** open als admin het profiel van een lid, tik rechtsboven op het menu en kies **Edit profile (admin)**. Het formulier laadt zonder foutmelding.
 - **Na 23:** open als admin het profiel van een lid, kies in het menu **Warning or message (admin)** en stuur een bericht. Bij het lid staat het bovenaan **Chats**.
+- **Na 26:** wijzig als host de tijd van een activiteit waar iemand aan meedoet. Die persoon krijgt in **Notifications** "Activity updated" met de nieuwe tijd.

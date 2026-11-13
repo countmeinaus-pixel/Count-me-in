@@ -2183,6 +2183,42 @@ h3 { font: 700 21px/24px var(--font-display); }
   background: var(--surface-1);
 }
 .report-dialog h2 { margin-bottom: 8px; }
+
+/* Move and zoom a profile photo before saving (PhotoCropDialog) */
+.photo-crop-dialog { display: grid; gap: 16px; }
+.photo-crop-dialog > p { margin: -8px 0 0; }
+.photo-crop-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.photo-crop-viewport:active { cursor: grabbing; }
+.photo-crop-viewport:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+.photo-crop-viewport img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  pointer-events: none;
+}
+.photo-crop-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 999px var(--scrim);
+  outline: 2px solid var(--seafoam);
+  pointer-events: none;
+}
+.photo-crop-zoom { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); }
+.photo-crop-zoom svg { flex: 0 0 auto; width: 20px; height: 20px; }
+.photo-crop-zoom input { flex: 1; min-height: 44px; accent-color: var(--accent); }
+.photo-crop-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .report-dialog > p,
 .report-dialog form > p { color: var(--text-secondary); line-height: 1.5; }
 .report-field {

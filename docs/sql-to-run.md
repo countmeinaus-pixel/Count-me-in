@@ -24,6 +24,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 16 | `supabase/migrations/20261112180000_service_role_read_access.sql` | De push-functie mag de chat, activiteiten en instellingen lezen (anders komt er geen push) |
 | 17 | `supabase/migrations/20261113090000_place_time_zones.sql` | Inchecken op de dag zelf en de tijd in het annuleerbericht gebruiken de tijdzone van de plek (Perth, Brisbane…) in plaats van altijd Adelaide |
 | 18 | `supabase/migrations/20261113120000_direct_chats.sql` | Privéchats tussen vrienden (1-op-1): tabellen, wie mag lezen/sturen, live-updates. Daarna ook de 4e webhook `push-direct` maken (zie onder) |
+| 19 | `supabase/migrations/20261113140000_avatar_size_limit.sql` | Profielfoto's max. 3 MB per bestand in de opslag (was 5 MB) |
 
 ## Zo doe je het (per bestand)
 

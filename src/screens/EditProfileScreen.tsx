@@ -1,3 +1,4 @@
+import { PhotoCropDialog } from '../components/PhotoCropDialog'
 import { SuburbInput } from '../components/SuburbInput'
 import { ArrowLeft, Camera, ImagePlus, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
@@ -8,7 +9,6 @@ import { useUnsavedChangesWarning } from '../lib/useUnsavedChangesWarning'
 import { getMoreOrigin } from '../lib/moreNavigation'
 import {
   calculateAgeFromDateOfBirth,
-  compressProfilePhoto,
   deleteProfilePhoto,
   getCurrentProfile,
   updateProfileDetails,
@@ -49,6 +49,7 @@ export function EditProfileScreen() {
   const [original, setOriginal] = useState<ProfileForm | null>(null)
   const [form, setForm] = useState<ProfileForm | null>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null)
+  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -135,7 +136,7 @@ export function EditProfileScreen() {
     setError('')
   }
 
-  async function handlePhotoSelect(event: ChangeEvent<HTMLInputElement>) {
+  function handlePhotoSelect(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
@@ -145,12 +146,18 @@ export function EditProfileScreen() {
       return
     }
 
+    setError('')
+    setPhotoToCrop(file)
+  }
+
+  // After Move and zoom: a square photo of at most 800×800 px (under 3 MB).
+  function handlePhotoCropped(cropped: File) {
+    setPhotoToCrop(null)
     if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl)
-    setSelectedPhoto(file)
-    const previewUrl = URL.createObjectURL(file)
+    setSelectedPhoto(cropped)
+    const previewUrl = URL.createObjectURL(cropped)
     setPhotoPreviewUrl(previewUrl)
     setForm((current) => current ? { ...current, photoUrl: previewUrl } : current)
-    setError('')
   }
 
   function handleRemovePhoto() {
@@ -170,10 +177,8 @@ export function EditProfileScreen() {
     try {
       let photoUrl = form.photoUrl
       if (selectedPhoto) {
-        photoUrl = await uploadProfilePhoto(
-          await compressProfilePhoto(selectedPhoto, true),
-          userId,
-        )
+        // Already cropped and compressed in the Move and zoom step.
+        photoUrl = await uploadProfilePhoto(selectedPhoto, userId)
       }
 
       await updateProfileDetails({
@@ -248,10 +253,10 @@ export function EditProfileScreen() {
       <section className="edit-profile-photo">
         <div className="edit-photo-preview">
           {photoSource
-            ? <img src={photoSource} alt="Profile photo preview, centre-cropped to a square" />
+            ? <img src={photoSource} alt="Profile photo preview" />
             : <span aria-label="Profile photo initials">{form.firstName.trim()[0]?.toUpperCase() ?? '?'}</span>}
         </div>
-        <p>Photo is centre-cropped to a square and compressed before upload.</p>
+        <p>After choosing a photo you can move and zoom it. It’s saved as a square, max 3 MB.</p>
         <div className="edit-photo-actions">
           <button type="button" className="secondary-action" onClick={() => photoInputRef.current?.click()}><ImagePlus />Choose photo</button>
           <button type="button" className="secondary-action" onClick={() => cameraInputRef.current?.click()}><Camera />Take photo</button>
@@ -259,6 +264,9 @@ export function EditProfileScreen() {
         </div>
         <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} hidden />
         <input ref={cameraInputRef} type="file" accept="image/*" capture="user" onChange={handlePhotoSelect} hidden />
+        {photoToCrop && (
+          <PhotoCropDialog file={photoToCrop} onCancel={() => setPhotoToCrop(null)} onDone={handlePhotoCropped} />
+        )}
       </section>
 
       <div className="edit-profile-fields">

@@ -3,12 +3,12 @@ import { CalendarDays, Camera, Check, LocateFixed, QrCode, ShieldCheck, Trophy }
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ClaimPrDialog } from '../components/ClaimPrDialog'
+import { PhotoCropDialog } from '../components/PhotoCropDialog'
 import { FlowLayout } from '../components/FlowLayout'
 import { PatchIcon } from '../components/PatchIcon'
 import { SportIcon } from '../components/SportIcon'
 import {
   calculateAgeFromDateOfBirth,
-  compressProfilePhoto,
   saveProfile,
   uploadProfilePhoto,
   type SkillLevel,
@@ -96,6 +96,7 @@ export function OnboardingScreen() {
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([])
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoToCrop, setPhotoToCrop] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [checkError, setCheckError] = useState('')
   const [isChecking, setIsChecking] = useState(true)
@@ -235,18 +236,27 @@ export function OnboardingScreen() {
     })
   }
 
-  async function handlePhotoSelect(event: ChangeEvent<HTMLInputElement>) {
+  function handlePhotoSelect(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
-    try {
-      const compressed = await compressProfilePhoto(file)
-      setPhotoFile(compressed)
-      setPhotoPreview(URL.createObjectURL(compressed))
-      setPhotoDataUrl(await fileToDataUrl(compressed).catch(() => null))
-    } catch (photoError) {
-      setError(photoError instanceof Error ? photoError.message : 'Unable to use this photo.')
+    if (!file.type.startsWith('image/')) {
+      setError('Choose an image file for your profile photo.')
+      return
     }
+    setError('')
+    setPhotoToCrop(file)
   }
+
+  // After Move and zoom: a square photo of at most 800×800 px.
+  async function handlePhotoCropped(cropped: File) {
+    setPhotoToCrop(null)
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    setPhotoFile(cropped)
+    setPhotoPreview(URL.createObjectURL(cropped))
+    setPhotoDataUrl(await fileToDataUrl(cropped).catch(() => null))
+  }
+
 
   // Fills in the nearest suburb or town. Only the place name is saved, never the exact spot.
   async function useCurrentLocation() {
@@ -332,6 +342,9 @@ export function OnboardingScreen() {
         </button>
         <input ref={photoInputRef} className="sr-only" type="file" accept="image/*" onChange={handlePhotoSelect} aria-label="Choose a profile photo" />
         <p className="flow-hint" style={{ textAlign: 'center' }}>Profile photo (optional)</p>
+        {photoToCrop && (
+          <PhotoCropDialog file={photoToCrop} onCancel={() => setPhotoToCrop(null)} onDone={(cropped) => void handlePhotoCropped(cropped)} />
+        )}
         <label className="flow-field">
           <span>Username</span>
           <input value={firstName} maxLength={40} autoComplete="nickname" onChange={(event) => setFirstName(event.target.value)} placeholder="For example, Matt" />

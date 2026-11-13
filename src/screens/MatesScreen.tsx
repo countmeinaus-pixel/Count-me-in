@@ -257,6 +257,11 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
                 }
               />
             ))}
+            <button type="button" className="mate-card mate-card-invite" onClick={() => setInviteOpen(true)}>
+              <span className="friend-tile-invite-icon"><UserPlus aria-hidden="true" /></span>
+              <strong>Invite a mate</strong>
+              <small>Bring your crew along</small>
+            </button>
           </div>
         ) : (
           <div className="mate-empty-state">
@@ -264,6 +269,9 @@ export function MatesScreen({ view = "friends" }: { view?: "friends" | "requests
             <p>Open someone's profile and tap Add friend. Once he accepts, he shows up here.</p>
             <button type="button" onClick={() => navigate("/more/crew")}>
               Find new crew
+            </button>
+            <button type="button" onClick={() => setInviteOpen(true)}>
+              Invite a mate
             </button>
           </div>
         )}

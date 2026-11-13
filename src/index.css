@@ -3464,6 +3464,10 @@ h3 { font: 700 21px/24px var(--font-display); }
   gap: 20px;
   padding-bottom: 32px;
 }
+/* Pages built on these classes that still show the bottom nav (e.g. Send a
+   warning, admin Edit profile): keep the last content above the nav. */
+.app-content.with-nav .edit-profile-page,
+.app-content.with-nav .edit-sports-page { padding-bottom: var(--bottom-nav-clearance); }
 .edit-page-header {
   display: flex;
   align-items: center;

@@ -643,7 +643,7 @@ export function HomeScreen() {
       )}
 
       <LatestPatches userName={viewerProfile?.firstName ?? null} />
-      <UpcomingChallenges />
+      <UpcomingChallenges userName={viewerProfile?.firstName ?? null} />
 
       <section className="crew-preview">
         <div className="crew-preview-heading">

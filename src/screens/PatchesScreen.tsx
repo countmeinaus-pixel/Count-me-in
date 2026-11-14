@@ -1,6 +1,7 @@
 import { ArrowLeft, Check, ChevronDown, LockKeyhole, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Button } from '../components/Button'
+import { ChallengeCard } from '../components/ChallengeCard'
+import { PatchProgressBar } from '../components/PatchProgressBar'
 import { getActiveChallenges } from '../data/challenges'
 import {
   getChallengeProgress,
@@ -27,32 +28,6 @@ function formatEarnedDate(date: string | null) {
 }
 
 const generalPatchCategories: string[] = ['Getting started', 'Consistency', 'Sports', 'Social', 'Places']
-
-function formatTimeLeft(endsAt: Date) {
-  const days = Math.ceil((endsAt.getTime() - Date.now()) / 86400000)
-  if (days <= 1) return 'Ends today'
-  return `${days} days left`
-}
-
-function PatchProgressBar({ patch }: { patch: Pick<PatchProgress, 'name' | 'progress' | 'target' | 'progressLabel'> }) {
-  const progressPercent = Math.min(100, (patch.progress / patch.target) * 100)
-
-  return (
-    <div className="patch-progress">
-      <div
-        className="patch-progress-track"
-        role="progressbar"
-        aria-label={`${patch.name} progress`}
-        aria-valuemin={0}
-        aria-valuemax={patch.target}
-        aria-valuenow={patch.progress}
-      >
-        <span style={{ width: `${progressPercent}%` }} />
-      </div>
-      <small>{patch.progress} of {patch.target} {patch.progressLabel}</small>
-    </div>
-  )
-}
 
 export function PatchesScreen() {
   const navigate = useNavigate()
@@ -200,43 +175,12 @@ export function PatchesScreen() {
         {challengeError && <p className="edit-form-error" role="alert">{challengeError}</p>}
         <div className="challenge-list">
           {activeChallenges.map((challenge) => (
-            <article key={challenge.id} className={`challenge-card ${challenge.joined ? 'joined' : ''}`}>
-              <span className={`all-patch-icon ${challenge.completed ? '' : 'challenge-icon'}`}>
-                <PatchIcon name={challenge.icon} />
-                {challenge.completed && <span className="patch-earned-mark"><Check aria-hidden="true" /></span>}
-              </span>
-              <div className="challenge-body">
-                <div className="challenge-title-row">
-                  <strong>{challenge.name}</strong>
-                  <span className="challenge-time-left">{formatTimeLeft(challenge.endsAt)}</span>
-                </div>
-                <small>{challenge.rule}</small>
-                {challenge.completed ? (
-                  <span className="patch-earned-date">Completed. Patch earned!</span>
-                ) : challenge.joined ? (
-                  <>
-                    <PatchProgressBar patch={challenge} />
-                    <button
-                      type="button"
-                      className="challenge-leave"
-                      onClick={() => void toggleChallenge(challenge)}
-                      disabled={busyChallengeId !== null}
-                    >
-                      Leave challenge
-                    </button>
-                  </>
-                ) : (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => void toggleChallenge(challenge)}
-                    disabled={busyChallengeId !== null}
-                  >
-                    {busyChallengeId === challenge.id ? 'Joining…' : 'Join challenge'}
-                  </Button>
-                )}
-              </div>
-            </article>
+            <ChallengeCard
+              key={challenge.id}
+              challenge={challenge}
+              busyId={busyChallengeId}
+              onToggle={(item) => void toggleChallenge(item)}
+            />
           ))}
         </div>
       </section>

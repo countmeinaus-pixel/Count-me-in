@@ -5922,7 +5922,14 @@ textarea:focus::placeholder { color: transparent; }
 .latest-patch-card.earned { background: var(--seafoam-subtle); }
 .latest-patch-card .patch-progress { margin-top: auto; }
 
-/* Home: Upcoming challenges slider (same cards as Latest patches). */
+/* Home: Challenges slider. Same cards as the Patches page: one wide card
+   with the next one peeking on phones, 3 cards wide on desktop. */
+.upcoming-challenges-track { grid-auto-columns: 85%; align-items: stretch; }
+@container app (min-width: 900px) {
+  .upcoming-challenges-track { grid-auto-columns: calc((100% - 20px) / 3); }
+  .upcoming-challenge-card .challenge-body { display: flex; flex-direction: column; }
+  .upcoming-challenge-card .challenge-body > small { flex: 1; }
+  .upcoming-challenge-card .challenge-body .button,
+  .upcoming-challenge-card .challenge-leave { align-self: flex-start; }
+}
 .upcoming-challenge-card { scroll-snap-align: start; }
-.upcoming-challenge-card > small { flex: 1; }
-.upcoming-challenge-card .upcoming-challenge-join { width: 100%; }

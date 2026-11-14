@@ -23,6 +23,7 @@ import { getBlockedProfiles } from '../lib/moderation'
 import { Avatar } from '../components/Avatar'
 import { ActivityCardSkeleton, Skeleton } from '../components/Skeleton'
 import { LatestPatches } from '../components/LatestPatches'
+import { UpcomingChallenges } from '../components/UpcomingChallenges'
 import { startAppTour } from '../lib/appTour'
 import { hasFinishedTour } from '../lib/onboardingFlags'
 import { PersonalRecordCard } from '../components/PersonalRecordCard'
@@ -642,6 +643,7 @@ export function HomeScreen() {
       )}
 
       <LatestPatches userName={viewerProfile?.firstName ?? null} />
+      <UpcomingChallenges />
 
       <section className="crew-preview">
         <div className="crew-preview-heading">

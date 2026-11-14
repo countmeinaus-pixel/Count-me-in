@@ -113,6 +113,29 @@ export function getActiveChallenges(now = new Date()): Challenge[] {
   ]
 }
 
+// Challenges you can still join: running now or starting soon (this month,
+// next month and the coming weekends), soonest first.
+export function getUpcomingChallenges(now = new Date(), count = 8): Challenge[] {
+  const year = now.getFullYear()
+  const monthIndex = now.getMonth()
+  const monthKinds = ['monthly', 'salt', 'captain'] as const
+  const nextMonth = new Date(year, monthIndex + 1, 1)
+  const candidates: Challenge[] = [
+    ...monthKinds.map((kind) => monthChallenge(kind, year, monthIndex)),
+    ...monthKinds.map((kind) => monthChallenge(kind, nextMonth.getFullYear(), nextMonth.getMonth())),
+  ]
+  const saturday = upcomingSaturday(now)
+  for (let week = 0; week < 6; week += 1) {
+    const date = new Date(saturday)
+    date.setDate(saturday.getDate() + week * 7)
+    candidates.push(weekendChallenge(date))
+  }
+  return candidates
+    .filter((challenge) => challenge.endsAt.getTime() > now.getTime())
+    .sort((left, right) => left.startsAt.getTime() - right.startsAt.getTime() || left.endsAt.getTime() - right.endsAt.getTime())
+    .slice(0, count)
+}
+
 export function getChallengeById(id: string): Challenge | null {
   const monthMatch = /^(monthly|salt|captain)-(\d{4})-(\d{2})$/.exec(id)
   if (monthMatch) {

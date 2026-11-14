@@ -5918,4 +5918,11 @@ textarea:focus::placeholder { color: transparent; }
   padding-bottom: 4px;
 }
 .latest-patches-track::-webkit-scrollbar { display: none; }
-.latest-patch-card { scroll-snap-align: start; background: var(--seafoam-subtle); }
+.latest-patch-card { scroll-snap-align: start; }
+.latest-patch-card.earned { background: var(--seafoam-subtle); }
+.latest-patch-card .patch-progress { margin-top: auto; }
+
+/* Home: Upcoming challenges slider (same cards as Latest patches). */
+.upcoming-challenge-card { scroll-snap-align: start; }
+.upcoming-challenge-card > small { flex: 1; }
+.upcoming-challenge-card .upcoming-challenge-join { width: 100%; }

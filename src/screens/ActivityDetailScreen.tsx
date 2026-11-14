@@ -96,6 +96,8 @@ export function ActivityDetailScreen() {
     mockActivity ? hasDemoJoinRequest(mockActivity.id) : false,
   )
   const [joinFeedback, setJoinFeedback] = useState("")
+  // After "Count me in": a sheet explaining when and how check-in works.
+  const [joinInfo, setJoinInfo] = useState<"accepted" | "pending" | null>(null)
   // Review by a moderator or admin (Open activities wait for this).
   const [reviewBusy, setReviewBusy] = useState(false)
   const [reviewError, setReviewError] = useState("")
@@ -368,6 +370,7 @@ export function ActivityDetailScreen() {
       }
       setJoinRequested(true)
       setJoinError("")
+      setJoinInfo("pending")
       return
     }
     if (!savedActivity) return
@@ -382,6 +385,7 @@ export function ActivityDetailScreen() {
           ? "You’re in. The host accepts this activity automatically."
           : "Your request was sent to the host and is waiting for review.",
       )
+      setJoinInfo(status === "accepted" ? "accepted" : "pending")
     } catch (error) {
       setJoinError(
         error instanceof Error
@@ -1218,6 +1222,73 @@ export function ActivityDetailScreen() {
         </div>
       )}
 
+      {joinInfo && activity && (
+        <div
+          className="checkin-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="join-info-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setJoinInfo(null)
+          }}
+        >
+          <div className="checkin-sheet">
+            <div className="checkin-drag" aria-hidden="true" />
+            <div className="checkin-header">
+              <h3 id="join-info-title">
+                {joinInfo === "accepted" ? "You’re in" : "Request sent"}
+              </h3>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={() => setJoinInfo(null)}
+                className="close-button"
+              >
+                ×
+              </button>
+            </div>
+            <div className="success-stage join-info-stage">
+              <div className="success-icon">✓</div>
+              <p>
+                {joinInfo === "accepted"
+                  ? "See you there, mate. You’re now in the group chat."
+                  : "The host will review your request. Once you’re accepted, you’ll join the group chat."}
+              </p>
+              <div className="join-info-when">
+                <strong>Check-in opens on the day</strong>
+                {activityStart && (
+                  <span>
+                    {activityStart.toLocaleDateString("en-AU", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      timeZone: activityTimeZone,
+                    })}
+                  </span>
+                )}
+              </div>
+              <ol className="join-info-steps">
+                <li>
+                  <strong>Meet up</strong>
+                  <span>When you’re together, open this activity and tap Check in.</span>
+                </li>
+                <li>
+                  <strong>Scan one code</strong>
+                  <span>Show your QR code to a mate, or tap Scan their code to scan theirs.</span>
+                </li>
+                <li>
+                  <strong>Done for both of you</strong>
+                  <span>One scan confirms the meetup for you both and counts towards your patches.</span>
+                </li>
+              </ol>
+              <Button onClick={() => setJoinInfo(null)} size="lg">
+                Got it
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {qrOpen && activity && (
         <div
           className="checkin-modal"
@@ -1254,6 +1325,9 @@ export function ActivityDetailScreen() {
                   </div>
                 </div>
 
+                <p className="checkin-hint">
+                  Let a mate scan your code, or scan theirs. One scan confirms the meetup for you both.
+                </p>
                 <Button
                   variant="secondary"
                   onClick={() => void startCameraScan()}

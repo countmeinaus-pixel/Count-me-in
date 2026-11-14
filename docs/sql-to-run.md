@@ -32,6 +32,7 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 | 24 | `supabase/migrations/20261113200000_revoke_staff_message.sql` | Admins kunnen een waarschuwing of bericht intrekken (Revoke); het lid krijgt een melding |
 | 25 | `supabase/migrations/20261113210000_chat_management.sql` | Chats beheren: host haalt leden uit de activiteit, sluit of verwijdert de groepschat; iedereen kan chats uit zijn lijst halen |
 | 26 | `supabase/migrations/20261114100000_activity_update_notifications.sql` | Wie meedoet krijgt een melding als de host (of een admin) de activiteit wijzigt, met wat er veranderd is |
+| 27 | `supabase/migrations/20261114120000_seen_patches.sql` | Onthoudt per account welke "New patch unlocked"-schermen je al gezien hebt, zodat elk maar één keer verschijnt (op al je toestellen) |
 
 ## Zo doe je het (per bestand)
 
@@ -63,3 +64,4 @@ Alle bestanden zijn veilig om opnieuw te draaien. Weet je niet zeker of je er ee
 - **Na 20:** open als admin het profiel van een lid, tik rechtsboven op het menu en kies **Edit profile (admin)**. Het formulier laadt zonder foutmelding.
 - **Na 23:** open als admin het profiel van een lid, kies in het menu **Warning or message (admin)** en stuur een bericht. Bij het lid staat het bovenaan **Chats**.
 - **Na 26:** wijzig als host de tijd van een activiteit waar iemand aan meedoet. Die persoon krijgt in **Notifications** "Activity updated" met de nieuwe tijd.
+- **Na 27:** open de app twee keer na elkaar. Een patch-feestscherm dat je al gezien hebt, komt niet terug.
